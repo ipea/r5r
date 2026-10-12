@@ -782,7 +782,35 @@ public class R5RCore {
 
     // --------------------------------  UTILITY FUNCTIONS  -----------------------------------------
 
-    // Returns list of public transport services active on a given date
+    /** Operating dates for services referenced by retained trips. */
+    public String[] getTransitServiceDates() {
+        return TransitServiceDates.getDates(routingProperties.getTransportNetworkBase().transitLayer);
+    }
+
+    /** Summarize calendars in one transfer, preserving explicit date order and duplicates. */
+    public RDataFrame getTransitServiceAvailability(String[] dates) {
+        RDataFrame table = new RDataFrame();
+        table.addStringColumn("date", "");
+        table.addIntegerColumn("total_services", 0);
+        table.addIntegerColumn("active_services", 0);
+        table.addDoubleColumn("pct_active", 0.0);
+        var services = routingProperties.getTransportNetworkBase().transitLayer.services;
+        for (String dateString : dates) {
+            LocalDate date = LocalDate.parse(dateString);
+            int active = 0;
+            for (Service service : services) {
+                if (service.activeOn(date)) active++;
+            }
+            table.append();
+            table.set("date", dateString);
+            table.set("total_services", services.size());
+            table.set("active_services", active);
+            table.set("pct_active", services.isEmpty() ? 0.0 : (double) active / services.size());
+        }
+        return table;
+    }
+
+    // Returns list of public transport services active on a given date.
     public RDataFrame getTransitServicesByDate(String date) {
         RDataFrame servicesTable = new RDataFrame();
         servicesTable.addStringColumn("service_id", "");
