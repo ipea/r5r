@@ -79,7 +79,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Using the time_window parameter</h1>
             
-            <h4 data-toc-skip class="date">2026-10-23</h4>
+            <h4 data-toc-skip class="date">2026-10-26</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ipea/r5r/blob/HEAD/r-package/vignettes/time_window.Rmd" class="external-link"><code>vignettes/time_window.Rmd</code></a></small>
       <div class="d-none name"><code>time_window.Rmd</code></div>
@@ -221,13 +221,13 @@ departures between 2pm and 3pm (<code>time_window = 60</code>):</p>
 <span><span class="co">#&gt;              &lt;char&gt;      &lt;char&gt;      &lt;int&gt;  &lt;int&gt;         &lt;num&gt;</span></span>
 <span><span class="co">#&gt;  1: 89a8100c603ffff     schools         10     45            13</span></span>
 <span><span class="co">#&gt;  2: 89a8100c603ffff     schools         20     45            13</span></span>
-<span><span class="co">#&gt;  3: 89a8100c603ffff     schools         50     45             6</span></span>
+<span><span class="co">#&gt;  3: 89a8100c603ffff     schools         50     45             7</span></span>
 <span><span class="co">#&gt;  4: 89a8100c603ffff     schools         70     45             6</span></span>
 <span><span class="co">#&gt;  5: 89a8100c603ffff     schools         80     45             6</span></span>
 <span><span class="co">#&gt;  6: 89a8100c617ffff     schools         10     45            14</span></span>
-<span><span class="co">#&gt;  7: 89a8100c617ffff     schools         20     45            14</span></span>
-<span><span class="co">#&gt;  8: 89a8100c617ffff     schools         50     45            13</span></span>
-<span><span class="co">#&gt;  9: 89a8100c617ffff     schools         70     45             7</span></span>
+<span><span class="co">#&gt;  7: 89a8100c617ffff     schools         20     45            13</span></span>
+<span><span class="co">#&gt;  8: 89a8100c617ffff     schools         50     45            10</span></span>
+<span><span class="co">#&gt;  9: 89a8100c617ffff     schools         70     45             6</span></span>
 <span><span class="co">#&gt; 10: 89a8100c617ffff     schools         80     45             6</span></span></code></pre></div>
 <p>The output is in long format, one row per origin and percentile, so
 the first 5 rows refer to the same origin. The 10th percentile counts
@@ -345,16 +345,16 @@ be very memory intensive for large data sets and time windows.</p>
 <span><span class="co">#&gt; 10: 89a8100c603ffff 89a8100c28bffff       14:01:00           5 4491-10</span></span>
 <span><span class="co">#&gt;     total_time</span></span>
 <span><span class="co">#&gt;          &lt;num&gt;</span></span>
-<span><span class="co">#&gt;  1:       36.8</span></span>
-<span><span class="co">#&gt;  2:       39.5</span></span>
-<span><span class="co">#&gt;  3:       39.7</span></span>
-<span><span class="co">#&gt;  4:       44.0</span></span>
-<span><span class="co">#&gt;  5:       52.6</span></span>
-<span><span class="co">#&gt;  6:       38.4</span></span>
-<span><span class="co">#&gt;  7:       39.2</span></span>
-<span><span class="co">#&gt;  8:       41.8</span></span>
-<span><span class="co">#&gt;  9:       43.0</span></span>
-<span><span class="co">#&gt; 10:       44.4</span></span></code></pre></div>
+<span><span class="co">#&gt;  1:       36.7</span></span>
+<span><span class="co">#&gt;  2:       41.8</span></span>
+<span><span class="co">#&gt;  3:       46.2</span></span>
+<span><span class="co">#&gt;  4:       49.6</span></span>
+<span><span class="co">#&gt;  5:       53.0</span></span>
+<span><span class="co">#&gt;  6:       38.6</span></span>
+<span><span class="co">#&gt;  7:       49.1</span></span>
+<span><span class="co">#&gt;  8:       50.1</span></span>
+<span><span class="co">#&gt;  9:       51.7</span></span>
+<span><span class="co">#&gt; 10:       52.2</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="detailed-itineraries-with-time_window-">3.5 Detailed itineraries with <code>time_window</code>.<a class="anchor" aria-label="anchor" href="#detailed-itineraries-with-time_window-"></a>

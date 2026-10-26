@@ -389,7 +389,7 @@ head(det)
 #> Simple feature collection with 6 features and 16 fields
 #> Geometry type: LINESTRING
 #> Dimension:     XY
-#> Bounding box:  xmin: -51.24094 ymin: -30.05 xmax: -51.19762 ymax: -29.99729
+#> Bounding box:  xmin: -51.24094 ymin: -30.05002 xmax: -51.19762 ymax: -29.99729
 #> Geodetic CRS:  WGS 84
 #>            from_id  from_lat  from_lon                          to_id    to_lat
 #> 1 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
@@ -399,18 +399,18 @@ head(det)
 #> 5 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
 #> 6 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
 #>      to_lon option departure_time total_duration total_distance segment mode
-#> 1 -51.22875      1       14:08:16           35.3           9460       1 WALK
-#> 2 -51.22875      1       14:08:16           35.3           9460       2 RAIL
-#> 3 -51.22875      1       14:08:16           35.3           9460       3 WALK
-#> 4 -51.22875      1       14:08:16           35.3           9460       4  BUS
-#> 5 -51.22875      1       14:08:16           35.3           9460       5 WALK
-#> 6 -51.22875      2       14:09:34           46.1           8779       1 WALK
+#> 1 -51.22875      1       14:08:16           36.7           9537       1 WALK
+#> 2 -51.22875      1       14:08:16           36.7           9537       2 RAIL
+#> 3 -51.22875      1       14:08:16           36.7           9537       3 WALK
+#> 4 -51.22875      1       14:08:16           36.7           9537       4  BUS
+#> 5 -51.22875      1       14:08:16           36.7           9537       5 WALK
+#> 6 -51.22875      2       14:09:34           47.5           8856       1 WALK
 #>   segment_duration wait distance  route                       geometry
 #> 1              5.1  0.0      174        LINESTRING (-51.1981 -29.99...
 #> 2              6.6  1.7     4796 LINHA1 LINESTRING (-51.19763 -29.9...
 #> 3              4.0  0.0      256        LINESTRING (-51.22827 -30.0...
 #> 4             10.4  4.4     4083    188 LINESTRING (-51.22926 -30.0...
-#> 5              3.2  0.0      151        LINESTRING (-51.22949 -30.0...
+#> 5              4.6  0.0      228        LINESTRING (-51.22949 -30.0...
 #> 6              5.1  0.0      174        LINESTRING (-51.1981 -29.99...
 ```
 

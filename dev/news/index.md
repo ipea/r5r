@@ -29,6 +29,18 @@
   fares still use McRAPTOR. Closed
   [\#464](https://github.com/ipea/r5r/issues/464).
 
+**Bug fixes**
+
+- [\#607](https://github.com/ipea/r5r/pull/607)
+  [`detailed_itineraries()`](https://ipea.github.io/r5r/dev/reference/detailed_itineraries.md)
+  now retains the final partial street segment and the connection to the
+  destination in transit egress legs. Backward searches associate
+  partial distances and directional costs with the correct street
+  endpoint. Both RAPTOR and McRAPTOR use the complete egress cost for
+  routing, duration limits and output, including RAPTOR searches shared
+  across destinations. Results can change, particularly for destinations
+  on long street segments.
+
 ## r5r 2.5.0
 
 **Major changes**
