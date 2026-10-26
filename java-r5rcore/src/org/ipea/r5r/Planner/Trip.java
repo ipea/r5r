@@ -414,8 +414,8 @@ public class Trip {
                 streetRouter.profileRequest.reverseSearch = true;
                 StreetRouter.State streetState = streetRouter.getStateAtVertex(endVertexStopIndex);
                 if (streetState != null) {
-                    StreetPath streetPath = new StreetPath(streetState, network, true);
-                    streetSegment = new StreetSegment(streetPath, egressMode, network.streetLayer);
+                    streetSegment = EgressPath.build(streetRouter, streetState, egressMode,
+                            request.toLat, request.toLon);
 
                     TripLeg egressLeg = TripLeg.newTransferLeg(egressMode.toString(),
                             streetSegment.duration, cumulativeFare, streetSegment.geometry, streetSegment, edgeStore);

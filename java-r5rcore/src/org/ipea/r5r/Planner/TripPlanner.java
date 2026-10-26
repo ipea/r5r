@@ -6,6 +6,7 @@ import com.conveyal.r5.api.util.StreetSegment;
 import com.conveyal.r5.profile.*;
 import com.conveyal.r5.streets.EdgeStore;
 import com.conveyal.r5.streets.StreetRouter;
+import com.conveyal.r5.streets.R5REgressRouter;
 import com.conveyal.r5.transit.TransportNetwork;
 import com.conveyal.r5.transit.path.Path;
 import gnu.trove.iterator.TIntObjectIterator;
@@ -183,11 +184,17 @@ public class TripPlanner {
         }
 
         // build street paths and geometries only for the trips that are returned
+        List<Trip> completedTrips = new ArrayList<>();
         for (Trip trip : tripList) {
-            trip.augment(accessRouter, egressRouter, transportNetwork, request, OSMLinkIds);
+            try {
+                trip.augment(accessRouter, egressRouter, transportNetwork, request, OSMLinkIds);
+                completedTrips.add(trip);
+            } catch (EgressPath.InvalidOriginException e) {
+                LOG.warn("Skipping itinerary from {} to {}: {}", fromId, toId, e.getMessage());
+            }
         }
 
-        return tripList;
+        return completedTrips;
     }
 
     // with all_to_all, a FastRaptor search and egress times shared with the other pairs of the same origin and
@@ -213,7 +220,7 @@ public class TripPlanner {
 
         // R5 rejects arrivals at or after departure + max_trip_duration, and then fails a checkState when it steps
         // the departure back one minute and an access stop cannot be updated: drop those stops up front
-        TIntIntMap accessTimes = streetTimesAtStops(access, false, request.maxTripDurationMinutes * FastRaptorWorker.SECONDS_PER_MINUTE);
+        TIntIntMap accessTimes = streetTimesAtStops(access, request.maxTripDurationMinutes * FastRaptorWorker.SECONDS_PER_MINUTE);
         if (accessTimes.isEmpty()) return null;
 
         FastRaptorWorker worker = new FastRaptorWorker(transportNetwork.transitLayer, (AnalysisWorkerTask) request, accessTimes);
@@ -253,7 +260,7 @@ public class TripPlanner {
     private TIntIntMap egressTimesAtStops(Map<LegMode, StreetRouter> egressRouter) {
         StreetRouter egress = egressRouter.get(request.egressModes.iterator().next());
         if (egress == null) return new TIntIntHashMap();
-        return streetTimesAtStops(egress, true, request.maxTripDurationMinutes * FastRaptorWorker.SECONDS_PER_MINUTE);
+        return streetTimesAtStops(egress, request.maxTripDurationMinutes * FastRaptorWorker.SECONDS_PER_MINUTE);
     }
 
     /**
@@ -286,26 +293,17 @@ public class TripPlanner {
     }
 
     /**
-     * Street time to each stop reached by a router, below maxSeconds, as Trip.augment() will report it in the access
-     * or egress leg. The egress search runs backwards from the destination, so on networks with elevation its times
-     * are those of walking (or cycling) uphill where the trip goes downhill, and vice versa; StreetPath re-times the
-     * leg in the direction of travel (State.reverse()). Ranking departures by the backward times would return a trip
-     * that is not the fastest by its own reported duration, so egress times are re-timed the same way here.
+     * Complete street times below maxSeconds, matching the legs reconstructed by Trip.augment().
+     * R5REgressRouter already costs edges in their physical travel direction and includes the
+     * destination connection. State.reverse() would drop that connection's root cost. Use these
+     * same costs before FastRaptor ranks trips, for both paired and shared-origin searches.
      */
-    private TIntIntMap streetTimesAtStops(StreetRouter router, boolean reverseSearch, int maxSeconds) {
-        boolean previousReverseSearch = router.profileRequest.reverseSearch;
-        router.profileRequest.reverseSearch = reverseSearch; // getStateAtVertex() reads the search direction
+    private TIntIntMap streetTimesAtStops(StreetRouter router, int maxSeconds) {
         TIntIntMap times = new TIntIntHashMap();
-        router.getReachedStops().forEachEntry((stop, reachedTime) -> {
-            int time = reachedTime;
-            if (reverseSearch) {
-                StreetRouter.State state = router.getStateAtVertex(transportNetwork.transitLayer.streetVertexForStop.get(stop));
-                if (state != null) time = state.reverse(transportNetwork).getDurationSeconds();
-            }
+        router.getReachedStops().forEachEntry((stop, time) -> {
             if (time < maxSeconds) times.put(stop, time);
             return true;
         });
-        router.profileRequest.reverseSearch = previousReverseSearch;
         return times;
     }
 
@@ -398,7 +396,7 @@ public class TripPlanner {
         //TODO: this must be reverse search
         request.reverseSearch = true;
         for(LegMode mode: request.egressModes) {
-            StreetRouter streetRouter = new StreetRouter(transportNetwork.streetLayer);
+            StreetRouter streetRouter = new R5REgressRouter(transportNetwork.streetLayer);
             streetRouter.transitStopSearch = true;
             streetRouter.quantityToMinimize = StreetRouter.State.RoutingVariable.DURATION_SECONDS;
 
@@ -413,7 +411,8 @@ public class TripPlanner {
                 LOG.info("Added {} egress stops for mode {}",stops.size(), mode);
 
             } else {
-                LOG.warn("MODE:{}, Edge near the destination coordinate {} wasn't found. Routing didn't start!", mode, toId);
+                LOG.warn("No permitted street connection within the time limit at destination {}, {} for mode {}. Routing didn't start!",
+                        request.toLat, request.toLon, mode);
             }
         }
 

@@ -4,6 +4,10 @@
 
 - [#603](https://github.com/ipea/r5r/pull/603) `detailed_itineraries()` with `shortest_path = TRUE` (the default) and no `fare_structure` now routes public transport with R5's RAPTOR algorithm (the one used by `travel_time_matrix()`) instead of McRAPTOR. The output has the same columns, but the call is much faster: on the Porto Alegre sample data (50 × 50 origin-destination pairs, public transport), about 40 times faster than r5r 2.4.0 with `all_to_all = TRUE` and `max_trip_duration = 60` (28 times with the same 2,500 pairs given row by row, since with `all_to_all = TRUE` one search per origin serves all its destinations), and 150 to 225 times faster with `max_trip_duration = 120` or `time_window = 30`. Results can differ slightly: departures are routed every minute of `time_window` instead of at random seconds, so the itinerary returned is never more than about a minute slower and often faster; walking transfers between stops are limited by `max_walk_time`; stops where the GTFS `pickup_type` or `drop_off_type` does not allow boarding or alighting are respected; on networks with elevation data, the walk from the last stop is ranked by its time in the direction of travel, as it is reported; and ties between equally fast trips may resolve to a different route. Alternative routes (`shortest_path = FALSE`) and fares still use McRAPTOR. Closed [#464](https://github.com/ipea/r5r/issues/464).
 
+**Bug fixes**
+
+- [#607](https://github.com/ipea/r5r/pull/607) `detailed_itineraries()` now retains the final partial street segment and the connection to the destination in transit egress legs. Backward searches associate partial distances and directional costs with the correct street endpoint. Both RAPTOR and McRAPTOR use the complete egress cost for routing, duration limits and output, including RAPTOR searches shared across destinations. Results can change, particularly for destinations on long street segments.
+
 # r5r 2.5.0
 
 **Major changes**
