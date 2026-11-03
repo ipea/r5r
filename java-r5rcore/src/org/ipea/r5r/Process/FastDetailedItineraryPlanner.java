@@ -63,20 +63,31 @@ public class FastDetailedItineraryPlanner extends R5DataFrameProcess {
         computer.setFastRaptor(routingProperties.fastRaptor && this.shortestPath);
 
         String originKey = null;
-        if (originSearches != null) {
-            // one FastRaptor search per origin: the first pair of an origin runs it, the others wait for it
-            originKey = fromLats[index] + "," + fromLons[index];
-            FutureTask<FastRaptorOrigin> search = originSearches.computeIfAbsent(originKey, key -> new FutureTask<>(() ->
-                    new TripPlanner(transportNetwork, buildRegionalTask(index)).searchFastRaptorOrigin(retainPathsByOrigin.get(key))));
-            search.run(); // no-op when another thread has started it
-            try {
+        List<Trip> trips;
+        try {
+            if (originSearches != null) {
+                // one FastRaptor search per origin: the first pair of an origin runs it, the others wait for it
+                originKey = fromLats[index] + "," + fromLons[index];
+                FutureTask<FastRaptorOrigin> search = originSearches.computeIfAbsent(originKey, key -> new FutureTask<>(() ->
+                        new TripPlanner(transportNetwork, buildRegionalTask(index)).searchFastRaptorOrigin(retainPathsByOrigin.get(key))));
+                search.run(); // no-op when another thread has started it
                 computer.setFastRaptorShared(search.get(), egressTimesByDestination.get(toLats[index] + "," + toLons[index]));
-            } catch (InterruptedException | ExecutionException e) {
-                throw new IllegalStateException("FastRaptor search failed for origin " + fromIds[index], e);
             }
+            trips = computer.plan();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("FastRaptor search interrupted for origin " + fromIds[index], e);
+        } catch (RuntimeException | ExecutionException e) {
+            if (!(routingProperties.fastRaptor && this.shortestPath)) throw e instanceof RuntimeException r ? r : new IllegalStateException(e);
+            // a pair FastRaptor cannot route is routed with McRAPTOR rather than failing the whole call; a second
+            // failure propagates. The R side skips McRAPTOR's draw checks here, so time_window = 200 still fails (#602)
+            LOG.warn("FastRaptor itinerary from {} to {} failed ({}); routing it with McRAPTOR", fromIds[index], toIds[index], e.getMessage());
+            TripPlanner fallback = new TripPlanner(transportNetwork, buildRegionalTask(index));
+            fallback.setOD(fromIds[index], toIds[index]);
+            fallback.setShortestPath(this.shortestPath);
+            fallback.setOSMLinkIds(this.OSMLinkIds);
+            trips = fallback.plan();
         }
-
-        List<Trip> trips = computer.plan();
         if (originKey != null && pairsLeftByOrigin.get(originKey).decrementAndGet() == 0) {
             originSearches.remove(originKey); // free its travel times and paths
         }

@@ -272,6 +272,8 @@ public class TripPlanner {
      * departure, then to the lowest egress stop index.
      */
     private void addFastRaptorTrip(Map<String, Trip> trips, FastRaptorOrigin origin, TIntIntMap egressTimes) {
+        // lets the tests exercise the McRAPTOR fallback in FastDetailedItineraryPlanner
+        if (Boolean.getBoolean("r5r.failFastRaptor")) throw new IllegalStateException("r5r.failFastRaptor is set");
         int[] egressStops = egressTimes.keys();
         Arrays.sort(egressStops);
 
