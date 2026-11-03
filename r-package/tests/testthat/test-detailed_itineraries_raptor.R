@@ -137,6 +137,24 @@ test_that("results do not depend on runs or threads", {
   expect_equal(run1, single)
 })
 
+test_that("pairs RAPTOR cannot route fall back to McRAPTOR", {
+  # a JVM property makes every RAPTOR itinerary fail
+  tester <- function(all_to_all) {
+    raptor_tester(destinations = pois[6:10, ], all_to_all = all_to_all)
+  }
+  expected <- list(tester(TRUE), tester(FALSE))
+  rJava::.jcall("java/lang/System", "S", "setProperty", "r5r.failFastRaptor", "true")
+  withr::defer(rJava::.jcall("java/lang/System", "S", "clearProperty", "r5r.failFastRaptor"))
+
+  for (i in 1:2) {
+    fallback <- tester(i == 1)
+    expect_setequal(unique(paste(fallback$from_id, fallback$to_id)),
+                    unique(paste(expected[[i]]$from_id, expected[[i]]$to_id)))
+    expect_true(any(fallback$route != ""))
+    expect_true(all(fallback$option == 1L))
+  }
+})
+
 test_that("access longer than max_trip_duration does not break routing", {
   # R5 fails a checkState when an access stop is reached after max_trip_duration
   # and the time window has more than one minute
