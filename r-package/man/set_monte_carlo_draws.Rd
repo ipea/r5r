@@ -8,7 +8,8 @@ set_monte_carlo_draws(
   r5r_network,
   draws_per_minute,
   time_window,
-  fare_structure = NULL
+  fare_structure = NULL,
+  mcraptor = !is.null(fare_structure)
 )
 }
 \arguments{
@@ -21,6 +22,9 @@ set_monte_carlo_draws(
 \item{fare_structure}{A fare structure or \code{NULL}. When set, R5 uses the
 McRaptor algorithm, and combinations of \code{draws_per_minute} and
 \code{time_window} that its departure-time sampler cannot handle are rejected.}
+
+\item{mcraptor}{A logical. Whether the routing uses the McRaptor algorithm.
+Defaults to \code{TRUE} when a \code{fare_structure} is set.}
 }
 \value{
 Invisibly returns \code{TRUE}.

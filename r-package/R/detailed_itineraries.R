@@ -285,7 +285,13 @@ detailed_itineraries <- function(r5r_network,
   osm_link_ids <- assign_osm_link_ids(osm_link_ids, drop_geometry)
 
   set_time_window(r5r_network, time_window)
-  set_monte_carlo_draws(r5r_network, 1, time_window)
+  set_monte_carlo_draws(
+    r5r_network,
+    1,
+    time_window,
+    mcraptor = mode_list$transit_mode != "" &&
+      !(shortest_path && is.null(fare_structure))
+  )
   set_speed(r5r_network, walk_speed, "walk")
   set_speed(r5r_network, bike_speed, "bike")
   set_max_rides(r5r_network, max_rides)

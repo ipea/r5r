@@ -230,6 +230,8 @@ set_percentiles <- function(r5r_network, percentiles) {
 #' @param fare_structure A fare structure or `NULL`. When set, R5 uses the
 #'   McRaptor algorithm, and combinations of `draws_per_minute` and
 #'   `time_window` that its departure-time sampler cannot handle are rejected.
+#' @param mcraptor A logical. Whether the routing uses the McRaptor algorithm.
+#'   Defaults to `TRUE` when a `fare_structure` is set.
 #'
 #' @return Invisibly returns `TRUE`.
 #'
@@ -239,7 +241,8 @@ set_percentiles <- function(r5r_network, percentiles) {
 set_monte_carlo_draws <- function(r5r_network,
                                   draws_per_minute,
                                   time_window,
-                                  fare_structure = NULL) {
+                                  fare_structure = NULL,
+                                  mcraptor = !is.null(fare_structure)) {
   # time_window is previously checked in set_time_window()
   checkmate::assert_count(draws_per_minute, positive = TRUE)
 
@@ -253,8 +256,16 @@ set_monte_carlo_draws <- function(r5r_network,
   # p is the normal approximation of the chance of one retry hitting `draws`;
   # it matches a simulation of the sampler (dpm 3-10, windows 10-240 min).
   # p >= 5e-5 accepts every case of #602 that worked (dpm 7, window 10: 8.7e-5)
-  if (!is.null(fare_structure)) {
-    m <- 60 %/% draws_per_minute
+  if (mcraptor) {
+    # R5's McRaptor reads exactly 200 draws as an unset UI default and throws
+    if (draws == 200L) {
+      cli::cli_abort(c(
+        "A {.arg time_window} of {time_window} minutes with {draws_per_minute} draw{?s} per minute gives exactly 200 Monte Carlo draws, which R5's McRaptor algorithm does not accept.",
+        "i" = "Use a slightly different {.arg time_window}, e.g. {time_window + 1}. See {.url https://github.com/ipea/r5r/issues/602}."
+      ), class = "r5r_200_draws")
+    }
+
+    m <-60 %/% draws_per_minute
     mu <- (m - 1) / 2 + m %/% 2
     span <- 60 * time_window
     sd <- sqrt(span * (m^2 - 1) / 12 / mu^3)

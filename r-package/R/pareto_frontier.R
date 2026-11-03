@@ -190,7 +190,12 @@ pareto_frontier <- function(r5r_network,
 
   set_time_window(r5r_network, time_window)
   set_percentiles(r5r_network, percentiles)
-  set_monte_carlo_draws(r5r_network, 1, time_window)
+  set_monte_carlo_draws(
+    r5r_network,
+    1,
+    time_window,
+    mcraptor = mode_list$transit_mode != ""
+  )
   set_monte_carlo_seed(r5r_network, seed)
   set_speed(r5r_network, walk_speed, "walk")
   set_speed(r5r_network, bike_speed, "bike")
