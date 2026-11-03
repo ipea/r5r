@@ -8,8 +8,8 @@ import com.conveyal.r5.profile.StreetMode;
  * This deliberately lives in R5's streets package to initialize its package-private queue
  * and best-state map, without reflection or replacing any upstream class. Recheck on R5 upgrades.
  * Only single-mode point-seeded egress uses this adapter; chained-mode searches are unchanged.
- * TODO: remove after R5 fixes setOrigin/State.reverse(); upstream issue link pending at
- * https://github.com/ipea/r5r/pull/607#issuecomment-6401238373.
+ * TODO: remove after R5 fixes setOrigin/State.reverse(), proposed upstream in
+ * https://github.com/conveyal/r5/pull/1027.
  */
 public final class R5REgressRouter extends StreetRouter {
     public R5REgressRouter(StreetLayer layer) {
