@@ -73,7 +73,8 @@ Suggests:
     patchwork,
     rJavaEnv,
     rmarkdown,
-    testthat
+    testthat,
+    withr
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
