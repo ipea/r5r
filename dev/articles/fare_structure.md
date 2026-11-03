@@ -170,34 +170,34 @@ head(fare_structure, n=7)
 #> $fares_per_route
 #>      agency_id                                 agency_name  route_id
 #>         <char>                                      <char>    <char>
-#>   1:     TRENS                                    TRENSURB    LINHA1
-#>   2:     TRENS                                    TRENSURB LINHAAERO
-#>   3:      EPTC Empresa Publica de Transportes e Circulação      1112
-#>   4:      EPTC Empresa Publica de Transportes e Circulação       149
-#>   5:      EPTC Empresa Publica de Transportes e Circulação       165
+#>   1:      EPTC Empresa Publica de Transportes e Circulação      1112
+#>   2:      EPTC Empresa Publica de Transportes e Circulação       149
+#>   3:      EPTC Empresa Publica de Transportes e Circulação       165
+#>   4:      EPTC Empresa Publica de Transportes e Circulação       168
+#>   5:      EPTC Empresa Publica de Transportes e Circulação       173
 #>  ---                                                                
-#> 113:      EPTC Empresa Publica de Transportes e Circulação        T7
-#> 114:      EPTC Empresa Publica de Transportes e Circulação        T8
-#> 115:      EPTC Empresa Publica de Transportes e Circulação        T9
-#> 116:      EPTC Empresa Publica de Transportes e Circulação      TR60
-#> 117:      EPTC Empresa Publica de Transportes e Circulação      TR62
+#> 113:      EPTC Empresa Publica de Transportes e Circulação        T9
+#> 114:      EPTC Empresa Publica de Transportes e Circulação      TR60
+#> 115:      EPTC Empresa Publica de Transportes e Circulação      TR62
+#> 116:     TRENS                                    TRENSURB    LINHA1
+#> 117:     TRENS                                    TRENSURB LINHAAERO
 #>      route_short_name                           route_long_name   mode
 #>                <char>                                    <char> <char>
-#>   1:           LINHA1 ESTACAO MERCADO ATE ESTACAO NOVO HAMBURGO   RAIL
-#>   2:             AREO                        AEROMOVEL TRENSURB   RAIL
-#>   3:             1112                         HIPICA / TRISTEZA    BUS
-#>   4:              149                                    ICARAI    BUS
-#>   5:              165                                     COHAB    BUS
+#>   1:             1112                         HIPICA / TRISTEZA    BUS
+#>   2:              149                                    ICARAI    BUS
+#>   3:              165                                     COHAB    BUS
+#>   4:              168                  BELEM NOVO(VIA TRISTEZA)    BUS
+#>   5:              173                                   CAMAQUA    BUS
 #>  ---                                                                  
-#> 113:               T7                     NILO / PRAIA DE BELAS    BUS
-#> 114:               T8                       CAMPUS  /  FARRAPOS    BUS
-#> 115:               T9                                       PUC    BUS
-#> 116:             TR60                         TRONCAL TRI‘NGULO    BUS
-#> 117:             TR62                          TRONCAL BALTAZAR    BUS
+#> 113:               T9                                       PUC    BUS
+#> 114:             TR60                         TRONCAL TRI‘NGULO    BUS
+#> 115:             TR62                          TRONCAL BALTAZAR    BUS
+#> 116:           LINHA1 ESTACAO MERCADO ATE ESTACAO NOVO HAMBURGO   RAIL
+#> 117:             AREO                        AEROMOVEL TRENSURB   RAIL
 #>      route_fare fare_type
 #>           <num>    <char>
-#>   1:        4.8      RAIL
-#>   2:        4.8      RAIL
+#>   1:        4.8       BUS
+#>   2:        4.8       BUS
 #>   3:        4.8       BUS
 #>   4:        4.8       BUS
 #>   5:        4.8       BUS
@@ -205,8 +205,8 @@ head(fare_structure, n=7)
 #> 113:        4.8       BUS
 #> 114:        4.8       BUS
 #> 115:        4.8       BUS
-#> 116:        4.8       BUS
-#> 117:        4.8       BUS
+#> 116:        4.8      RAIL
+#> 117:        4.8      RAIL
 #> 
 #> $debug_settings
 #> $debug_settings$output_file
@@ -389,22 +389,30 @@ in this `fares_per_route` data.frame.
 ``` r
 
 tail(fare_structure$fares_per_route)
-#>    agency_id                                 agency_name route_id
-#>       <char>                                      <char>   <char>
-#> 1:      EPTC Empresa Publica de Transportes e Circulação       T6
-#> 2:      EPTC Empresa Publica de Transportes e Circulação       T7
-#> 3:      EPTC Empresa Publica de Transportes e Circulação       T8
-#> 4:      EPTC Empresa Publica de Transportes e Circulação       T9
-#> 5:      EPTC Empresa Publica de Transportes e Circulação     TR60
-#> 6:      EPTC Empresa Publica de Transportes e Circulação     TR62
-#>    route_short_name       route_long_name   mode route_fare fare_type
-#>              <char>                <char> <char>      <num>    <char>
-#> 1:               T6         TRANSVERSAL 6    BUS        4.8       BUS
-#> 2:               T7 NILO / PRAIA DE BELAS    BUS        4.8       BUS
-#> 3:               T8   CAMPUS  /  FARRAPOS    BUS        4.8       BUS
-#> 4:               T9                   PUC    BUS        4.8       BUS
-#> 5:             TR60     TRONCAL TRI‘NGULO    BUS        4.8       BUS
-#> 6:             TR62      TRONCAL BALTAZAR    BUS        4.8       BUS
+#>    agency_id                                 agency_name  route_id
+#>       <char>                                      <char>    <char>
+#> 1:      EPTC Empresa Publica de Transportes e Circulação        T8
+#> 2:      EPTC Empresa Publica de Transportes e Circulação        T9
+#> 3:      EPTC Empresa Publica de Transportes e Circulação      TR60
+#> 4:      EPTC Empresa Publica de Transportes e Circulação      TR62
+#> 5:     TRENS                                    TRENSURB    LINHA1
+#> 6:     TRENS                                    TRENSURB LINHAAERO
+#>    route_short_name                           route_long_name   mode route_fare
+#>              <char>                                    <char> <char>      <num>
+#> 1:               T8                       CAMPUS  /  FARRAPOS    BUS        4.8
+#> 2:               T9                                       PUC    BUS        4.8
+#> 3:             TR60                         TRONCAL TRI‘NGULO    BUS        4.8
+#> 4:             TR62                          TRONCAL BALTAZAR    BUS        4.8
+#> 5:           LINHA1 ESTACAO MERCADO ATE ESTACAO NOVO HAMBURGO   RAIL        4.8
+#> 6:             AREO                        AEROMOVEL TRENSURB   RAIL        4.8
+#>    fare_type
+#>       <char>
+#> 1:       BUS
+#> 2:       BUS
+#> 3:       BUS
+#> 4:       BUS
+#> 5:      RAIL
+#> 6:      RAIL
 ```
 
 Basic route information is taken directly from the GTFS data (agency,

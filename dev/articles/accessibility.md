@@ -112,12 +112,12 @@ also computes gravity-based metrics: set `decay_function` to
 Metrics not implemented in R5, such as floating catchment area, travel
 cost to the closest N opportunities or time-interval cumulative
 opportunities, are available in the
-[accessibility](https://github.com/ipeaGIT/accessibility) package.
+[accessibility](https://github.com/ipea/accessibility) package.
 
 ## 4. Accessibility: flexible approach
 
-The [accessibility](https://github.com/ipeaGIT/accessibility) package
-takes a [travel time
+The [accessibility](https://github.com/ipea/accessibility) package takes
+a [travel time
 matrix](https://ipea.github.io/r5r/articles/travel_time_matrix.html),
 which we compute with `r5r`:
 
@@ -146,7 +146,7 @@ head(ttm)
 #> 6: 89a901291abffff 89a901285cfffff              38
 ```
 
-[`accessibility::cumulative_cutoff()`](https://rdrr.io/pkg/accessibility/man/cumulative_cutoff.html)
+[`accessibility::cumulative_cutoff()`](https://ipea.github.io/accessibility/reference/cumulative_cutoff.html)
 computes the same cumulative metric from the travel time matrix and land
 use data. It also counts trips that take exactly the cutoff time, while
 [`r5r::accessibility()`](https://ipea.github.io/r5r/dev/reference/accessibility.md)
@@ -171,13 +171,12 @@ access_health <- accessibility::cumulative_cutoff(
   travel_cost = 'travel_time_p50',
   cutoff = 20
   )
-#> Warning: 'land_use_data$healthcare' contains NA values, which may produce NAs
-#> in the final output.
+#> Warning: `land_use_data$healthcare` contains NA values, which are
+#> treated as 0.
 
 head(access_edu)
-#> Key: <id>
 #>                 id schools
-#>             <char>   <int>
+#>             <char>   <num>
 #> 1: 89a9012124fffff       1
 #> 2: 89a9012126bffff       4
 #> 3: 89a9012127bffff       2
@@ -185,9 +184,8 @@ head(access_edu)
 #> 5: 89a90128007ffff       5
 #> 6: 89a9012800bffff       8
 head(access_health)
-#> Key: <id>
 #>                 id healthcare
-#>             <char>      <int>
+#>             <char>      <num>
 #> 1: 89a9012124fffff          0
 #> 2: 89a9012126bffff          1
 #> 3: 89a9012127bffff          1

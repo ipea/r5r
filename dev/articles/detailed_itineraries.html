@@ -79,7 +79,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Trip planning with detailed_itineraries()</h1>
             
-            <h4 data-toc-skip class="date">2026-10-26</h4>
+            <h4 data-toc-skip class="date">2026-11-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ipea/r5r/blob/HEAD/r-package/vignettes/detailed_itineraries.Rmd" class="external-link"><code>vignettes/detailed_itineraries.Rmd</code></a></small>
       <div class="d-none name"><code>detailed_itineraries.Rmd</code></div>
@@ -256,21 +256,21 @@ frequency-based GTFS feeds. The workaround is to convert frequencies to
 timetables with the <a href="https://ipea.github.io/gtfstools/" class="external-link"><code>gtfstools</code>
 package</a>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ipeagit.github.io/gtfstools/" class="external-link">gtfstools</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ipea.github.io/gtfstools/" class="external-link">gtfstools</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># location of your frequency-based GTFS</span></span>
 <span><span class="va">freq_gtfs_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/spo/spo.zip"</span>, package <span class="op">=</span> <span class="st">"r5r"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># read GTFS data</span></span>
-<span><span class="va">freq_gtfs</span> <span class="op">&lt;-</span> <span class="fu">gtfstools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gtfstools/man/read_gtfs.html" class="external-link">read_gtfs</a></span><span class="op">(</span><span class="va">freq_gtfs_file</span><span class="op">)</span></span>
+<span><span class="va">freq_gtfs</span> <span class="op">&lt;-</span> <span class="fu">gtfstools</span><span class="fu">::</span><span class="fu"><a href="https://ipea.github.io/gtfstools/reference/read_gtfs.html" class="external-link">read_gtfs</a></span><span class="op">(</span><span class="va">freq_gtfs_file</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># convert from frequencies to time tables</span></span>
-<span><span class="va">stop_times_gtfs</span> <span class="op">&lt;-</span> <span class="fu">gtfstools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gtfstools/man/frequencies_to_stop_times.html" class="external-link">frequencies_to_stop_times</a></span><span class="op">(</span><span class="va">freq_gtfs</span><span class="op">)</span></span>
+<span><span class="va">stop_times_gtfs</span> <span class="op">&lt;-</span> <span class="fu">gtfstools</span><span class="fu">::</span><span class="fu"><a href="https://ipea.github.io/gtfstools/reference/frequencies_to_stop_times.html" class="external-link">frequencies_to_stop_times</a></span><span class="op">(</span><span class="va">freq_gtfs</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># save it as a new GTFS.zip file</span></span>
-<span><span class="fu">gtfstools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gtfstools/man/write_gtfs.html" class="external-link">write_gtfs</a></span><span class="op">(</span>gtfs <span class="op">=</span> <span class="va">stop_times_gtfs</span>,</span>
+<span><span class="fu">gtfstools</span><span class="fu">::</span><span class="fu"><a href="https://ipea.github.io/gtfstools/reference/write_gtfs.html" class="external-link">write_gtfs</a></span><span class="op">(</span>gtfs <span class="op">=</span> <span class="va">stop_times_gtfs</span>,</span>
 <span>                      path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>pattern <span class="op">=</span> <span class="st">'stop_times_gtfs'</span>, fileext <span class="op">=</span> <span class="st">'.zip'</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/pkg/gtfstools/man/write_gtfs.html" class="external-link">write_gtfs()</a></code> saves the new feed to the <code>path</code>
+<p><code><a href="https://ipea.github.io/gtfstools/reference/write_gtfs.html" class="external-link">write_gtfs()</a></code> saves the new feed to the <code>path</code>
 you give it (a temporary file above). Put that file in your
 <code>data_path</code>, in place of the frequency-based feed, and build
 the network.</p>

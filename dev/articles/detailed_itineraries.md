@@ -191,7 +191,7 @@ gtfstools::write_gtfs(gtfs = stop_times_gtfs,
                       path = tempfile(pattern = 'stop_times_gtfs', fileext = '.zip'))
 ```
 
-[`write_gtfs()`](https://rdrr.io/pkg/gtfstools/man/write_gtfs.html)
+[`write_gtfs()`](https://ipea.github.io/gtfstools/reference/write_gtfs.html)
 saves the new feed to the `path` you give it (a temporary file above).
 Put that file in your `data_path`, in place of the frequency-based feed,
 and build the network.

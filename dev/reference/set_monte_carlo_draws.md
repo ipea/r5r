@@ -9,7 +9,8 @@ set_monte_carlo_draws(
   r5r_network,
   draws_per_minute,
   time_window,
-  fare_structure = NULL
+  fare_structure = NULL,
+  mcraptor = !is.null(fare_structure)
 )
 ```
 
@@ -33,6 +34,11 @@ set_monte_carlo_draws(
   A fare structure or `NULL`. When set, R5 uses the McRaptor algorithm,
   and combinations of `draws_per_minute` and `time_window` that its
   departure-time sampler cannot handle are rejected.
+
+- mcraptor:
+
+  A logical. Whether the routing uses the McRaptor algorithm. Defaults
+  to `TRUE` when a `fare_structure` is set.
 
 ## Value
 

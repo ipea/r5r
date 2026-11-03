@@ -142,8 +142,8 @@ head(acc, n = 10)
 #>  5: 89a8100c603ffff     schools         80     45             6
 #>  6: 89a8100c617ffff     schools         10     45            14
 #>  7: 89a8100c617ffff     schools         20     45            13
-#>  8: 89a8100c617ffff     schools         50     45            10
-#>  9: 89a8100c617ffff     schools         70     45             6
+#>  8: 89a8100c617ffff     schools         50     45            13
+#>  9: 89a8100c617ffff     schools         70     45             7
 #> 10: 89a8100c617ffff     schools         80     45             6
 ```
 
@@ -271,16 +271,16 @@ head(ettm, n = 10)
 #> 10: 89a8100c603ffff 89a8100c28bffff       14:01:00           5 4491-10
 #>     total_time
 #>          <num>
-#>  1:       36.7
-#>  2:       41.8
-#>  3:       46.2
-#>  4:       49.6
-#>  5:       53.0
-#>  6:       38.6
-#>  7:       49.1
-#>  8:       50.1
-#>  9:       51.7
-#> 10:       52.2
+#>  1:       36.3
+#>  2:       43.5
+#>  3:       52.0
+#>  4:       52.2
+#>  5:       53.7
+#>  6:       35.6
+#>  7:       35.7
+#>  8:       42.2
+#>  9:       43.2
+#> 10:       48.4
 ```
 
 ### 3.5 Detailed itineraries with `time_window`.
@@ -310,7 +310,7 @@ transfers.
 *obs.*
 [`detailed_itineraries()`](https://ipea.github.io/r5r/dev/reference/detailed_itineraries.md)
 cannot route public transport trips on frequency-based GTFS feeds; use
-[`gtfstools::frequencies_to_stop_times()`](https://rdrr.io/pkg/gtfstools/man/frequencies_to_stop_times.html)
+[`gtfstools::frequencies_to_stop_times()`](https://ipea.github.io/gtfstools/reference/frequencies_to_stop_times.html)
 to create a suitable feed.
 
 ### Cleaning up after usage

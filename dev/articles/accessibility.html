@@ -79,7 +79,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Accessibility</h1>
             
-            <h4 data-toc-skip class="date">2026-10-26</h4>
+            <h4 data-toc-skip class="date">2026-11-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ipea/r5r/blob/HEAD/r-package/vignettes/accessibility.Rmd" class="external-link"><code>vignettes/accessibility.Rmd</code></a></small>
       <div class="d-none name"><code>accessibility.Rmd</code></div>
@@ -121,7 +121,7 @@ package</a>, which offers a wider range of metrics.</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>java.parameters <span class="op">=</span> <span class="st">"-Xmx2G"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ipea/r5r" class="external-link">r5r</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ipeaGIT/accessibility" class="external-link">accessibility</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ipea/accessibility" class="external-link">accessibility</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
@@ -193,12 +193,12 @@ metrics: set <code>decay_function</code> to <code>"exponential"</code>,
 <code>"logistic"</code>. Metrics not implemented in R5, such as floating
 catchment area, travel cost to the closest N opportunities or
 time-interval cumulative opportunities, are available in the
-<a href="https://github.com/ipeaGIT/accessibility" class="external-link">accessibility</a> package.</p>
+<a href="https://github.com/ipea/accessibility" class="external-link">accessibility</a> package.</p>
 </div>
 <div class="section level2">
 <h2 id="accessibility-flexible-approach">4. Accessibility: flexible approach<a class="anchor" aria-label="anchor" href="#accessibility-flexible-approach"></a>
 </h2>
-<p>The <a href="https://github.com/ipeaGIT/accessibility" class="external-link">accessibility</a> package takes a <a href="https://ipea.github.io/r5r/articles/travel_time_matrix.html">travel
+<p>The <a href="https://github.com/ipea/accessibility" class="external-link">accessibility</a> package takes a <a href="https://ipea.github.io/r5r/articles/travel_time_matrix.html">travel
 time matrix</a>, which we compute with <code>r5r</code>:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># calculate travel time matrix</span></span>
@@ -222,14 +222,14 @@ time matrix</a>, which we compute with <code>r5r</code>:</p>
 <span><span class="co">#&gt; 4: 89a901291abffff 89a901284a3ffff              60</span></span>
 <span><span class="co">#&gt; 5: 89a901291abffff 89a9012809bffff              47</span></span>
 <span><span class="co">#&gt; 6: 89a901291abffff 89a901285cfffff              38</span></span></code></pre></div>
-<p><code><a href="https://rdrr.io/pkg/accessibility/man/cumulative_cutoff.html" class="external-link">accessibility::cumulative_cutoff()</a></code> computes the same
+<p><code><a href="https://ipea.github.io/accessibility/reference/cumulative_cutoff.html" class="external-link">accessibility::cumulative_cutoff()</a></code> computes the same
 cumulative metric from the travel time matrix and land use data. It also
 counts trips that take exactly the cutoff time, while
 <code><a href="../reference/accessibility.html">r5r::accessibility()</a></code> counts only trips strictly shorter
 than it, so the two estimates can differ slightly:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># calculate accessibility</span></span>
-<span><span class="va">access_edu</span> <span class="op">&lt;-</span> <span class="fu">accessibility</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/accessibility/man/cumulative_cutoff.html" class="external-link">cumulative_cutoff</a></span><span class="op">(</span></span>
+<span><span class="va">access_edu</span> <span class="op">&lt;-</span> <span class="fu">accessibility</span><span class="fu">::</span><span class="fu"><a href="https://ipea.github.io/accessibility/reference/cumulative_cutoff.html" class="external-link">cumulative_cutoff</a></span><span class="op">(</span></span>
 <span>  travel_matrix <span class="op">=</span> <span class="va">ttm</span>, </span>
 <span>  land_use_data <span class="op">=</span> <span class="va">points</span>,</span>
 <span>  opportunity <span class="op">=</span> <span class="st">'schools'</span>,</span>
@@ -237,20 +237,19 @@ than it, so the two estimates can differ slightly:</p>
 <span>  cutoff <span class="op">=</span> <span class="fl">20</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="va">access_health</span> <span class="op">&lt;-</span> <span class="fu">accessibility</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/accessibility/man/cumulative_cutoff.html" class="external-link">cumulative_cutoff</a></span><span class="op">(</span></span>
+<span><span class="va">access_health</span> <span class="op">&lt;-</span> <span class="fu">accessibility</span><span class="fu">::</span><span class="fu"><a href="https://ipea.github.io/accessibility/reference/cumulative_cutoff.html" class="external-link">cumulative_cutoff</a></span><span class="op">(</span></span>
 <span>  travel_matrix <span class="op">=</span> <span class="va">ttm</span>, </span>
 <span>  land_use_data <span class="op">=</span> <span class="va">points</span>,</span>
 <span>  opportunity <span class="op">=</span> <span class="st">'healthcare'</span>,</span>
 <span>  travel_cost <span class="op">=</span> <span class="st">'travel_time_p50'</span>,</span>
 <span>  cutoff <span class="op">=</span> <span class="fl">20</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: 'land_use_data$healthcare' contains NA values, which may produce NAs</span></span>
-<span><span class="co">#&gt; in the final output.</span></span>
+<span><span class="co">#&gt; Warning: `land_use_data$healthcare` contains NA values, which are</span></span>
+<span><span class="co">#&gt; treated as 0.</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">access_edu</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Key: &lt;id&gt;</span></span>
 <span><span class="co">#&gt;                 id schools</span></span>
-<span><span class="co">#&gt;             &lt;char&gt;   &lt;int&gt;</span></span>
+<span><span class="co">#&gt;             &lt;char&gt;   &lt;num&gt;</span></span>
 <span><span class="co">#&gt; 1: 89a9012124fffff       1</span></span>
 <span><span class="co">#&gt; 2: 89a9012126bffff       4</span></span>
 <span><span class="co">#&gt; 3: 89a9012127bffff       2</span></span>
@@ -258,9 +257,8 @@ than it, so the two estimates can differ slightly:</p>
 <span><span class="co">#&gt; 5: 89a90128007ffff       5</span></span>
 <span><span class="co">#&gt; 6: 89a9012800bffff       8</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">access_health</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Key: &lt;id&gt;</span></span>
 <span><span class="co">#&gt;                 id healthcare</span></span>
-<span><span class="co">#&gt;             &lt;char&gt;      &lt;int&gt;</span></span>
+<span><span class="co">#&gt;             &lt;char&gt;      &lt;num&gt;</span></span>
 <span><span class="co">#&gt; 1: 89a9012124fffff          0</span></span>
 <span><span class="co">#&gt; 2: 89a9012126bffff          1</span></span>
 <span><span class="co">#&gt; 3: 89a9012127bffff          1</span></span>

@@ -31,6 +31,18 @@
 
 **Bug fixes**
 
+- R5’s McRaptor algorithm fails with a cryptic Java error (“Monte Carlo
+  draws set to UI default”) when it routes exactly 200 Monte Carlo
+  draws,
+  e.g. [`pareto_frontier()`](https://ipea.github.io/r5r/dev/reference/pareto_frontier.md)
+  with `time_window = 200`,
+  [`detailed_itineraries()`](https://ipea.github.io/r5r/dev/reference/detailed_itineraries.md)
+  with `time_window = 200` and `shortest_path = FALSE` or a
+  `fare_structure`, or
+  [`travel_time_matrix()`](https://ipea.github.io/r5r/dev/reference/travel_time_matrix.md)
+  with a `fare_structure`, `time_window = 40` and
+  `draws_per_minute = 5`. These calls now raise an informative error.
+  Closes [\#602](https://github.com/ipea/r5r/issues/602).
 - [\#607](https://github.com/ipea/r5r/pull/607)
   [`detailed_itineraries()`](https://ipea.github.io/r5r/dev/reference/detailed_itineraries.md)
   now retains the final partial street segment and the connection to the
