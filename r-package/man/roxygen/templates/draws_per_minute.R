@@ -11,4 +11,5 @@
 #'   parameter then affects the results with or without frequencies. R5's
 #'   McRaptor cannot sample many departure times per minute over long windows,
 #'   so such combinations raise an error (e.g. 8 draws per minute in a
-#'   10-minute window, or 5 in a window of 150 minutes or more).
+#'   10-minute window, or 5 in a window of 150 minutes or more), as does a
+#'   total of exactly 200 draws.

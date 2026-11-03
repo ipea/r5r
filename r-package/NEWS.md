@@ -6,6 +6,7 @@
 
 **Bug fixes**
 
+- R5's McRaptor algorithm fails with a cryptic Java error ("Monte Carlo draws set to UI default") when it routes exactly 200 Monte Carlo draws, e.g. `pareto_frontier()` with `time_window = 200`, `detailed_itineraries()` with `time_window = 200` and `shortest_path = FALSE` or a `fare_structure`, or `travel_time_matrix()` with a `fare_structure`, `time_window = 40` and `draws_per_minute = 5`. These calls now raise an informative error. Closes [#602](https://github.com/ipea/r5r/issues/602).
 - [#607](https://github.com/ipea/r5r/pull/607) `detailed_itineraries()` now retains the final partial street segment and the connection to the destination in transit egress legs. Backward searches associate partial distances and directional costs with the correct street endpoint. Both RAPTOR and McRAPTOR use the complete egress cost for routing, duration limits and output, including RAPTOR searches shared across destinations. Results can change, particularly for destinations on long street segments.
 
 # r5r 2.5.0

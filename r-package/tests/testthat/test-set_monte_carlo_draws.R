@@ -207,4 +207,40 @@ test_that("infeasible draws are rejected with a fare_structure", {
 
   # without a fare_structure there is no limit
   expect_true(tester(61, 180, fs = NULL))
+
+  # McRaptor rejects exactly 200 draws as an unset UI default
+  expect_error(tester(5, 40), class = "r5r_200_draws")
+  expect_error(
+    set_monte_carlo_draws(mock_network, 1, 200, mcraptor = TRUE),
+    class = "r5r_200_draws"
+  )
+  expect_true(set_monte_carlo_draws(mock_network, 1, 200))
+})
+
+test_that("exactly 200 McRaptor draws are rejected before routing (#602)", {
+  expect_error(
+    pareto_frontier(
+      r5r_network,
+      origins = points[1:2],
+      destinations = points[1:2],
+      mode = c("TRANSIT", "WALK"),
+      departure_datetime = departure_datetime,
+      time_window = 200,
+      fare_structure = fare_structure,
+      fare_cutoffs = c(0, 5)
+    ),
+    class = "r5r_200_draws"
+  )
+  expect_error(
+    detailed_itineraries(
+      r5r_network,
+      origins = points[1:2],
+      destinations = points[2:3],
+      mode = c("TRANSIT", "WALK"),
+      departure_datetime = departure_datetime,
+      time_window = 200,
+      shortest_path = FALSE
+    ),
+    class = "r5r_200_draws"
+  )
 })
