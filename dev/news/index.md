@@ -26,8 +26,9 @@
   stop is ranked by its time in the direction of travel, as it is
   reported; and ties between equally fast trips may resolve to a
   different route. Alternative routes (`shortest_path = FALSE`) and
-  fares still use McRAPTOR. Closed
-  [\#464](https://github.com/ipea/r5r/issues/464).
+  fares still use McRAPTOR. If RAPTOR cannot build the itinerary of a
+  pair, that pair falls back to McRAPTOR instead of the whole call
+  failing. Closed [\#464](https://github.com/ipea/r5r/issues/464).
 
 **Bug fixes**
 
