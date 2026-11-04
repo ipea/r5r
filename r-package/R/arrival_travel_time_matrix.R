@@ -13,10 +13,10 @@
 #' information; split larger sets into chunks.
 #'
 #' @inheritParams expanded_travel_time_matrix
-#' @param arrival_datetime A POSIXct object. The time by which trips must
+#' @param arrival_datetime A POSIXct object, required for all modes. The time by which trips must
 #'   arrive. When routing with public transport, services must run on the date
 #'   of `arrival_datetime - max_trip_duration` (see
-#'   [check_transit_availability()]). Defaults to `Sys.time()`. See details for
+#'   [check_transit_availability()]). See details for
 #'   how datetimes are parsed.
 #'
 #' @return A `data.table` with one row per origin-destination pair that can be
@@ -88,7 +88,7 @@ arrival_travel_time_matrix <- function(r5r_network,
                                        destinations,
                                        mode = "WALK",
                                        mode_egress = "WALK",
-                                       arrival_datetime = Sys.time(),
+                                       arrival_datetime,
                                        breakdown = FALSE,
                                        max_walk_time = Inf,
                                        max_bike_time = Inf,
@@ -120,7 +120,11 @@ arrival_travel_time_matrix <- function(r5r_network,
     r5r_network <- r5r_core
   }
 
-  if (missing(arrival_datetime)) warn_default_datetime(mode, "arrival_datetime")
+  if (missing(arrival_datetime) || is.null(arrival_datetime)) {
+    cli::cli_abort(
+      "{.arg arrival_datetime} is required. Supply a POSIXct value specifying when trips must arrive. For trips that do not depend on time, use {.fun travel_time_matrix}."
+    )
+  }
 
   old_options <- options(datatable.optimize = Inf)
   on.exit(options(old_options), add = TRUE)
@@ -167,7 +171,7 @@ arrival_travel_time_matrix <- function(r5r_network,
 
   # calculate departure datetime
   departure_datetime <- arrival_datetime - as.difftime(max_trip_duration, units = "mins")
-  departure <- assign_departure(departure_datetime)
+  departure <- assign_departure(departure_datetime, mode_list)
 
   # check availability of transit services on the selected date
   if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR') {

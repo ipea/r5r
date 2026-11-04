@@ -4,7 +4,7 @@
 \alias{assign_departure}
 \title{Check and convert POSIXct objects to strings}
 \usage{
-assign_departure(datetime)
+assign_departure(datetime, mode_list)
 }
 \arguments{
 \item{datetime}{An object of POSIXct class.}

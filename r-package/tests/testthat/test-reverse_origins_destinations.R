@@ -45,6 +45,7 @@ attm_regular <- arrival_travel_time_matrix(
   origins = spo_points2,
   destinations = spo_points,
   mode = "walk",
+  arrival_datetime = Sys.time(),
   max_trip_duration = 600
 )
 
@@ -53,6 +54,7 @@ attm_reverse <- arrival_travel_time_matrix(
   origins = spo_points,
   destinations = spo_points2,
   mode = "walk",
+  arrival_datetime = Sys.time(),
   bike_speed = 100,
   max_trip_duration = 600
 )
@@ -99,18 +101,19 @@ testthat::expect_true(length(unique(ettm_reverse$to_id)) == npoints2)
 
 spo_points5 <- spo_points[1:5, ]  # 5 origins > 2 destinations would trigger the swap
 
-check_csv_orientation <- function(fun) {
+check_csv_orientation <- function(fun, ...) {
   out_dir <- tempfile("r5r_reverse_csv_")
   dir.create(out_dir)
   on.exit(unlink(out_dir, recursive = TRUE), add = TRUE)
 
   fun(
-    spo_network,
+    r5r_network = spo_network,
     origins = spo_points5,
     destinations = spo_points2,
     mode = "walk",
     max_trip_duration = 600,
-    output_dir = out_dir
+    output_dir = out_dir,
+    ...
   )
 
   csv_files <- list.files(out_dir, pattern = "\\.csv$")
@@ -126,7 +129,7 @@ check_csv_orientation <- function(fun) {
 }
 
 check_csv_orientation(travel_time_matrix)
-check_csv_orientation(arrival_travel_time_matrix)
+check_csv_orientation(arrival_travel_time_matrix, arrival_datetime = Sys.time())
 check_csv_orientation(expanded_travel_time_matrix)
 
 

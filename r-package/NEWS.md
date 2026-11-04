@@ -5,7 +5,8 @@
 - [#603](https://github.com/ipea/r5r/pull/603) `detailed_itineraries()` with `shortest_path = TRUE` (the default) and no `fare_structure` now routes public transport with R5's RAPTOR algorithm (the one used by `travel_time_matrix()`) instead of McRAPTOR. The output has the same columns, but the call is much faster: on the Porto Alegre sample data (50 × 50 origin-destination pairs, public transport), about 40 times faster than r5r 2.4.0 with `all_to_all = TRUE` and `max_trip_duration = 60` (28 times with the same 2,500 pairs given row by row, since with `all_to_all = TRUE` one search per origin serves all its destinations), and 150 to 225 times faster with `max_trip_duration = 120` or `time_window = 30`. Results can differ slightly: departures are routed every minute of `time_window` instead of at random seconds, so the itinerary returned is never more than about a minute slower and often faster; walking transfers between stops are limited by `max_walk_time`; stops where the GTFS `pickup_type` or `drop_off_type` does not allow boarding or alighting are respected; on networks with elevation data, the walk from the last stop is ranked by its time in the direction of travel, as it is reported; and ties between equally fast trips may resolve to a different route. Alternative routes (`shortest_path = FALSE`) and fares still use McRAPTOR. If RAPTOR cannot build the itinerary of a pair, that pair falls back to McRAPTOR instead of the whole call failing. Closed [#464](https://github.com/ipea/r5r/issues/464).
 
 **Bug fixes**
-
+- [#549](https://github.com/ipeaGIT/r5r/pull/549) Remove default departure time from function parameters when not using a transit mode. Closed [#486](https://github.com/ipeaGIT/r5r/issues/486). If using a transit schedule not specifying a departure time will provide un-controlled results.
+- [#549](https://github.com/ipeaGIT/r5r/pull/549) Remove default departure time form `aarival_travel_time_matrix` for all modes.
 - R5's McRaptor algorithm fails with a cryptic Java error ("Monte Carlo draws set to UI default") when it routes exactly 200 Monte Carlo draws, e.g. `pareto_frontier()` with `time_window = 200`, `detailed_itineraries()` with `time_window = 200` and `shortest_path = FALSE` or a `fare_structure`, or `travel_time_matrix()` with a `fare_structure`, `time_window = 40` and `draws_per_minute = 5`. These calls now raise an informative error. Closes [#602](https://github.com/ipea/r5r/issues/602).
 - [#607](https://github.com/ipea/r5r/pull/607) `detailed_itineraries()` now retains the final partial street segment and the connection to the destination in transit egress legs. Backward searches associate partial distances and directional costs with the correct street endpoint. Both RAPTOR and McRAPTOR use the complete egress cost for routing, duration limits and output, including RAPTOR searches shared across destinations. Results can change, particularly for destinations on long street segments.
 
@@ -18,7 +19,7 @@
 
 **Deprecations**
 
-- Relying on the default `departure_datetime = Sys.time()` (`arrival_datetime` in `arrival_travel_time_matrix()`) when routing on public transport is deprecated and now raises a warning, because the results then depend on when the code is run. Please set the argument explicitly: the default will be removed in a future release. See [#549](https://github.com/ipea/r5r/pull/549).
+- Public transport routing now requires an explicit `departure_datetime` as this was not intended behaviour. See *Bug fixes* for more info and [#549](https://github.com/ipea/r5r/pull/549).
 
 **Bug fixes**
 

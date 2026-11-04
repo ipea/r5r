@@ -171,7 +171,21 @@ assign_mode <- function(mode, mode_egress) {
 #' @family assigning functions
 #'
 #' @keywords internal
-assign_departure <- function(datetime) {
+assign_departure <- function(datetime, mode_list) {
+  if (is.null(datetime)) {
+    if (mode_list$transit_mode == "") {
+      datetime <- Sys.time()
+    } else {
+      cli::cli_abort(
+        c(
+          "!" = "You must pass a {.arg departure_datetime} for public transport routing.",
+          "i" = "Results depend on the departure time. Supply an explicit POSIXct value to make results reproducible."
+        )
+      )
+    }
+  }
+
+
   checkmate::assert_posixct(
     datetime,
     len = 1,

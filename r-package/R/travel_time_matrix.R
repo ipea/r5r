@@ -117,7 +117,7 @@ travel_time_matrix <- function(r5r_network,
                                destinations,
                                mode = "WALK",
                                mode_egress = "WALK",
-                               departure_datetime = Sys.time(),
+                               departure_datetime = NULL,
                                time_window = 10L,
                                percentiles = 50L,
                                max_walk_time = Inf,
@@ -152,8 +152,6 @@ travel_time_matrix <- function(r5r_network,
     r5r_network <- r5r_core
   }
 
-  if (missing(departure_datetime)) warn_default_datetime(mode)
-
   old_options <- options(datatable.optimize = Inf)
   on.exit(options(old_options), add = TRUE)
 
@@ -167,7 +165,7 @@ travel_time_matrix <- function(r5r_network,
   origins <- assign_points_input(origins, "origins")
   destinations <- assign_points_input(destinations, "destinations")
   mode_list <- assign_mode(mode, mode_egress)
-  departure <- assign_departure(departure_datetime)
+  departure <- assign_departure(departure_datetime, mode_list)
 
   # check availability of transit services on the selected date
   if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR') {

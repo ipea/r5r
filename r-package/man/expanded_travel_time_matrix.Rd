@@ -10,7 +10,7 @@ expanded_travel_time_matrix(
   destinations,
   mode = "WALK",
   mode_egress = "WALK",
-  departure_datetime = Sys.time(),
+  departure_datetime = NULL,
   time_window = 10L,
   breakdown = FALSE,
   max_walk_time = Inf,
@@ -50,7 +50,8 @@ from the last public transport. It can be either \code{WALK}, \code{BICYCLE} or
 \item{departure_datetime}{A POSIXct object. Only affects public transport
 legs; when routing with public transport, it must fall within the service
 period of the GTFS feeds (\code{calendar.txt}; see
-\code{\link[=check_transit_availability]{check_transit_availability()}}). Defaults to \code{Sys.time()}. See details for
+\code{\link[=check_transit_availability]{check_transit_availability()}}). Required for public transport; optional
+otherwise. See details for
 how datetimes are parsed.}
 
 \item{time_window}{An integer. The time window in minutes for which \code{r5r}
