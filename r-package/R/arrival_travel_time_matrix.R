@@ -16,7 +16,7 @@
 #' @param arrival_datetime A POSIXct object. The time by which trips must
 #'   arrive. When routing with public transport, services must run on the date
 #'   of `arrival_datetime - max_trip_duration` (see
-#'   [check_transit_availability()]). Defaults to `Sys.time()`. See details for
+#'   [check_transit_availability()]). See details for
 #'   how datetimes are parsed.
 #'
 #' @return A `data.table` with one row per origin-destination pair that can be
@@ -120,7 +120,11 @@ arrival_travel_time_matrix <- function(r5r_network,
     r5r_network <- r5r_core
   }
 
-  if (missing(arrival_datetime)) warn_default_datetime(mode, "arrival_datetime")
+  if (missing(arrival_datetime) || is.null(arrival_datetime)) {
+    cli::cli_abort(
+      "{.arg arrival_datetime} is required. Supply a POSIXct value specifying when trips must arrive. For trips that do not depend on time, use {.fun travel_time_matrix}."
+    )
+  }
 
   old_options <- options(datatable.optimize = Inf)
   on.exit(options(old_options), add = TRUE)
