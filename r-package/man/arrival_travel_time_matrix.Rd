@@ -47,10 +47,10 @@ other options.}
 from the last public transport. It can be either \code{WALK}, \code{BICYCLE} or
 \code{CAR}. Defaults to \code{WALK}. Ignored when public transport is not used.}
 
-\item{arrival_datetime}{A POSIXct object. The time by which trips must
+\item{arrival_datetime}{A POSIXct object, required for all modes. The time by which trips must
 arrive. When routing with public transport, services must run on the date
 of \code{arrival_datetime - max_trip_duration} (see
-\code{\link[=check_transit_availability]{check_transit_availability()}}). Defaults to \code{Sys.time()}. See details for
+\code{\link[=check_transit_availability]{check_transit_availability()}}). See details for
 how datetimes are parsed.}
 
 \item{breakdown}{A logical. Whether to include detailed information about

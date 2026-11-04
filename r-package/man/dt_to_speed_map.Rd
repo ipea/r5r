@@ -22,7 +22,8 @@ to a Java Map<Long, Float> for use by r5r_network.
 Other java support functions:
 \code{\link[=dt_to_lts_map]{dt_to_lts_map()}},
 \code{\link[=get_java_version]{get_java_version()}},
-\code{\link[=java_to_dt]{java_to_dt()}}
+\code{\link[=java_to_dt]{java_to_dt()}},
+\code{\link[=run_routing_job]{run_routing_job()}}
 }
 \concept{java support functions}
 \keyword{internal}

@@ -61,7 +61,8 @@ defined, see
 \item{departure_datetime}{A POSIXct object. Only affects public transport
 legs; when routing with public transport, it must fall within the service
 period of the GTFS feeds (\code{calendar.txt}; see
-\code{\link[=check_transit_availability]{check_transit_availability()}}). Defaults to \code{Sys.time()}. See details for
+\code{\link[=check_transit_availability]{check_transit_availability()}}). Required for public transport; optional
+otherwise. See details for
 how datetimes are parsed.}
 
 \item{polygon_output}{A Logical. If \code{TRUE}, the function outputs
