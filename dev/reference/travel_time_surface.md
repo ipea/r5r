@@ -12,7 +12,7 @@ travel_time_surface(
   zoom = 10,
   mode = "WALK",
   mode_egress = "WALK",
-  departure_datetime = Sys.time(),
+  departure_datetime = NULL,
   time_window = 10L,
   percentiles = 50L,
   max_walk_time = Inf,
@@ -76,74 +76,76 @@ travel_time_surface(
   with public transport, it must fall within the service period of the
   GTFS feeds (`calendar.txt`; see
   [`check_transit_availability()`](https://ipea.github.io/r5r/dev/reference/check_transit_availability.md)).
-  Defaults to [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html). See
-  details for how datetimes are parsed.
+  Required for public transport; optional otherwise. See details for how
+  datetimes are parsed.
 
 - time_window:
 
-  An integer. The time window in minutes for which `r5r` will calculate
-  multiple travel time matrices departing each minute (or, with a
-  `fare_structure`, at departure times sampled at random within the
-  window; see `draws_per_minute`). Defaults to 10 minutes. The function
-  returns the result based on median travel times. See
+  An integer. The time window in minutes. Departures are simulated every
+  minute from `departure_datetime` until `time_window` minutes later,
+  and travel times are summarized over these departures using
+  `percentiles` (the median by default). With a `fare_structure`, and
+  always in
+  [`pareto_frontier()`](https://ipea.github.io/r5r/dev/reference/pareto_frontier.md),
+  departures are instead sampled at random within the window:
+  `draws_per_minute` per minute on average (one in
+  [`pareto_frontier()`](https://ipea.github.io/r5r/dev/reference/pareto_frontier.md)),
+  different for each origin and the same in every call from the same
+  origin with the same `seed`. Defaults to 10. See
   [`vignette("time_window", package = "r5r")`](https://ipea.github.io/r5r/dev/articles/time_window.md).
 
 - percentiles:
 
-  An integer vector (max length of 5, an `R5` limit). The travel time
-  percentiles within the time window from which accessibility is
-  calculated. They apply to travel times, not to the accessibility
-  distribution: with 25, accessibility is calculated from the 25th
-  percentile travel time, which may differ from the 25th percentile of
-  accessibility. Defaults to 50 (the median travel time). With more than
-  one value, the output gets a column identifying the percentile of each
-  estimate. See the `R5` documentation at
+  An integer vector (max length of 5). Specifies the percentile to use
+  when returning travel time estimates within the given time window. For
+  example, if the 25th travel time percentile between A and B is 15
+  minutes, 25% of all trips taken between these points within the
+  specified time window are shorter than 15 minutes. Defaults to 50,
+  returning the median travel time. If a vector with length bigger than
+  1 is passed, the output contains an additional column for each
+  percentile specifying the percentile travel time estimate. Due to
+  upstream restrictions, only 5 percentiles can be specified at a time.
+  See the R5 documentation at
   <https://docs.conveyal.com/analysis/methodology#accounting-for-variability>.
 
 - max_walk_time:
 
   An integer. The maximum walking time (in minutes) to access and egress
-  the transit network, or to make transfers within the network. Defaults
-  to no restrictions, as long as `max_trip_duration` is respected. The
-  max time is considered separately for each leg (e.g. if you set
-  `max_walk_time` to 15, you could potentially walk up to 15 minutes to
-  reach transit, and up to *another* 15 minutes to reach the destination
-  after leaving transit). Defaults to `Inf`, no limit.
+  the transit network, make transfers, or complete walk-only trips.
+  Applies to each leg separately (e.g. `15` allows up to 15 minutes to
+  reach transit and another 15 after leaving it). Defaults to `Inf` (no
+  limit besides `max_trip_duration`). In walk-only trips, the lower of
+  `max_walk_time` and `max_trip_duration` applies.
 
 - max_bike_time:
 
   An integer. The maximum cycling time (in minutes) to access and egress
-  the transit network. Defaults to no restrictions, as long as
-  `max_trip_duration` is respected. The max time is considered
-  separately for each leg (e.g. if you set `max_bike_time` to 15
-  minutes, you could potentially cycle up to 15 minutes to reach
-  transit, and up to *another* 15 minutes to reach the destination after
-  leaving transit). Defaults to `Inf`, no limit.
+  the transit network, make transfers, or complete bicycle-only trips.
+  Applies to each leg separately (e.g. `15` allows up to 15 minutes to
+  reach transit and another 15 after leaving it). Defaults to `Inf` (no
+  limit besides `max_trip_duration`). In bicycle-only trips, the lower
+  of `max_bike_time` and `max_trip_duration` applies.
 
 - max_car_time:
 
   An integer. The maximum driving time (in minutes) to access and egress
-  the transit network, or to complete car-only trips. Defaults to no
-  restrictions, as long as `max_trip_duration` is respected. The max
-  time is considered separately for each leg (e.g. if you set
-  `max_car_time` to 15 minutes, you could potentially drive up to 15
-  minutes to reach transit, and up to *another* 15 minutes to reach the
-  destination after leaving transit). Defaults to `Inf`, no limit. In
-  car-only trips, whenever `max_car_time` differs from
-  `max_trip_duration`, the lowest value is considered.
+  the transit network, or to complete car-only trips. Applies to each
+  leg separately (e.g. `15` allows up to 15 minutes to reach transit and
+  another 15 after leaving it). Defaults to `Inf` (no limit besides
+  `max_trip_duration`). In car-only trips, the lower of `max_car_time`
+  and `max_trip_duration` applies.
 
 - max_trip_duration:
 
-  An integer. The maximum trip duration in minutes. Defaults to 120
-  minutes (2 hours).
+  An integer. The maximum trip duration in minutes. Defaults to 120.
 
 - walk_speed:
 
-  A numeric. Average walk speed in km/h. Defaults to 3.6 km/h.
+  A numeric. Average walk speed in km/h. Defaults to 3.6.
 
 - bike_speed:
 
-  A numeric. Average cycling speed in km/h. Defaults to 12 km/h.
+  A numeric. Average cycling speed in km/h. Defaults to 12.
 
 - max_rides:
 
@@ -241,7 +243,7 @@ travel_time_surface(
 - n_threads:
 
   An integer. The number of threads to use when running the router in
-  parallel. Defaults to use all available threads (`Inf`).
+  parallel. Defaults to `Inf` (all available threads).
 
 - verbose:
 
@@ -253,11 +255,8 @@ travel_time_surface(
 - progress:
 
   A logical. Whether to show a progress counter when running the router.
-  Defaults to `TRUE`. Only works when `verbose` is set to `FALSE`, so
-  the progress counter does not interfere with `R5`'s output messages.
-  Setting `progress` to `TRUE` may impose a small penalty for
-  computation efficiency, because the progress counter must be
-  synchronized among all active threads.
+  Defaults to `TRUE`. Only works when `verbose` is `FALSE`. May slightly
+  slow computation, as the counter is synchronized across threads.
 
 ## Value
 

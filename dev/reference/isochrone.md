@@ -19,7 +19,7 @@ isochrone(
   mode_egress = "walk",
   cutoffs = c(0, 15, 30),
   zoom = 10,
-  departure_datetime = Sys.time(),
+  departure_datetime = NULL,
   polygon_output = TRUE,
   time_window = 10L,
   max_walk_time = Inf,
@@ -87,8 +87,8 @@ isochrone(
   with public transport, it must fall within the service period of the
   GTFS feeds (`calendar.txt`; see
   [`check_transit_availability()`](https://ipea.github.io/r5r/dev/reference/check_transit_availability.md)).
-  Defaults to [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html). See
-  details for how datetimes are parsed.
+  Required for public transport; optional otherwise. See details for how
+  datetimes are parsed.
 
 - polygon_output:
 

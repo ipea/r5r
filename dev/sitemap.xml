@@ -53,6 +53,7 @@
 <url><loc>https://ipea.github.io/r5r/dev/reference/read_fare_structure.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/reverse_back_if_direct_mode.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/reverse_if_direct_mode.html</loc></url>
+<url><loc>https://ipea.github.io/r5r/dev/reference/run_routing_job.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/set_breakdown.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/set_cutoffs.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/set_elevation.html</loc></url>
@@ -85,7 +86,6 @@
 <url><loc>https://ipea.github.io/r5r/dev/reference/travel_time_matrix.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/travel_time_surface.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/validate_bad_osm_ids.html</loc></url>
-<url><loc>https://ipea.github.io/r5r/dev/reference/warn_default_datetime.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/wrap_r5r_network.html</loc></url>
 <url><loc>https://ipea.github.io/r5r/dev/reference/write_fare_structure.html</loc></url>
 </urlset>

@@ -79,7 +79,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Using the time_window parameter</h1>
             
-            <h4 data-toc-skip class="date">2026-11-03</h4>
+            <h4 data-toc-skip class="date">2026-11-04</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ipea/r5r/blob/HEAD/r-package/vignettes/time_window.Rmd" class="external-link"><code>vignettes/time_window.Rmd</code></a></small>
       <div class="d-none name"><code>time_window.Rmd</code></div>
@@ -221,13 +221,13 @@ departures between 2pm and 3pm (<code>time_window = 60</code>):</p>
 <span><span class="co">#&gt;              &lt;char&gt;      &lt;char&gt;      &lt;int&gt;  &lt;int&gt;         &lt;num&gt;</span></span>
 <span><span class="co">#&gt;  1: 89a8100c603ffff     schools         10     45            13</span></span>
 <span><span class="co">#&gt;  2: 89a8100c603ffff     schools         20     45            13</span></span>
-<span><span class="co">#&gt;  3: 89a8100c603ffff     schools         50     45             6</span></span>
+<span><span class="co">#&gt;  3: 89a8100c603ffff     schools         50     45             7</span></span>
 <span><span class="co">#&gt;  4: 89a8100c603ffff     schools         70     45             6</span></span>
 <span><span class="co">#&gt;  5: 89a8100c603ffff     schools         80     45             6</span></span>
 <span><span class="co">#&gt;  6: 89a8100c617ffff     schools         10     45            14</span></span>
 <span><span class="co">#&gt;  7: 89a8100c617ffff     schools         20     45            14</span></span>
 <span><span class="co">#&gt;  8: 89a8100c617ffff     schools         50     45            13</span></span>
-<span><span class="co">#&gt;  9: 89a8100c617ffff     schools         70     45             6</span></span>
+<span><span class="co">#&gt;  9: 89a8100c617ffff     schools         70     45             7</span></span>
 <span><span class="co">#&gt; 10: 89a8100c617ffff     schools         80     45             6</span></span></code></pre></div>
 <p>The output is in long format, one row per origin and percentile, so
 the first 5 rows refer to the same origin. The 10th percentile counts
@@ -345,16 +345,16 @@ be very memory intensive for large data sets and time windows.</p>
 <span><span class="co">#&gt; 10: 89a8100c603ffff 89a8100c28bffff       14:01:00           5 4491-10</span></span>
 <span><span class="co">#&gt;     total_time</span></span>
 <span><span class="co">#&gt;          &lt;num&gt;</span></span>
-<span><span class="co">#&gt;  1:       38.5</span></span>
-<span><span class="co">#&gt;  2:       38.8</span></span>
-<span><span class="co">#&gt;  3:       43.5</span></span>
-<span><span class="co">#&gt;  4:       43.8</span></span>
-<span><span class="co">#&gt;  5:       46.6</span></span>
-<span><span class="co">#&gt;  6:       36.4</span></span>
-<span><span class="co">#&gt;  7:       40.8</span></span>
-<span><span class="co">#&gt;  8:       43.0</span></span>
-<span><span class="co">#&gt;  9:       46.7</span></span>
-<span><span class="co">#&gt; 10:       54.4</span></span></code></pre></div>
+<span><span class="co">#&gt;  1:       42.8</span></span>
+<span><span class="co">#&gt;  2:       43.9</span></span>
+<span><span class="co">#&gt;  3:       44.1</span></span>
+<span><span class="co">#&gt;  4:       53.6</span></span>
+<span><span class="co">#&gt;  5:       53.8</span></span>
+<span><span class="co">#&gt;  6:       37.0</span></span>
+<span><span class="co">#&gt;  7:       41.3</span></span>
+<span><span class="co">#&gt;  8:       47.0</span></span>
+<span><span class="co">#&gt;  9:       47.2</span></span>
+<span><span class="co">#&gt; 10:       47.6</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="detailed-itineraries-with-time_window-">3.5 Detailed itineraries with <code>time_window</code>.<a class="anchor" aria-label="anchor" href="#detailed-itineraries-with-time_window-"></a>

@@ -65,7 +65,7 @@ containing travel times from a specified point.</p>
 <span>  zoom <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"WALK"</span>,</span>
 <span>  mode_egress <span class="op">=</span> <span class="st">"WALK"</span>,</span>
-<span>  departure_datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  departure_datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_window <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  percentiles <span class="op">=</span> <span class="fl">50L</span>,</span>
 <span>  max_walk_time <span class="op">=</span> <span class="cn">Inf</span>,</span>
@@ -114,8 +114,8 @@ more information on how the grid cells are defined, see
 
 <dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>
 <dd><p>A character vector. The transport modes allowed for access,
-transfer and vehicle legs of the trips. Defaults to <code>WALK</code>. See
-details for other options.</p></dd>
+transfer and vehicle legs of the trips. Defaults to <code>WALK</code>. See details for
+other options.</p></dd>
 
 
 <dt id="arg-mode-egress">mode_egress<a class="anchor" aria-label="anchor" href="#arg-mode-egress"></a></dt>
@@ -126,77 +126,77 @@ from the last public transport. It can be either <code>WALK</code>, <code>BICYCL
 
 <dt id="arg-departure-datetime">departure_datetime<a class="anchor" aria-label="anchor" href="#arg-departure-datetime"></a></dt>
 <dd><p>A POSIXct object. Only affects public transport
-legs; when routing with public transport, it must fall within the
-service period of the GTFS feeds (<code>calendar.txt</code>; see
-<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Defaults to <code><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time()</a></code>. See
-details for how datetimes are parsed.</p></dd>
+legs; when routing with public transport, it must fall within the service
+period of the GTFS feeds (<code>calendar.txt</code>; see
+<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Required for public transport; optional
+otherwise. See details for
+how datetimes are parsed.</p></dd>
 
 
 <dt id="arg-time-window">time_window<a class="anchor" aria-label="anchor" href="#arg-time-window"></a></dt>
-<dd><p>An integer. The time window in minutes for which <code>r5r</code>
-will calculate multiple travel time matrices departing each minute
-(or, with a <code>fare_structure</code>, at departure times sampled at random
-within the window; see <code>draws_per_minute</code>). Defaults to 10 minutes.
-The function returns the result based on median travel times. See
-<code><a href="../articles/time_window.html">vignette("time_window", package = "r5r")</a></code>.</p></dd>
+<dd><p>An integer. The time window in minutes. Departures are
+simulated every minute from <code>departure_datetime</code> until <code>time_window</code>
+minutes later, and travel times are summarized over these departures using
+<code>percentiles</code> (the median by default). With a <code>fare_structure</code>, and always
+in <code><a href="pareto_frontier.html">pareto_frontier()</a></code>, departures are instead sampled at random within
+the window: <code>draws_per_minute</code> per minute on average (one in
+<code><a href="pareto_frontier.html">pareto_frontier()</a></code>), different for each origin and the same in every call
+from the same origin with the same <code>seed</code>.
+Defaults to 10. See <code><a href="../articles/time_window.html">vignette("time_window", package = "r5r")</a></code>.</p></dd>
 
 
 <dt id="arg-percentiles">percentiles<a class="anchor" aria-label="anchor" href="#arg-percentiles"></a></dt>
-<dd><p>An integer vector (max length of 5, an <code>R5</code> limit). The
-travel time percentiles within the time window from which accessibility is
-calculated. They apply to travel times, not to the accessibility
-distribution: with 25, accessibility is calculated from the 25th
-percentile travel time, which may differ from the 25th percentile of
-accessibility. Defaults to 50 (the median travel time). With more than one
-value, the output gets a column identifying the percentile of each
-estimate. See the <code>R5</code> documentation at
+<dd><p>An integer vector (max length of 5). Specifies the
+percentile to use when returning travel time estimates within the given
+time window. For example, if the 25th travel time percentile between A and
+B is 15 minutes, 25% of all trips taken between these points within the
+specified time window are shorter than 15 minutes. Defaults to 50,
+returning the median travel time. If a vector with length bigger than 1 is
+passed, the output contains an additional column for each percentile
+specifying the percentile travel time estimate. Due to
+upstream restrictions, only 5 percentiles can be specified at a time. See
+the R5 documentation at
 <a href="https://docs.conveyal.com/analysis/methodology#accounting-for-variability" class="external-link">https://docs.conveyal.com/analysis/methodology#accounting-for-variability</a>.</p></dd>
 
 
 <dt id="arg-max-walk-time">max_walk_time<a class="anchor" aria-label="anchor" href="#arg-max-walk-time"></a></dt>
 <dd><p>An integer. The maximum walking time (in minutes) to
-access and egress the transit network, or to make transfers within the
-network. Defaults to no restrictions, as long as <code>max_trip_duration</code>
-is respected. The max time is considered separately for each leg (e.g.
-if you set <code>max_walk_time</code> to 15, you could potentially walk up to 15
-minutes to reach transit, and up to <em>another</em> 15 minutes to reach the
-destination after leaving transit). Defaults to <code>Inf</code>, no limit.</p></dd>
+access and egress the transit network, make transfers, or complete
+walk-only trips. Applies to each leg separately (e.g. <code>15</code> allows up to 15
+minutes to reach transit and another 15 after leaving it). Defaults to
+<code>Inf</code> (no limit besides <code>max_trip_duration</code>). In walk-only trips, the lower
+of <code>max_walk_time</code> and <code>max_trip_duration</code> applies.</p></dd>
 
 
 <dt id="arg-max-bike-time">max_bike_time<a class="anchor" aria-label="anchor" href="#arg-max-bike-time"></a></dt>
 <dd><p>An integer. The maximum cycling time (in minutes) to
-access and egress the transit network. Defaults to no restrictions, as
-long as <code>max_trip_duration</code> is respected. The max time is considered
-separately for each leg (e.g. if you set <code>max_bike_time</code> to 15 minutes,
-you could potentially cycle up to 15 minutes to reach transit, and up
-to <em>another</em> 15 minutes to reach the destination after leaving
-transit). Defaults to <code>Inf</code>, no limit.</p></dd>
+access and egress the transit network, make transfers, or complete
+bicycle-only trips. Applies to each leg separately (e.g. <code>15</code> allows up to
+15 minutes to reach transit and another 15 after leaving it). Defaults to
+<code>Inf</code> (no limit besides <code>max_trip_duration</code>). In bicycle-only trips, the
+lower of <code>max_bike_time</code> and <code>max_trip_duration</code> applies.</p></dd>
 
 
 <dt id="arg-max-car-time">max_car_time<a class="anchor" aria-label="anchor" href="#arg-max-car-time"></a></dt>
 <dd><p>An integer. The maximum driving time (in minutes) to
-access and egress the transit network, or to complete car-only
-trips. Defaults to no restrictions, as long as <code>max_trip_duration</code>
-is respected. The max time is considered
-separately for each leg (e.g. if you set <code>max_car_time</code> to 15 minutes,
-you could potentially drive up to 15 minutes to reach transit, and up
-to <em>another</em> 15 minutes to reach the destination after leaving transit).
-Defaults to <code>Inf</code>, no limit. In car-only trips, whenever
-<code>max_car_time</code> differs from <code>max_trip_duration</code>, the lowest value is
-considered.</p></dd>
+access and egress the transit network, or to complete car-only trips.
+Applies to each leg separately (e.g. <code>15</code> allows up to 15 minutes to reach
+transit and another 15 after leaving it). Defaults to <code>Inf</code> (no limit
+besides <code>max_trip_duration</code>). In car-only trips, the lower of
+<code>max_car_time</code> and <code>max_trip_duration</code> applies.</p></dd>
 
 
 <dt id="arg-max-trip-duration">max_trip_duration<a class="anchor" aria-label="anchor" href="#arg-max-trip-duration"></a></dt>
 <dd><p>An integer. The maximum trip duration in minutes.
-Defaults to 120 minutes (2 hours).</p></dd>
+Defaults to 120.</p></dd>
 
 
 <dt id="arg-walk-speed">walk_speed<a class="anchor" aria-label="anchor" href="#arg-walk-speed"></a></dt>
-<dd><p>A numeric. Average walk speed in km/h. Defaults to 3.6 km/h.</p></dd>
+<dd><p>A numeric. Average walk speed in km/h. Defaults to 3.6.</p></dd>
 
 
 <dt id="arg-bike-speed">bike_speed<a class="anchor" aria-label="anchor" href="#arg-bike-speed"></a></dt>
-<dd><p>A numeric. Average cycling speed in km/h. Defaults to 12 km/h.</p></dd>
+<dd><p>A numeric. Average cycling speed in km/h. Defaults to 12.</p></dd>
 
 
 <dt id="arg-max-rides">max_rides<a class="anchor" aria-label="anchor" href="#arg-max-rides"></a></dt>
@@ -206,9 +206,9 @@ allowed in the same trip. Defaults to 3.</p></dd>
 
 <dt id="arg-max-lts">max_lts<a class="anchor" aria-label="anchor" href="#arg-max-lts"></a></dt>
 <dd><p>An integer between 1 and 4. The maximum level of traffic
-stress that cyclists will tolerate. A value of 1 means cyclists will
-only travel through the quietest streets, while a value of 4 indicates
-cyclists can travel through any road. Defaults to 2. See details.</p></dd>
+stress that cyclists will tolerate. A value of 1 means cyclists will only
+travel through the quietest streets, while a value of 4 indicates cyclists
+can travel through any road. Defaults to 2. See details.</p></dd>
 
 
 <dt id="arg-fare-structure">fare_structure<a class="anchor" aria-label="anchor" href="#arg-fare-structure"></a></dt>
@@ -289,7 +289,7 @@ contain a <code>frequencies.txt</code> table. In functions that accept a <code>f
 
 <dt id="arg-n-threads">n_threads<a class="anchor" aria-label="anchor" href="#arg-n-threads"></a></dt>
 <dd><p>An integer. The number of threads to use when running the
-router in parallel. Defaults to use all available threads (<code>Inf</code>).</p></dd>
+router in parallel. Defaults to <code>Inf</code> (all available threads).</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -301,11 +301,9 @@ caught by <code>r5r</code>.</p></dd>
 
 <dt id="arg-progress">progress<a class="anchor" aria-label="anchor" href="#arg-progress"></a></dt>
 <dd><p>A logical. Whether to show a progress counter when running
-the router. Defaults to <code>TRUE</code>. Only works when <code>verbose</code> is set to
-<code>FALSE</code>, so the progress counter does not interfere with <code>R5</code>'s output
-messages. Setting <code>progress</code> to <code>TRUE</code> may impose a small penalty for
-computation efficiency, because the progress counter must be
-synchronized among all active threads.</p></dd>
+the router. Defaults to <code>TRUE</code>. Only works when <code>verbose</code> is <code>FALSE</code>.
+May slightly slow computation, as the counter is synchronized across
+threads.</p></dd>
 
 </dl></div>
     <div class="section level2">
