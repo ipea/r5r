@@ -4,10 +4,16 @@
 \alias{java_to_dt}
 \title{Java object to data.table}
 \usage{
-java_to_dt(obj)
+java_to_dt(obj, ids = NULL)
 }
 \arguments{
 \item{obj}{A Java Object reference}
+
+\item{ids}{An optional named list of character vectors, e.g.
+\code{list(from_id = origins$id, to_id = destinations$id)}, holding the
+ids sent to Java. String columns named here are transferred as
+integer positions in these vectors, which is much faster than
+transferring one Java string per row.}
 }
 \value{
 An R data.table
@@ -16,10 +22,10 @@ An R data.table
 Converts a Java object returned by r5r_network to an R \code{data.table}
 }
 \seealso{
-Other java support functions: 
-\code{\link{dt_to_lts_map}()},
-\code{\link{dt_to_speed_map}()},
-\code{\link{get_java_version}()}
+Other java support functions:
+\code{\link[=dt_to_lts_map]{dt_to_lts_map()}},
+\code{\link[=dt_to_speed_map]{dt_to_speed_map()}},
+\code{\link[=get_java_version]{get_java_version()}}
 }
 \concept{java support functions}
 \keyword{internal}

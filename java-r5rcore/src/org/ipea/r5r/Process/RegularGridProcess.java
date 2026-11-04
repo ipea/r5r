@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
+import org.ipea.r5r.R5.R5TravelTimeComputer;
 import org.ipea.r5r.RegularGridResult;
 import org.ipea.r5r.RoutingProperties;
 import org.locationtech.jts.geom.Envelope;
@@ -31,7 +32,7 @@ public class RegularGridProcess extends R5Process<RegularGridResult, RegularGrid
         
         // Calculate the extents of the transport network and request a pointset that size.
         // this will be fast after the first call as R5 transparently caches these pointsets.
-        Envelope env = routingProperties.transportNetworkWorking.getEnvelope();
+        Envelope env = routingProperties.getTransportNetwork().getEnvelope();
         extents = WebMercatorExtents.forWgsEnvelope(env, zoom);
     }
 
@@ -54,7 +55,7 @@ public class RegularGridProcess extends R5Process<RegularGridResult, RegularGrid
         request.north = extents.north;
         request.height = extents.height;
 
-        TravelTimeComputer computer = new TravelTimeComputer(request, transportNetwork);
+        TravelTimeComputer computer = new R5TravelTimeComputer(request, transportNetwork, routingProperties.monteCarloSeed);
         OneOriginResult result = computer.computeTravelTimes();
 
         return new RegularGridResult(result.travelTimes, request);

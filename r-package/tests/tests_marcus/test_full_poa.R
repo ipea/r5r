@@ -4,7 +4,7 @@ options(java.parameters = "-Xmx16G")
 # source("./R/fun/selecionar_data_gtfs.R")
 
 
-# devtools::install_github("ipeaGIT/r5r", subdir = "r-package")
+# devtools::install_github("ipea/r5r", subdir = "r-package")
 # library(r5r)
 devtools::load_all(".")
 library(data.table)

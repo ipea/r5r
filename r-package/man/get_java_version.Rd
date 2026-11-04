@@ -13,10 +13,10 @@ The number of the Java version
 Determine the Java version installed locally
 }
 \seealso{
-Other java support functions: 
-\code{\link{dt_to_lts_map}()},
-\code{\link{dt_to_speed_map}()},
-\code{\link{java_to_dt}()}
+Other java support functions:
+\code{\link[=dt_to_lts_map]{dt_to_lts_map()}},
+\code{\link[=dt_to_speed_map]{dt_to_speed_map()}},
+\code{\link[=java_to_dt]{java_to_dt()}}
 }
 \concept{java support functions}
 \keyword{internal}

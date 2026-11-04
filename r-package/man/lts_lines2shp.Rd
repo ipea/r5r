@@ -30,8 +30,8 @@ shp_path <- r5r:::lts_lines2shp(
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-Other Support functions: 
-\code{\link{congestion_poly2geojson}()}
+Other Support functions:
+\code{\link[=congestion_poly2geojson]{congestion_poly2geojson()}}
 }
 \concept{Support functions}
 \keyword{internal}

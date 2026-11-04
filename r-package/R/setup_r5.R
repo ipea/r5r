@@ -5,7 +5,7 @@
 #'
 #' `setup_r5()` was renamed to [`build_network()`] to create a more consistent
 #' API. **`setup_r5()` is being deprecated** after *r5r* v2.3.0 and will be
-#' **removed in a future release**. Please switch to [`build_network()`].
+#' **removed in a future release**. Use [`build_network()`] instead.
 #'
 #' @template verbose
 #' @param data_path A string pointing to the directory where data inputs are
@@ -17,8 +17,8 @@
 #'        or to use a cached file. Defaults to `FALSE` (i.e. use a cached
 #'        network).
 #'
-#' @return A `r5r_network` object representing the built network to connect with
-#'         `R5` routing engine.
+#' @return An `r5r_network` object, used by r5r's routing and support
+#'         functions.
 #'
 #' @template elevation_section
 #'

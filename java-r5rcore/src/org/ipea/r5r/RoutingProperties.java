@@ -9,12 +9,16 @@ import com.conveyal.r5.transit.TransportNetwork;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.ipea.r5r.Fares.RuleBasedInRoutingFareCalculator;
+import org.ipea.r5r.Process.R5Process;
 import org.ipea.r5r.Scenario.DummyScenario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.ipea.r5r.JsonUtil.OBJECT_MAPPER;
 
 
 public class RoutingProperties {
+    private static final Logger LOG = LoggerFactory.getLogger(RoutingProperties.class);
 
     public static final float DEFAULT_WALK_SPEED = 1.0f;
     public static final float DEFAULT_BIKE_SPEED = 3.3f;
@@ -34,20 +38,24 @@ public class RoutingProperties {
     public int suboptimalMinutes = DEFAULT_SUBOPTIMAL_MINUTES; // Suboptimal minutes in point-to-point queries
     public int timeWindowSize = DEFAULT_TIME_WINDOW_SIZE; // minutes
     public int numberOfMonteCarloDraws = DEFAULT_NUMBER_OF_MONTE_CARLO_DRAWS; //
+    public Integer monteCarloSeed = null; // null: R5's unseeded frequency offsets
     public int[] percentiles = DEFAULT_PERCENTILES;
     public int[] cutoffs = DEFAULT_CUTOFFS;
     public boolean travelTimesBreakdown = false;
     public boolean expandedTravelTimes = false;
+    public boolean fastRaptor = false; // detailed_itineraries(), shortest path without fares: FastRaptorWorker, not McRAPTOR
+    public boolean fastRaptorPerOrigin = false; // all_to_all: one FastRaptor search per origin, shared by its pairs
     public PathResult.Stat travelTimesBreakdownStat = PathResult.Stat.MEAN;
 
     public float maxFare = DEFAULT_MAX_FARE;
     public float[] fareCutoffs = DEFAULT_FARE_CUTOFFS;
     public InRoutingFareCalculator fareCalculator = null;
-    public TransitLayer transitLayer = null;
+    public TransitLayer transitLayer;
     public SearchType searchType = SearchType.DEPART_FROM;
     private final TransportNetwork transportNetworkBase;
-    public TransportNetwork transportNetworkWorking;
+    private TransportNetwork transportNetworkWorking;
     private final Scenario dummyScenario = new DummyScenario();
+    boolean scenarioApplied = false;
 
     public void setFareCalculatorJson(String fareCalculatorJson) {
         // first, check to see if this is a built-in R5 fare calculator JSON representation
@@ -67,7 +75,7 @@ public class RoutingProperties {
 
     public RoutingProperties(TransportNetwork network) {
         transportNetworkBase = network;
-        transportNetworkWorking = transportNetworkBase.scenarioCopy(dummyScenario);
+        transportNetworkWorking = null;
         transitLayer = network.transitLayer;
     }
 
@@ -80,10 +88,13 @@ public class RoutingProperties {
         suboptimalMinutes = DEFAULT_SUBOPTIMAL_MINUTES;
         timeWindowSize = DEFAULT_TIME_WINDOW_SIZE;
         numberOfMonteCarloDraws = DEFAULT_NUMBER_OF_MONTE_CARLO_DRAWS;
+        monteCarloSeed = null;
 
         travelTimesBreakdown = false;
         travelTimesBreakdownStat = PathResult.Stat.MEAN;
         expandedTravelTimes = false;
+        fastRaptor = false;
+        fastRaptorPerOrigin = false;
 
         percentiles = DEFAULT_PERCENTILES;
         cutoffs = DEFAULT_CUTOFFS;
@@ -92,9 +103,23 @@ public class RoutingProperties {
         maxFare = DEFAULT_MAX_FARE;
         fareCalculator = null;
         searchType = SearchType.DEPART_FROM;
-        transportNetworkWorking = transportNetworkBase.scenarioCopy(dummyScenario);
+        transportNetworkWorking = null;
+        scenarioApplied = false;
         // do not reset transitLayer
     }
 
+    public TransportNetwork getTransportNetworkForScenario() {
+        scenarioApplied = true;
+        if (transportNetworkWorking == null) transportNetworkWorking = transportNetworkBase.scenarioCopy(dummyScenario);
+        return transportNetworkWorking;
+    }
+
     public TransportNetwork getTransportNetworkBase(){ return transportNetworkBase; }
+
+    public TransportNetwork getTransportNetwork(){
+        if (scenarioApplied){
+            LOG.warn("A scenario has been applied. Unfortunately elevation data will be lost from the network. See issue #555.");
+            return transportNetworkWorking;
+        } else return transportNetworkBase;
+    }
 }

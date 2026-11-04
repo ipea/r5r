@@ -4,12 +4,17 @@
 \alias{set_max_fare}
 \title{Set max fare}
 \usage{
-set_max_fare(r5r_network, max_fare)
+set_max_fare(r5r_network, max_fare, fare_structure)
 }
 \arguments{
 \item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
 
 \item{max_fare}{A number.}
+
+\item{fare_structure}{A fare structure object, following the convention
+set in \code{\link[=setup_fare_structure]{setup_fare_structure()}}. This object describes how transit fares
+should be calculated. See \code{vignette("fare_structure", package = "r5r")}
+for its structure.}
 }
 \value{
 Invisibly returns \code{TRUE}.
@@ -18,28 +23,29 @@ Invisibly returns \code{TRUE}.
 Sets the max fare allowed when calculating transit fares.
 }
 \seealso{
-Other setting functions: 
-\code{\link{reverse_back_if_direct_mode}()},
-\code{\link{reverse_if_direct_mode}()},
-\code{\link{set_breakdown}()},
-\code{\link{set_cutoffs}()},
-\code{\link{set_elevation}()},
-\code{\link{set_expanded_travel_times}()},
-\code{\link{set_fare_cutoffs}()},
-\code{\link{set_fare_structure}()},
-\code{\link{set_max_lts}()},
-\code{\link{set_max_rides}()},
-\code{\link{set_monte_carlo_draws}()},
-\code{\link{set_n_threads}()},
-\code{\link{set_new_congestion}()},
-\code{\link{set_new_lts}()},
-\code{\link{set_output_dir}()},
-\code{\link{set_percentiles}()},
-\code{\link{set_progress}()},
-\code{\link{set_speed}()},
-\code{\link{set_suboptimal_minutes}()},
-\code{\link{set_time_window}()},
-\code{\link{set_verbose}()}
+Other setting functions:
+\code{\link[=reverse_back_if_direct_mode]{reverse_back_if_direct_mode()}},
+\code{\link[=reverse_if_direct_mode]{reverse_if_direct_mode()}},
+\code{\link[=set_breakdown]{set_breakdown()}},
+\code{\link[=set_cutoffs]{set_cutoffs()}},
+\code{\link[=set_elevation]{set_elevation()}},
+\code{\link[=set_expanded_travel_times]{set_expanded_travel_times()}},
+\code{\link[=set_fare_cutoffs]{set_fare_cutoffs()}},
+\code{\link[=set_fare_structure]{set_fare_structure()}},
+\code{\link[=set_max_lts]{set_max_lts()}},
+\code{\link[=set_max_rides]{set_max_rides()}},
+\code{\link[=set_monte_carlo_draws]{set_monte_carlo_draws()}},
+\code{\link[=set_monte_carlo_seed]{set_monte_carlo_seed()}},
+\code{\link[=set_n_threads]{set_n_threads()}},
+\code{\link[=set_new_congestion]{set_new_congestion()}},
+\code{\link[=set_new_lts]{set_new_lts()}},
+\code{\link[=set_output_dir]{set_output_dir()}},
+\code{\link[=set_percentiles]{set_percentiles()}},
+\code{\link[=set_progress]{set_progress()}},
+\code{\link[=set_speed]{set_speed()}},
+\code{\link[=set_suboptimal_minutes]{set_suboptimal_minutes()}},
+\code{\link[=set_time_window]{set_time_window()}},
+\code{\link[=set_verbose]{set_verbose()}}
 }
 \concept{setting functions}
 \keyword{internal}

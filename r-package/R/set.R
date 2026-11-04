@@ -1,12 +1,10 @@
 #' Set verbose argument
 #'
-#' Indicates whether R5 should output informative messages or not. Please note
-#' that R5 error messages are still reported even when `verbose` is `FALSE`.
+#' Indicates whether R5 should output informative messages or not. R5 error
+#' messages are still reported even when `verbose` is `FALSE`.
 #'
 #' @template r5r_network
 #' @param verbose A logical, passed from the function above.
-#'
-#' @param verbose A logical, passed from function above.
 #'
 #' @return Invisibly returns `TRUE`.
 #'
@@ -62,6 +60,7 @@ set_progress <- function(r5r_network, progress) {
 #' @keywords internal
 set_n_threads <- function(r5r_network, n_threads) {
   checkmate::assert_number(n_threads, lower = 1)
+  if (is.finite(n_threads)) checkmate::assert_count(n_threads, positive = TRUE)
 
   if (is.infinite(n_threads)) {
     r5r_network$setNumberOfThreadsToMax()
@@ -88,7 +87,7 @@ set_n_threads <- function(r5r_network, n_threads) {
 #'
 #' @keywords internal
 set_max_lts <- function(r5r_network, max_lts) {
-  checkmate::assert_number(max_lts)
+  checkmate::assert_count(max_lts, positive = TRUE)
 
   if (max_lts < 1 | max_lts > 4) {
     stop(
@@ -118,7 +117,7 @@ set_max_lts <- function(r5r_network, max_lts) {
 #'
 #' @keywords internal
 set_max_rides <- function(r5r_network, max_rides) {
-  checkmate::assert_number(max_rides, lower = 1, finite = TRUE)
+  checkmate::assert_count(max_rides, positive = TRUE)
 
   r5r_network$setMaxRides(as.integer(max_rides))
 
@@ -180,7 +179,7 @@ set_speed <- function(r5r_network, speed, mode) {
 #'
 #' @keywords internal
 set_time_window <- function(r5r_network, time_window) {
-  checkmate::assert_number(time_window, lower = 1, finite = TRUE)
+  checkmate::assert_count(time_window, positive = TRUE)
 
   time_window <- as.integer(time_window)
 
@@ -203,17 +202,17 @@ set_time_window <- function(r5r_network, time_window) {
 #'
 #' @keywords internal
 set_percentiles <- function(r5r_network, percentiles) {
-  checkmate::assert_numeric(
+  checkmate::assert_integerish(
     percentiles,
     lower = 1,
     upper = 99,
     max.len = 5,
     unique = TRUE,
-    any.missing = FALSE,
-    finite = TRUE
+    any.missing = FALSE
   )
 
-  percentiles <- as.integer(percentiles)
+  # R5 requires ascending percentiles; output columns follow this order
+  percentiles <- sort(as.integer(percentiles))
 
   r5r_network$setPercentiles(percentiles)
 
@@ -228,20 +227,83 @@ set_percentiles <- function(r5r_network, percentiles) {
 #' @template r5r_network
 #' @param draws_per_minute A number.
 #' @param time_window A number.
+#' @param fare_structure A fare structure or `NULL`. When set, R5 uses the
+#'   McRaptor algorithm, and combinations of `draws_per_minute` and
+#'   `time_window` that its departure-time sampler cannot handle are rejected.
+#' @param mcraptor A logical. Whether the routing uses the McRaptor algorithm.
+#'   Defaults to `TRUE` when a `fare_structure` is set.
 #'
 #' @return Invisibly returns `TRUE`.
 #'
 #' @family setting functions
 #'
 #' @keywords internal
-set_monte_carlo_draws <- function(r5r_network, draws_per_minute, time_window) {
+set_monte_carlo_draws <- function(r5r_network,
+                                  draws_per_minute,
+                                  time_window,
+                                  fare_structure = NULL,
+                                  mcraptor = !is.null(fare_structure)) {
   # time_window is previously checked in set_time_window()
-  checkmate::assert_number(draws_per_minute, lower = 1, finite = TRUE)
+  checkmate::assert_count(draws_per_minute, positive = TRUE)
 
   draws <- time_window * draws_per_minute
   draws <- as.integer(draws)
 
+  # R5's McRaptor samples departure times with steps of nextInt(m) + m %/% 2
+  # seconds, m = 60 %/% draws_per_minute, and retries until it gets exactly
+  # `draws` of them (#602). The steps average less than m, so the expected count
+  # overshoots `draws` as the window grows and the retries may never end.
+  # p is the normal approximation of the chance of one retry hitting `draws`;
+  # it matches a simulation of the sampler (dpm 3-10, windows 10-240 min).
+  # p >= 5e-5 accepts every case of #602 that worked (dpm 7, window 10: 8.7e-5)
+  if (mcraptor) {
+    # R5's McRaptor reads exactly 200 draws as an unset UI default and throws
+    if (draws == 200L) {
+      cli::cli_abort(c(
+        "A {.arg time_window} of {time_window} minutes with {draws_per_minute} draw{?s} per minute gives exactly 200 Monte Carlo draws, which R5's McRaptor algorithm does not accept.",
+        "i" = "Use a slightly different {.arg time_window}, e.g. {time_window + 1}. See {.url https://github.com/ipea/r5r/issues/602}."
+      ), class = "r5r_200_draws")
+    }
+
+    m <-60 %/% draws_per_minute
+    mu <- (m - 1) / 2 + m %/% 2
+    span <- 60 * time_window
+    sd <- sqrt(span * (m^2 - 1) / 12 / mu^3)
+    z <- ((span - (m - 1) / 2) / mu + 1 - draws) / sd
+    p <- if (m < 2) 0 else exp(-z^2 / 2) / sqrt(2 * pi) / sd
+
+    if (p < 5e-5) {
+      cli::cli_abort(c(
+        "{.arg draws_per_minute} = {draws_per_minute} with a {.arg time_window} of {time_window} minutes is not supported with a {.arg fare_structure}.",
+        "i" = "R5's McRaptor algorithm cannot sample this many departure times and could run indefinitely.",
+        "i" = "Use a lower {.arg draws_per_minute} or a shorter {.arg time_window}. See {.url https://github.com/ipea/r5r/issues/602}."
+      ))
+    }
+  }
+
   r5r_network$setNumberOfMonteCarloDraws(draws)
+
+  return(invisible(TRUE))
+}
+
+
+#' Set the seed of the Monte Carlo draws
+#'
+#' Sets the seed used by R5 to draw the departure offsets of frequency-based
+#' transit routes.
+#'
+#' @template r5r_network
+#' @param seed An integer or `NULL`. `NULL` keeps R5's unseeded draws.
+#'
+#' @return Invisibly returns `TRUE`.
+#'
+#' @family setting functions
+#'
+#' @keywords internal
+set_monte_carlo_seed <- function(r5r_network, seed) {
+  checkmate::assert_int(seed, null.ok = TRUE)
+
+  if (!is.null(seed)) r5r_network$setMonteCarloSeed(as.integer(seed))
 
   return(invisible(TRUE))
 }
@@ -296,14 +358,24 @@ set_fare_structure <- function(r5r_network, fare_structure) {
 #'
 #' @template r5r_network
 #' @param max_fare A number.
+#' @template fare_structure
 #'
 #' @return Invisibly returns `TRUE`.
 #'
 #' @family setting functions
 #'
 #' @keywords internal
-set_max_fare <- function(r5r_network, max_fare) {
+set_max_fare <- function(r5r_network, max_fare, fare_structure) {
   checkmate::assert_number(max_fare, lower = 0)
+
+  # a finite max_fare only makes sense when fares are being calculated
+  if (is.finite(max_fare) && is.null(fare_structure)) {
+    cli::cli_abort(c(
+      "{.arg max_fare} requires a {.arg fare_structure}.",
+      "x" = "{.arg max_fare} is {.val {max_fare}} but {.arg fare_structure} is {.code NULL}, so no fares are calculated and the limit would be ignored.",
+      "i" = "Pass a fare structure (see {.fn setup_fare_structure}) or leave {.arg max_fare} as {.val {Inf}}."
+    ))
+  }
 
   # Inf values are not allowed in Java, so -1 is used to indicate when max_fare
   # is unconstrained
@@ -358,12 +430,14 @@ set_output_dir <- function(r5r_network, output_dir) {
 #'
 #' @keywords internal
 set_cutoffs <- function(r5r_network, cutoffs, decay_function) {
-  checkmate::assert_numeric(
+  checkmate::assert_integerish(
     cutoffs,
+    lower = 1,
+    upper = 120,
     min.len = 1,
     max.len = 12,
     any.missing = FALSE,
-    finite = TRUE,
+    unique = TRUE,
     null.ok = TRUE
   )
 
@@ -386,7 +460,8 @@ set_cutoffs <- function(r5r_network, cutoffs, decay_function) {
   if (is.null(cutoffs)) {
     cutoffs <- 0L
   } else {
-    cutoffs <- as.integer(cutoffs)
+    # R5 requires ascending cutoffs
+    cutoffs <- sort(as.integer(cutoffs))
   }
 
   r5r_network$setCutoffs(cutoffs)
@@ -493,7 +568,7 @@ set_suboptimal_minutes <- function(r5r_network,
                                    suboptimal_minutes,
                                    fare_structure,
                                    shortest_path) {
-  checkmate::assert_number(suboptimal_minutes, lower = 0, finite = TRUE)
+  checkmate::assert_count(suboptimal_minutes)
 
   if (!is.null(fare_structure) && suboptimal_minutes > 0) {
     stop(
@@ -522,8 +597,8 @@ set_suboptimal_minutes <- function(r5r_network,
 #' Swaps the `origins` and `destinations` data frames if certain conditions are
 #' met, specifically to optimize routing performance with R5's one-to-many
 #' algorithm. The function reverses the direction of analysis when the transit
-#' mode is empty and the direct modes are WALK or BICYCLE and when the number of
-#' origin points is greater than the number of destination points.
+#' mode is empty and the direct modes is WALK and when the number of origin
+#' points is greater than the number of destination points.
 #'
 #' @param origins A data frame representing origin locations.
 #' @param destinations A data frame representing destination locations.
@@ -547,9 +622,12 @@ reverse_if_direct_mode <- function(origins, destinations, mode_list, data_path) 
     temp <- origins
     origins <- destinations
     destinations <- temp
+
+    return(list(origins = origins, destinations = destinations))
   }
 
-  return(list(origins = origins, destinations = destinations))
+  # if origins and destinations are not reversed, simply return NULL
+  return(NULL)
 }
 
 
@@ -589,7 +667,8 @@ reverse_back_if_direct_mode <- function(travel_times, origins, destinations, mod
     travel_times <- data.table::setcolorder(travel_times, c('from_id', 'to_id'))
   }
 
-    return(travel_times)
+    ## no need to return object because data.table changes object in place
+    # return(travel_times)
 
 }
 
@@ -602,7 +681,7 @@ reverse_back_if_direct_mode <- function(travel_times, origins, destinations, mod
 #'
 #' @param elevation Character.
 #'
-#' @return Character. Corretly formatted elevation.
+#' @return Character. Correctly formatted elevation.
 #' @family setting functions
 #'
 #' @keywords internal
@@ -632,10 +711,11 @@ set_elevation <- function(elevation) {
 #'
 #' @keywords internal
 set_new_congestion <- function(r5r_network, new_carspeeds, carspeed_scale) {
-  checkmate::assert_class(new_carspeeds, "data.frame", null.ok = T)
-  checkmate::assert_numeric(carspeed_scale, lower = 0, finite = TRUE, null.ok = F)
+  checkmate::assert_class(new_carspeeds, "data.frame", null.ok = TRUE)
+  checkmate::assert_numeric(carspeed_scale, lower = 0, finite = TRUE, null.ok = FALSE)
   if (!is.null(new_carspeeds) || carspeed_scale != 1){
-    cli::cli_inform(c(i = "Modifying carspeeds..."))
+    cli::cli_inform("Modifying carspeeds...")
+    cli::cli_warn("A scenario was used for this calculation. This may affect results for WALK or BICYCLE due to missing elevation. See issue #555.")
 
     if (inherits(new_carspeeds, "sf")) { # polygon mode
       geojson_path <- congestion_poly2geojson(new_carspeeds)
@@ -675,7 +755,8 @@ set_new_congestion <- function(r5r_network, new_carspeeds, carspeed_scale) {
 set_new_lts <- function(r5r_network, new_lts) {
   checkmate::assert_class(new_lts, "data.frame", null.ok = TRUE)
   if (!is.null(new_lts)){
-    cli::cli_inform(c(i = "Modifying LTS levels..."))
+    cli::cli_inform("Modifying LTS levels...")
+    cli::cli_warn("A scenario was used for this calculation. This may affect results for WALK or BICYCLE due to missing elevation. See issue #555.")
 
     if (inherits(new_lts, "sf")) { # polygon mode
       shp_path <- lts_lines2shp(new_lts)

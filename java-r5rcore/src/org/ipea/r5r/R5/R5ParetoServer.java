@@ -15,6 +15,7 @@ import com.conveyal.r5.transit.TripPattern;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.TIntIntMap;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateArrays;
 import org.locationtech.jts.geom.LineString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -229,7 +230,10 @@ public class R5ParetoServer {
                             LineString hop = hops.get(i);
                             coords.addAll(Arrays.asList(hop.getCoordinates()));
                         }
-                        LineString shape = GeometryUtils.geometryFactory.createLineString(coords.toArray(new Coordinate[0]));
+                        // consecutive hops share their stop; s2 rejects repeated vertices (as in TripLeg.getGeometry())
+                        Coordinate[] hopCoords = coords.toArray(new Coordinate[0]);
+                        Coordinate[] uniqueCoords = CoordinateArrays.removeRepeatedPoints(hopCoords);
+                        LineString shape = GeometryUtils.geometryFactory.createLineString(uniqueCoords.length >= 2 ? uniqueCoords : hopCoords);
 
                         legs.add(new ParetoTransitLeg(network.transitLayer.routes.get(pattern.routeIndex),
                                 network.transitLayer.stopIdForIndex.get(boardStopIndex), network.transitLayer.stopNames.get(boardStopIndex),

@@ -37,6 +37,8 @@ test_that("progress argument works in routing functions", {
         opportunities_colnames = \"jobs\" ,
         cutoffs = 60
       )"
+    } else if (identical(f, isochrone)) {
+      "f(r5r_network, origins = pois[1:3], mode = \"WALK\", cutoffs = c(10, 20))"
     }
 
     progress_expr <- sub("\\)$", ", progress = TRUE\\)", expr)
@@ -69,4 +71,5 @@ test_that("progress argument works in routing functions", {
   assert_function(detailed_itineraries)
   assert_function(pareto_frontier)
   assert_function(accessibility)
+  assert_function(isochrone)
 })

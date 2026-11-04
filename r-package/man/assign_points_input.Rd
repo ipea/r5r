@@ -4,12 +4,16 @@
 \alias{assign_points_input}
 \title{Check and convert origin and destination inputs}
 \usage{
-assign_points_input(df, name)
+assign_points_input(df, name, unique_ids = TRUE)
 }
 \arguments{
 \item{df}{Either a \code{data.frame} or a \verb{POINT sf}.}
 
 \item{name}{Object name.}
+
+\item{unique_ids}{A logical. Whether to raise an error when \code{df$id} has
+duplicated values. Defaults to \code{TRUE}. Set to \code{FALSE} for row-paired
+inputs, where the same point may legitimately appear in several rows.}
 }
 \value{
 A \code{data.frame} with columns \code{id}, \code{lon} and \code{lat}.
@@ -18,16 +22,16 @@ A \code{data.frame} with columns \code{id}, \code{lon} and \code{lat}.
 Check and convert origin and destination inputs
 }
 \seealso{
-Other assigning functions: 
-\code{\link{assign_decay_function}()},
-\code{\link{assign_departure}()},
-\code{\link{assign_drop_geometry}()},
-\code{\link{assign_max_street_time}()},
-\code{\link{assign_max_trip_duration}()},
-\code{\link{assign_mode}()},
-\code{\link{assign_opportunities}()},
-\code{\link{assign_osm_link_ids}()},
-\code{\link{assign_shortest_path}()}
+Other assigning functions:
+\code{\link[=assign_decay_function]{assign_decay_function()}},
+\code{\link[=assign_departure]{assign_departure()}},
+\code{\link[=assign_drop_geometry]{assign_drop_geometry()}},
+\code{\link[=assign_max_street_time]{assign_max_street_time()}},
+\code{\link[=assign_max_trip_duration]{assign_max_trip_duration()}},
+\code{\link[=assign_mode]{assign_mode()}},
+\code{\link[=assign_opportunities]{assign_opportunities()}},
+\code{\link[=assign_osm_link_ids]{assign_osm_link_ids()}},
+\code{\link[=assign_shortest_path]{assign_shortest_path()}}
 }
 \concept{assigning functions}
 \keyword{internal}

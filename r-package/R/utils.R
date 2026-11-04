@@ -92,7 +92,8 @@ start_r5r_java <- function(data_path,
   r5_version <- paste0("-DR5_VER=", r5r_env$r5_jar_version)
   r5r_version <- paste0("-DR5R_VER=", utils::packageVersion("r5r"))
 
-  rJava::.jinit(parameters = c(log_path, r5_version, r5r_version))
+  # passing `parameters` replaces .jinit()'s default, so keep the user's options(java.parameters)
+  rJava::.jinit(parameters = c(getOption("java.parameters"), log_path, r5_version, r5r_version))
 
   ver <- get_java_version()
 
@@ -140,9 +141,9 @@ start_r5r_java <- function(data_path,
       file.path( r5r_env$cache_dir, filename)
     )
 
-    # If there isn't a JAR already larger than 60MB, download it
-    if (checkmate::test_file_exists(jar_file) && file.info(jar_file)$size > r5r_env$r5_jar_size) {
-      if (!verbose) message("Using cached R5 version from ", jar_file)
+    # If there isn't a complete JAR already, download it
+    if (checkmate::test_file_exists(jar_file) && file.info(jar_file)$size >= r5r_env$r5_jar_size) {
+      if (verbose) message("Using cached R5 version from ", jar_file)
     } else {
       check  <- download_r5(temp_dir = temp_dir, quiet = !verbose)
       if (is.null(check)) { return(invisible(NULL)) }
@@ -350,4 +351,31 @@ lts_lines2shp <- function(new_lts_lines){
   sf::st_write(new_lts_lines, file_path, quiet = TRUE)
 
   if (file.exists(file_path)) { return(file_path)}
+}
+
+
+#' Warn about the deprecated `Sys.time()` default of the departure/arrival time
+#'
+#' Relying on the default `Sys.time()` with public transport gives results that
+#' depend on when the code is run (#549). The default will be removed in a
+#' future release.
+#'
+#' @param mode The `mode` passed to the routing function.
+#' @param arg The name of the date-time argument.
+#'
+#' @return Invisibly returns `NULL`.
+#'
+#' @keywords internal
+warn_default_datetime <- function(mode, arg = "departure_datetime") {
+  if (any(grepl("TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR", toupper(mode)))) {
+    cli::cli_warn(
+      c(
+        "!" = "Relying on the default {.code {arg} = Sys.time()} for public transport routing is deprecated as of r5r v2.5.0.",
+        "i" = "Results depend on the departure time. Please set {.arg {arg}} explicitly: the default will be removed in a future release."
+      ),
+      .frequency = "regularly",
+      .frequency_id = "r5r_default_datetime"
+    )
+  }
+  invisible(NULL)
 }

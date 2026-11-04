@@ -1,7 +1,7 @@
 #' Extract the geographic bounding box of the transport network
 #'
 #' Extracts the geographic bounding box of the street network layer from a
-#' routable transport network built with [build_network()]). It is a fast and
+#' routable transport network built with [build_network()]. It is a fast and
 #' memory-efficient alternative to `sf::st_bbox(street_network_to_sf(r5r_net))`.
 #'
 #' @template r5r_network

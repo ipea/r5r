@@ -1,7 +1,7 @@
 #' Extract transit network in sf format
 #'
 #' Extracts the transit network in `sf` format from a routable transport network
-#' built with [build_network()]).
+#' built with [build_network()].
 #'
 #' @template r5r_network
 #' @template r5r_core

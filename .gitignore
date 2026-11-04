@@ -8,6 +8,7 @@ r5r_core.jar
 java-r5/.idea/libraries
 .Rproj.user
 .Rhistory
+.Rprofile
 r5r.Rcheck
 *.tar.gz
 network.dat
@@ -34,3 +35,12 @@ aws.xml
 docs/
 network_settings.json
 r-package/rjavaenv/
+
+# Claude Code workflow (local state) and machine-local Java setup
+quality_reports/
+.claude/settings.local.json
+.claude/state/
+CLAUDE.local.md
+rjavaenv/
+r-package/inst/extdata/*/gtfs_errors.csv
+bash.exe.stackdump

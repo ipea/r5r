@@ -16,16 +16,16 @@ A logical.
 Check the drop geometry input.
 }
 \seealso{
-Other assigning functions: 
-\code{\link{assign_decay_function}()},
-\code{\link{assign_departure}()},
-\code{\link{assign_max_street_time}()},
-\code{\link{assign_max_trip_duration}()},
-\code{\link{assign_mode}()},
-\code{\link{assign_opportunities}()},
-\code{\link{assign_osm_link_ids}()},
-\code{\link{assign_points_input}()},
-\code{\link{assign_shortest_path}()}
+Other assigning functions:
+\code{\link[=assign_decay_function]{assign_decay_function()}},
+\code{\link[=assign_departure]{assign_departure()}},
+\code{\link[=assign_max_street_time]{assign_max_street_time()}},
+\code{\link[=assign_max_trip_duration]{assign_max_trip_duration()}},
+\code{\link[=assign_mode]{assign_mode()}},
+\code{\link[=assign_opportunities]{assign_opportunities()}},
+\code{\link[=assign_osm_link_ids]{assign_osm_link_ids()}},
+\code{\link[=assign_points_input]{assign_points_input()}},
+\code{\link[=assign_shortest_path]{assign_shortest_path()}}
 }
 \concept{assigning functions}
 \keyword{internal}

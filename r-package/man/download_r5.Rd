@@ -38,8 +38,8 @@ download_r5(temp_dir = TRUE)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-Other Build network: 
-\code{\link{build_network}()},
-\code{\link{setup_r5}()}
+Other Build network:
+\code{\link[=build_network]{build_network()}},
+\code{\link[=setup_r5]{setup_r5()}}
 }
 \concept{Build network}

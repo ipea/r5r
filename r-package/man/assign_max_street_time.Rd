@@ -10,8 +10,9 @@ assign_max_street_time(max_time, speed, max_trip_duration, mode)
 \item{max_time}{A numeric of length 1. Maximum walking distance (in
 meters) for the whole trip. Passed from routing functions.}
 
-\item{speed}{A numeric of length 1. Average walk speed in km/h.
-Defaults to 3.6 Km/h. Passed from routing functions.}
+\item{speed}{A numeric of length 1. Average walk or bike speed in km/h,
+passed from routing functions and only validated here. \code{NULL} for car,
+which has no speed argument.}
 
 \item{max_trip_duration}{A numeric of length 1. Maximum trip duration in
 seconds. Defaults to 120 minutes (2 hours). Passed from routing functions.}
@@ -25,16 +26,16 @@ An \code{integer} representing the maximum number of minutes walking.
 Checks the time duration and speed inputs and converts them to distance.
 }
 \seealso{
-Other assigning functions: 
-\code{\link{assign_decay_function}()},
-\code{\link{assign_departure}()},
-\code{\link{assign_drop_geometry}()},
-\code{\link{assign_max_trip_duration}()},
-\code{\link{assign_mode}()},
-\code{\link{assign_opportunities}()},
-\code{\link{assign_osm_link_ids}()},
-\code{\link{assign_points_input}()},
-\code{\link{assign_shortest_path}()}
+Other assigning functions:
+\code{\link[=assign_decay_function]{assign_decay_function()}},
+\code{\link[=assign_departure]{assign_departure()}},
+\code{\link[=assign_drop_geometry]{assign_drop_geometry()}},
+\code{\link[=assign_max_trip_duration]{assign_max_trip_duration()}},
+\code{\link[=assign_mode]{assign_mode()}},
+\code{\link[=assign_opportunities]{assign_opportunities()}},
+\code{\link[=assign_osm_link_ids]{assign_osm_link_ids()}},
+\code{\link[=assign_points_input]{assign_points_input()}},
+\code{\link[=assign_shortest_path]{assign_shortest_path()}}
 }
 \concept{assigning functions}
 \keyword{internal}

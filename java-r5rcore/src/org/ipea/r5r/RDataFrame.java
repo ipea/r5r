@@ -161,6 +161,24 @@ public class RDataFrame {
     public ArrayList<Object> get(String columnName) { return dataFrame.get(columnName); }
 
     public String[] getStringColumn(String columnName) { return dataFrame.get(columnName).toArray(String[]::new); }
+
+    // returns each value's 0-based position in ids, so R can rebuild the column as ids[pos + 1]
+    // without converting one Java String per row (e.g. from_id / to_id of a travel time matrix)
+    public int[] getStringColumnIndex(String columnName, String[] ids) {
+        HashMap<String, Integer> positions = new HashMap<>(ids.length * 2);
+        for (int i = 0; i < ids.length; i++) positions.putIfAbsent(ids[i], i);
+
+        ArrayList<Object> column = dataFrame.get(columnName);
+        int[] v = new int[column.size()];
+        for (int i = 0; i < v.length; i++) {
+            Integer pos = positions.get((String) column.get(i));
+            if (pos == null) {
+                throw new IllegalStateException("Value '" + column.get(i) + "' of column " + columnName + " is not among the ids supplied");
+            }
+            v[i] = pos;
+        }
+        return v;
+    }
     public int[] getIntegerColumn(String columnName) {
         return dataFrame.get(columnName).stream().mapToInt(i -> (int) i).toArray();
     }
@@ -223,11 +241,20 @@ public class RDataFrame {
                 row = new StringJoiner(",");
 
                 for (String c:columnNames) {
-                    row.add(String.valueOf(dataFrame.get(c).get(i)));
+                    row.add(csvField(Objects.toString(dataFrame.get(c).get(i), ""))); // null (NA) -> empty field
                 }
                 pw.println(row);
             }
         }
+    }
+
+    // quotes a value that contains a comma, a double quote or a line break
+    // (e.g. WKT geometries, lists of ids), doubling any quotes inside it (RFC 4180)
+    private static String csvField(String value) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 }
 

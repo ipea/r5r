@@ -16,7 +16,7 @@ wrap_r5r_network(jcore)
 Wraps a Java R5RCore as an r5r_network.
 }
 \seealso{
-Other r5r_network: 
+Other r5r_network:
 \code{\link{r5r_network-class}}
 }
 \concept{r5r_network}

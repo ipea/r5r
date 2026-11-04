@@ -226,3 +226,27 @@ test_that("message for missing OSM ids", {
     info = "Did not find warning for a bad OSM Id in log"
   )
 })
+
+
+test_that("a failed scenario call does not leak into the next call", {
+  plain_car <- function(...) {
+    travel_time_matrix(
+      r5r_network,
+      origins = points[1:20, ],
+      destinations = points[1:20, ],
+      mode = "CAR",
+      departure_datetime = departure_datetime,
+      ...
+    )
+  }
+
+  baseline <- plain_car()
+
+  # carspeed_scale is applied before new_lts fails validation (lts not integer)
+  bad_lts <- data.frame(osm_id = 27184648, lts = 1.5)
+  expect_error(suppressWarnings(suppressMessages(
+    plain_car(carspeed_scale = 0.3, new_lts = bad_lts)
+  )))
+
+  expect_identical(plain_car(), baseline)
+})

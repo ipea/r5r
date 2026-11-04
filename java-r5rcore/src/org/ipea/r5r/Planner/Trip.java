@@ -14,6 +14,11 @@ import com.conveyal.r5.transit.RouteInfo;
 import com.conveyal.r5.transit.TransitLayer;
 import com.conveyal.r5.transit.TransportNetwork;
 import com.conveyal.r5.transit.TripPattern;
+import com.conveyal.r5.transit.TripSchedule;
+import com.conveyal.r5.transit.path.Path;
+import com.conveyal.r5.transit.path.StopSequence;
+import gnu.trove.list.TIntList;
+import gnu.trove.map.TIntIntMap;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.ipea.r5r.Utils.Utils;
 import org.locationtech.jts.geom.Coordinate;
@@ -202,26 +207,7 @@ public class Trip {
                     int destTime = state.time;
                     int fare = state.fare != null ? state.fare.cumulativeFarePaid : 0;
 
-                    int destStopIndex = state.stop;
-                    int originStopIndex = state.back.stop;
-
-                    LineString geom = GeometryUtils.geometryFactory.createLineString(new Coordinate[0]);
-
-                    Coordinate originStopCoord = network.transitLayer.getCoordinateForStopFixed(originStopIndex);
-                    Coordinate destStopCoord = network.transitLayer.getCoordinateForStopFixed(destStopIndex);
-
-                    if (originStopIndex != destStopIndex & originStopCoord != null & destStopCoord != null) {
-                        geom = GeometryUtils.geometryFactory.createLineString(new Coordinate[]{
-                                new Coordinate(originStopCoord.getX() / VertexStore.FIXED_FACTOR, originStopCoord.getY() / VertexStore.FIXED_FACTOR),
-                                new Coordinate(destStopCoord.getX() / VertexStore.FIXED_FACTOR, destStopCoord.getY() / VertexStore.FIXED_FACTOR),
-                        });
-                    }
-
-                    TripLeg leg = TripLeg.newTransferLeg(StreetMode.WALK.toString(),destTime - originTime, fare, geom, null, null);
-
-                    leg.setODStops(originStopIndex, destStopIndex);
-
-                    legs.add(leg);
+                    legs.add(newStopTransferLeg(network, state.back.stop, state.stop, destTime - originTime, fare));
 
                 } else {
                     TripPattern pattern = network.transitLayer.tripPatterns.get(state.pattern);
@@ -247,6 +233,111 @@ public class Trip {
             }
             state = state.back;
         }
+    }
+
+    // walk between two stops; augment() replaces the straight line with the street path
+    private static TripLeg newStopTransferLeg(TransportNetwork network, int originStopIndex, int destStopIndex,
+                                              int duration, int fare) {
+        LineString geom = GeometryUtils.geometryFactory.createLineString(new Coordinate[0]);
+
+        Coordinate originStopCoord = network.transitLayer.getCoordinateForStopFixed(originStopIndex);
+        Coordinate destStopCoord = network.transitLayer.getCoordinateForStopFixed(destStopIndex);
+
+        if (originStopIndex != destStopIndex & originStopCoord != null & destStopCoord != null) {
+            geom = GeometryUtils.geometryFactory.createLineString(new Coordinate[]{
+                    new Coordinate(originStopCoord.getX() / VertexStore.FIXED_FACTOR, originStopCoord.getY() / VertexStore.FIXED_FACTOR),
+                    new Coordinate(destStopCoord.getX() / VertexStore.FIXED_FACTOR, destStopCoord.getY() / VertexStore.FIXED_FACTOR),
+            });
+        }
+
+        TripLeg leg = TripLeg.newTransferLeg(StreetMode.WALK.toString(), duration, fare, geom, null, null);
+        leg.setODStops(originStopIndex, destStopIndex);
+        return leg;
+    }
+
+    /**
+     * Transit trip from a path retained by R5's FastRaptorWorker (#464). The path holds stop indices, board clock
+     * times, ride times and the transfer walk before each ride, but no waits or pattern positions: waits follow from
+     * the clock times, and positions are matched against the pattern's schedules (a pattern can visit a stop twice).
+     *
+     * @param accessTimes  access seconds per stop given to the worker
+     * @param egressSeconds egress seconds from the last alight stop
+     * @param expectedTotal the worker's travel time to the last alight stop plus egressSeconds
+     */
+    public Trip(Path path, int departureTime, TIntIntMap accessTimes, int egressSeconds, int expectedTotal,
+                TransportNetwork network) {
+        this.departureTime = departureTime;
+        this.totalFare = 0;
+        legs = new ArrayList<>();
+
+        TIntList patterns = path.patternSequence.patterns;
+        StopSequence stops = path.patternSequence.stopSequence;
+        if (patterns.isEmpty() || !accessTimes.containsKey(stops.boardStops.get(0))) {
+            throw new IllegalStateException("FastRaptor path does not start at an access stop");
+        }
+
+        int ready = departureTime + accessTimes.get(stops.boardStops.get(0)); // clock time at the next board stop
+        for (int k = 0; k < patterns.size(); k++) {
+            int boardStop = stops.boardStops.get(k);
+            int alightStop = stops.alightStops.get(k);
+            int boardTime = path.boardTimes.get(k);
+            int rideTime = stops.rideTimesSeconds.get(k);
+
+            if (k > 0) {
+                int transferTime = stops.transferTimesSeconds.get(k);
+                int previousAlightStop = stops.alightStops.get(k - 1);
+                // a transfer within the same stop (GTFS transfers.txt, not loaded by r5r) has no leg of its own:
+                // its time is then counted in the wait
+                if (previousAlightStop != boardStop) {
+                    legs.add(newStopTransferLeg(network, previousAlightStop, boardStop, transferTime, 0));
+                    ready += transferTime;
+                }
+            }
+
+            int wait = boardTime - ready;
+            if (wait < 0) throw new IllegalStateException("FastRaptor path boards before reaching the stop");
+
+            TripPattern pattern = network.transitLayer.tripPatterns.get(patterns.get(k));
+            int[] positions = stopPositions(pattern, boardStop, alightStop, boardTime, rideTime);
+            RouteInfo route = network.transitLayer.routes.get(pattern.routeIndex);
+            String mode = TransitLayer.getTransitModes(route.route_type).toString();
+
+            TripLeg leg = TripLeg.newTransitLeg(mode, rideTime, 0, wait, boardStop, alightStop, route.route_id);
+            leg.setPatternData(pattern, positions[0], positions[1]);
+            legs.add(leg);
+
+            ready = boardTime + rideTime;
+        }
+
+        this.totalDurationSeconds = ready - departureTime + egressSeconds;
+        if (totalDurationSeconds != expectedTotal) {
+            throw new IllegalStateException("FastRaptor path duration does not match its travel time");
+        }
+        buildKey();
+    }
+
+    /**
+     * Board and alight positions of a ride in a pattern: the pair whose scheduled times match the ride, or, when no
+     * schedule matches, the shortest span from the board stop to a later alight stop.
+     */
+    private static int[] stopPositions(TripPattern pattern, int boardStop, int alightStop, int boardTime, int rideTime) {
+        int[] best = null;
+        for (int p = 0; p < pattern.stops.length; p++) {
+            if (pattern.stops[p] != boardStop) continue;
+            for (int q = p + 1; q < pattern.stops.length; q++) {
+                if (pattern.stops[q] != alightStop) continue;
+                for (TripSchedule schedule : pattern.tripSchedules) {
+                    if (schedule.departures[p] == boardTime && schedule.arrivals[q] == boardTime + rideTime) {
+                        return new int[]{p, q};
+                    }
+                }
+                if (best == null || q - p < best[1] - best[0]) best = new int[]{p, q};
+            }
+        }
+        if (best == null) throw new IllegalStateException("FastRaptor ride stops are not in its pattern");
+        LOG.warn("No schedule of pattern {} matches the ride from stop {} at {}; using the shortest span",
+                pattern.originalId, boardStop, boardTime);
+        return best;
     }
 
     private void addAccessPath(Map<LegMode, StreetRouter> accessRouter, Map<Integer, StreetSegment> accessPaths,
@@ -323,8 +414,8 @@ public class Trip {
                 streetRouter.profileRequest.reverseSearch = true;
                 StreetRouter.State streetState = streetRouter.getStateAtVertex(endVertexStopIndex);
                 if (streetState != null) {
-                    StreetPath streetPath = new StreetPath(streetState, network, true);
-                    streetSegment = new StreetSegment(streetPath, egressMode, network.streetLayer);
+                    streetSegment = EgressPath.build(streetRouter, streetState, egressMode,
+                            request.toLat, request.toLon);
 
                     TripLeg egressLeg = TripLeg.newTransferLeg(egressMode.toString(),
                             streetSegment.duration, cumulativeFare, streetSegment.geometry, streetSegment, edgeStore);

@@ -22,16 +22,14 @@ knitr::opts_chunk$set(
 
 # 1. Introduction 
 
-**r5r** has some extremely efficient functions to run multimodal routing and accessibility analysis. In general, though, these functions output only the essential information required by most transport planning applications and simulation models. Moreover, the algorithms behind these function return only the optimal route in terms of minimizing travel times and/or monetary costs. Sometimes, though, we would like to do more simple route planning analysis and extract more information for each route. Also, we might be interested in finding not only the fastest route but some other suboptimal route alternatives too.
+**r5r**'s routing and accessibility functions are very fast, but they return only the essential information, and only the optimal route (minimizing travel time and/or monetary cost). Sometimes, though, we would like to do more simple route planning analysis and extract more information for each route. Also, we might be interested in finding not only the fastest route but some other suboptimal route alternatives too. 
+This is where the `detailed_itineraries()` function comes in. `detailed_itineraries()` returns, for each origin/destination pair, a detailed route plan per leg, i.e. a part of the trip on a single mode, such as walking to the bus stop (R5's documentation calls legs 'segments'). Each leg has its mode, waiting time, travel time, distance and geometry. The function can also return suboptimal route alternatives.
 
-This is where the `detailed_itineraries()` function comes in. This function outputs for each origin destination pair a detailed route plan with information per leg, meaning a route taken by a single mode such as a walk to the bus stop. In R5's documentation these legs are referred to as 'segments', a word more usually used to describe small sections on the transport network. Results contain information on the mode, waiting times, travel times and distances for each leg (or 'segment' in R5 documentation) and the trip geometry. Moreover, the `detailed_itineraries()` function can also return results for multiple route alternatives. Let's see how this function works using a reproducible example.
- 
-
-**obs.** We only recommend using `detailed_itineraries()` in case you are interested in finding suboptimal alternative routes and/or need the geometry information of the outputs. If you only want to have route information detailed by trip segments, then we would strongly encourage you to use the `expanded_travel_time_matrix()` function.
+**obs.** If you only need the routes used and the access, waiting, in-vehicle and transfer times, `expanded_travel_time_matrix()` is enough. Use `detailed_itineraries()` when you need each trip segment's mode, distance or geometry, or suboptimal alternative routes.
 
 # 2. Build routable transport network with `build_network()`
 
-First, let's load some libraries and build our multimodal transport network. In this example we'll be using the a sample data set for the city of Porto Alegre (Brazil) included in `r5r`.
+We use the Porto Alegre (Brazil) sample data included in `r5r`.
 
 ```{r, message = FALSE}
 # increase Java memory
@@ -63,9 +61,7 @@ poi <- fread(file.path(data_path, "poa_points_of_interest.csv"))
 
 # 3. Detailed info by trip segment for multiple trip alternatives
 
-In this example below, we want to know some alternative routes between a single origin/destination pair. To get multiple route alternatives, we need to set `shortest_path = FALSE`.
-
-Note that in the example below we set `suboptimal_minutes = 8`. In this case, `r5r` will consider sub-optimal routes that arrive up to 8 minutes after the arrival of the optimal route.
+To get alternative routes between one origin/destination pair, set `shortest_path = FALSE`. With `suboptimal_minutes = 8`, `r5r` also keeps routes arriving up to 8 minutes after the optimal one.
 
 ```{r, message = FALSE}
 # set inputs
@@ -91,16 +87,15 @@ det <- detailed_itineraries(
 head(det)
 ```
 ```{r detailed head, echo = FALSE, out.width='100%', message = FALSE, eval = FALSE}
-knitr::include_graphics("https://github.com/ipeaGIT/r5r/blob/master/r-package/inst/img/vig_output_detailed.png?raw=true")
+knitr::include_graphics("https://github.com/ipea/r5r/blob/master/r-package/inst/img/vig_output_detailed.png?raw=true")
 ```
 
 
-The output is a `data.frame sf` object, so we can easily visualize the results.
+The output is an `sf` data.frame, ready to map.
 
 ## 3.1 Visualize results
 
-**Static visualization** with `ggplot2` package: To provide a geographic context 
-for the visualization of the results in `ggplot2`, you can also use the `street_network_to_sf((` function to  extract the OSM street network used in the routing.
+`street_network_to_sf()` extracts the OSM street network used in routing, to give the map geographic context:
 
 ```{r, message = FALSE}
 # extract OSM network
@@ -118,31 +113,27 @@ fig <- ggplot() +
 
 fig
 ```
-```{r, message = FALSE, eval = FALSE}
+```{r, message = FALSE, eval = FALSE, include = FALSE}
 # SAVE image
 ggsave(plot = fig, filename = 'inst/img/vig_detailed_ggplot.png', 
        height = 5, width = 15, units='cm', dpi=200)
 ```
 
 ```{r ggplot2 output, echo = FALSE, out.width='100%', message = FALSE, eval = FALSE}
-knitr::include_graphics("https://github.com/ipeaGIT/r5r/blob/master/r-package/inst/img/vig_detailed_ggplot.png?raw=true")
+knitr::include_graphics("https://github.com/ipea/r5r/blob/master/r-package/inst/img/vig_detailed_ggplot.png?raw=true")
 ```
 
-# 4. A few options:
+# 4. Other options
 
-### 4.1 Combining orings and destinations
-
-- By default, `detailed_itineraries()` will query routes between the 1st origin to the 1st destination, then the 2nd origin to the 2nd destination, and so on. If you would like to query routes between all origins to all destinations you can simply set `all_to_all = TRUE`.
-
-### 4.2 Keep geometry data in the output
-
-- Be default, `detailed_itineraries()` will return the spatial geometry of results. To prevent retrieving this information you can simply set `drop_geometry = TRUE`.
+- **Fastest route only:** with the default `shortest_path = TRUE` and no `fare_structure`, public transport is routed with R5's RAPTOR algorithm, the one used by `travel_time_matrix()`, which is much faster than the search for alternative routes. It routes one departure at each minute of `time_window` and returns the fastest itinerary.
+- **All origins to all destinations:** by default, `detailed_itineraries()` routes the 1st origin to the 1st destination, the 2nd to the 2nd, and so on. Set `all_to_all = TRUE` to route every origin to every destination. With `shortest_path = TRUE`, a single search per origin then serves all its destinations.
+- **No geometry:** set `drop_geometry = TRUE` to return results without the trip geometry. This makes the function faster.
 
 
 
 # 5. Hack for frequency-based GTFS feeds
 
-Please note that the `detailed_itineraries()` functions does not run on frequency-based GTFS feeds. A simple hack to overcome this problem is to convert your GTFS data from frequencies to time tables. This can be easily done using the [`gtfstools` package](https://ipeagit.github.io/gtfstools/). Here is how:
+`detailed_itineraries()` does not work with frequency-based GTFS feeds. The workaround is to convert frequencies to timetables with the [`gtfstools` package](https://ipea.github.io/gtfstools/):
 
 ```{r, message = FALSE, eval = FALSE}
 library(gtfstools)
@@ -163,15 +154,15 @@ gtfstools::write_gtfs(gtfs = stop_times_gtfs,
 
 ```
 
-... and now you can use `r5r` on this `stop_times_gtfs.zip`.
+`write_gtfs()` saves the new feed to the `path` you give it (a temporary file above). Put that file in your `data_path`, in place of the frequency-based feed, and build the network.
 
 ### Cleaning up after usage
 
-`r5r` objects are still allocated to any amount of memory previously set after they are done with their calculations. In order to remove an existing `r5r` object and reallocate the memory it had been using, we use the `stop_r5` function followed by a call to Java's garbage collector, as follows:
+Stop the network and run Java's garbage collector to free the memory it used:
 
 ```{r, message = FALSE}
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
 ```
 
-If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipeaGIT/r5r).
+If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipea/r5r).

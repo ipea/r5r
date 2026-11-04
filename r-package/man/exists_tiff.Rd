@@ -16,14 +16,14 @@ exists_tiff(data_path)
 Check if there is an elevation data file in \code{.tif} format in a given data path
 }
 \seealso{
-Other support functions: 
-\code{\link{fileurl_from_metadata}()},
-\code{\link{get_gtfs_errors}()},
-\code{\link{start_r5r_java}()},
-\code{\link{stop_r5}()},
-\code{\link{tempdir_unique}()},
-\code{\link{travel_time_surface}},
-\code{\link{validate_bad_osm_ids}()}
+Other support functions:
+\code{\link[=fileurl_from_metadata]{fileurl_from_metadata()}},
+\code{\link[=get_gtfs_errors]{get_gtfs_errors()}},
+\code{\link[=start_r5r_java]{start_r5r_java()}},
+\code{\link[=stop_r5]{stop_r5()}},
+\code{\link[=tempdir_unique]{tempdir_unique()}},
+\code{\link[=travel_time_surface]{travel_time_surface()}},
+\code{\link[=validate_bad_osm_ids]{validate_bad_osm_ids()}}
 }
 \concept{support functions}
 \keyword{internal}

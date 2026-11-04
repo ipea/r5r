@@ -7,5 +7,4 @@
 #' `GONDOLA`, `FUNICULAR`. The option `TRANSIT` automatically considers all
 #' public transport modes available.
 #'
-#' - **Non transit modes:** `WALK`, `BICYCLE`, `CAR`, `BICYCLE_RENT`,
-#' `CAR_PARK`.
+#' - **Non transit modes:** `WALK`, `BICYCLE`, `CAR`.

@@ -13,7 +13,7 @@ default_tester <- function(r5r_network,
                                                            format = "%d-%m-%Y %H:%M:%S"),
                            time_window = 1L,
                            percentiles = 50,
-                           fare_structure = NULL,
+                           fare_structure = poa_fare_structure,
                            fare_cutoffs = 0L,
                            max_walk_time = Inf,
                            max_bike_time = Inf,
@@ -52,12 +52,26 @@ default_tester <- function(r5r_network,
 # load fare calculator object
 fare_structure_path <- system.file("extdata/poa/fares/fares_poa.zip",
                                     package = "r5r")
-fare_structure <- r5r::read_fare_structure(fare_structure_path)
+poa_fare_structure <- r5r::read_fare_structure(fare_structure_path)
 
 # errors and warnings -----------------------------------------------------
 
 
 test_that("adequately raises errors", {
+
+  # errors related to missing fare_structure / fare_cutoffs
+  dep <- as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S")
+  expect_error(
+    pareto_frontier(r5r_network, points[1:2, ], points[1:2, ], departure_datetime = dep, fare_cutoffs = 0),
+    "fare_structure"
+  )
+  expect_error(default_tester(r5r_network, fare_structure = NULL), "fare_structure")
+  expect_error(
+    pareto_frontier(r5r_network, points[1:2, ], points[1:2, ], departure_datetime = dep,
+                    fare_structure = poa_fare_structure),
+    "fare_cutoffs"
+  )
+  expect_error(default_tester(r5r_network, fare_cutoffs = -1))
 
   # error related to using object with wrong type as r5r_network
   expect_error(default_tester("r5r_network"))

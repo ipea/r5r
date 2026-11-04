@@ -45,10 +45,10 @@
 #' stop_r5(r5r_network)
 #' @export
 find_snap <- function(r5r_network,
-                      r5r_core = deprecated(),
                       points,
                       radius = 1600,
-                      mode = "WALK"){
+                      mode = "WALK",
+                      r5r_core = deprecated()){
 
   # deprecating r5r_core --------------------------------------
   if (lifecycle::is_present(r5r_core)) {

@@ -17,14 +17,14 @@ A url a string.
 Returns the most recent JAR file url from metadata, depending on the version.
 }
 \seealso{
-Other support functions: 
-\code{\link{exists_tiff}()},
-\code{\link{get_gtfs_errors}()},
-\code{\link{start_r5r_java}()},
-\code{\link{stop_r5}()},
-\code{\link{tempdir_unique}()},
-\code{\link{travel_time_surface}},
-\code{\link{validate_bad_osm_ids}()}
+Other support functions:
+\code{\link[=exists_tiff]{exists_tiff()}},
+\code{\link[=get_gtfs_errors]{get_gtfs_errors()}},
+\code{\link[=start_r5r_java]{start_r5r_java()}},
+\code{\link[=stop_r5]{stop_r5()}},
+\code{\link[=tempdir_unique]{tempdir_unique()}},
+\code{\link[=travel_time_surface]{travel_time_surface()}},
+\code{\link[=validate_bad_osm_ids]{validate_bad_osm_ids()}}
 }
 \concept{support functions}
 \keyword{internal}

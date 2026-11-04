@@ -26,7 +26,7 @@ toc()
 
 
 
-# devtools::install_github("ipeaGIT/r5r", subdir = "r-package", force=T)
+# devtools::install_github("ipea/r5r", subdir = "r-package", force=T)
 options(java.parameters = '-Xmx10G')
 library(sf)
 library(data.table)
@@ -48,14 +48,14 @@ mapviewOptions(platform = 'leafgl')
 
 
 # utils::remove.packages('r5r')
-# devtools::install_github("ipeaGIT/r5r", subdir = "r-package", ref = 'detach_r5_codebase')
+# devtools::install_github("ipea/r5r", subdir = "r-package", ref = 'detach_r5_codebase')
 # library(r5r)
 
 
 
 ############## issue 281 - fare calculator not working with Sao Paulo example ------------------------------
 
-# https://github.com/ipeaGIT/r5r/blob/8101578e5178333cceb969ab5efd040755c48afa/r-package/R/detailed_itineraries.R#L134
+# https://github.com/ipea/r5r/blob/8101578e5178333cceb969ab5efd040755c48afa/r-package/R/detailed_itineraries.R#L134
 
 
 
@@ -376,7 +376,7 @@ mapview(iso2, z = 'isochrone')
 
 
 ##### set_road_speed ------------------------
-# https://github.com/ipeaGIT/r5r/issues/187
+# https://github.com/ipea/r5r/issues/187
 
 library(jsonlite)
 library(data.table)
@@ -804,7 +804,7 @@ unlink(jar_dir, recursive = TRUE)
 
 tictoc::tic()
 Sys.setenv(NOT_CRAN = "true")
-devtools::check(pkg = ".",  cran = FALSE, env_vars = c(NOT_CRAN = "true"))
+devtools::check(pkg = "./r-package/",  cran = FALSE, env_vars = c(NOT_CRAN = "true"))
 tictoc::toc()
 beepr::beep()
 

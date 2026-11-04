@@ -17,7 +17,7 @@
 #' that `r5r` depends on.
 #'
 #' @section Usage:
-#' Please check the vignettes on the [website](https://ipeagit.github.io/r5r/).
+#' See the vignettes on the [website](https://ipea.github.io/r5r/).
 #'
 #' @docType package
 #' @name r5r

@@ -13,14 +13,14 @@ Path. Returns the path of the created temporary directory
 This is different from the built in tempdir() in that it does not return the same directory within a given runtime. Always returns a unique directory
 }
 \seealso{
-Other support functions: 
-\code{\link{exists_tiff}()},
-\code{\link{fileurl_from_metadata}()},
-\code{\link{get_gtfs_errors}()},
-\code{\link{start_r5r_java}()},
-\code{\link{stop_r5}()},
-\code{\link{travel_time_surface}},
-\code{\link{validate_bad_osm_ids}()}
+Other support functions:
+\code{\link[=exists_tiff]{exists_tiff()}},
+\code{\link[=fileurl_from_metadata]{fileurl_from_metadata()}},
+\code{\link[=get_gtfs_errors]{get_gtfs_errors()}},
+\code{\link[=start_r5r_java]{start_r5r_java()}},
+\code{\link[=stop_r5]{stop_r5()}},
+\code{\link[=travel_time_surface]{travel_time_surface()}},
+\code{\link[=validate_bad_osm_ids]{validate_bad_osm_ids()}}
 }
 \concept{support functions}
 \keyword{internal}

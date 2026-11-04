@@ -40,7 +40,7 @@ test_that("verbose argument works in routing functions", {
     }
 
     verbose_expr <- sub("\\)$", ", verbose = TRUE\\)", expr)
-    non_verbose_expr <- sub("\\)$", ", verbose = FALSE\\)", expr)
+    non_verbose_expr <- sub("\\)$", ", verbose = FALSE, progress = FALSE\\)", expr)
 
     info_regex <- "\\[\\s*(INFO|ERROR|WARN)\\s*\\]"
 

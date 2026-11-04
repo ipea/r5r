@@ -110,6 +110,7 @@ test_that("throws error if Java is not 21", {
 # }
 
 test_that("build_network - feeds with errors", {
+
   # create a feed with an error
   temp_net_dir <- tempfile()
   dir.create(temp_net_dir, mode = "0700")
@@ -152,9 +153,8 @@ test_that("build_network - feeds with errors", {
     # the expected error and update accordingly.
     data.table::data.table(
       # current R5 (7.4) records the empty table error twice ?
-      V1 = c(1, 2),
       file = "frequencies",
-      line = 0,
+      line = c(0,0),
       type = "EmptyTableError",
       field = NA,
       id = NA,
@@ -173,7 +173,7 @@ test_that("build_network - feeds with errors", {
     trips[-1,],
     file.path(gtfs_dir, "trips.txt")
   )
-  
+
   # turn back to GTFS
   zip(
     file.path(net_high_dir, "gtfs.zip"),
@@ -201,7 +201,6 @@ test_that("build_network - feeds with errors", {
     # the expected error and update accordingly.
     data.table::data.table(
       # current R5 short-circuits after high priority error so we only get one
-      V1 = 1,
       file = "stop_times",
       line = 2,
       type = "ReferentialIntegrityError",

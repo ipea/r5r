@@ -19,10 +19,10 @@ Converts a \code{data.frame} with road OSM id's and respective LTS
 levels a Java Map<Long, Integer> for use by r5r_network.
 }
 \seealso{
-Other java support functions: 
-\code{\link{dt_to_speed_map}()},
-\code{\link{get_java_version}()},
-\code{\link{java_to_dt}()}
+Other java support functions:
+\code{\link[=dt_to_speed_map]{dt_to_speed_map()}},
+\code{\link[=get_java_version]{get_java_version()}},
+\code{\link[=java_to_dt]{java_to_dt()}}
 }
 \concept{java support functions}
 \keyword{internal}

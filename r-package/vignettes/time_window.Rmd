@@ -24,34 +24,31 @@ knitr::opts_chunk$set(
 ## 1. Introduction 
 
 ### The problem
-To calculate the travel time from A to B, or to calculate the accessibility level at a given location, one has to select a departure time. However, travel time and accessibility estimates can differ significantly at different departure times because of how public transport service levels vary across the day [@stepniak2019impact]. Even a small difference, say leaving at `10:00am` or `10:04am` might importantly change travel time and accessibility estimates depending on when a person departs relative to when a public transport vehicle arrives, and how well transfers are coordinated given a service timetable. This is a very common issue related to the modifiable temporal unit problem (MTUP) [@pereiramtup2019; @levinson2020manual].
+Travel time and accessibility estimates require a departure time, and they can differ significantly across departure times because public transport service levels vary across the day [@stepniak2019impact]. Even leaving at `10:00am` instead of `10:04am` can change results considerably, depending on when vehicles arrive and how well transfers are coordinated. This relates to the modifiable temporal unit problem (MTUP) [@pereiramtup2019; @levinson2020manual].
 
-This problem gets even more complicated when public transport GTFS feeds have a `frequencies.txt` table. In these cases, we cannot know the exact departure time of vehicles, what creates greater uncertainty for our travel time and accessibility estimates [@conway2018accounting; @stewart2022half].
+The uncertainty is greater when GTFS feeds have a `frequencies.txt` table, because exact vehicle departure times are unknown [@conway2018accounting; @stewart2022half].
 
 
 ### The solution
 
-A common strategy to overcome this problem is to calculate travel times and accessibilities at multiple departure times sampled over a time window, and then take the average or median value. Now you may ask, but how many departure times should I use? You might also be thinking  that doing multiple repeated routing analysis can be cumbersome and take a lot of time. Right?
+A common strategy is to compute estimates for multiple departure times over a time window and take the average or median. Repeating the routing for each departure is slow, though.
 
-Here is where `r5r` comes in. Both the `travel_time_matrix()`and `accessibility()` functions have a parameter called `time_window`. When this parameter is set, R<sup>5</sup> will automatically compute multiple travel times / accessibility estimates considering multiple departures per minute within the `time_window` selected by the user.
-
-This vignette shows a reproducible example to explain how one can use the `time_window` and interpret the results.
+In `r5r`, functions such as `travel_time_matrix()` and `accessibility()` have a `time_window` parameter that does this in a single call. This vignette shows how to use it and interpret the results.
 
 
 ## 2. How the `time_window` works and how to interpret the results.
 
-As mentioned above, when `time_window` is set, R<sup>5</sup> computes multiple travel times / accessibility estimates starting at the specified `departure_datetime` and within the `time_window` selected by the user.  By default, `r5r` will generate one estimate per minute. Nonetheless, users can set a number to the `draws_per_minute` parameter that will change the number of Monte Carlo draws to perform per time window minute. The default value of `draws_per_minute` is 5, which mean 300 draws in a 60 minutes time window, for example. For a detailed discussion on the effect of number of draws on result stability, see Stewart et al [-@stewart2022half].
+With `time_window`, R<sup>5</sup> computes an estimate for a departure every minute from `departure_datetime` until the end of the window. If the GTFS feeds have a `frequencies.txt` table, `draws_per_minute` sets the number of Monte Carlo draws per minute (default 5, i.e. 300 draws in a 60-minute window); without frequencies, departures are deterministic and `draws_per_minute` does not affect results. For the effect of the number of draws on result stability, see Stewart et al [-@stewart2022half].
 
-In this case, there isn't a single estimate of travel time / accessibility, but a distribution of several estimates that reflect the travel time / accessibility uncertainties in the specified time window. To get our heads around so many estimates, we can use the `percentiles` parameter to specify the percentiles of the distribution we are interested in. For example, if we select the 25th travel time percentile and the results show that the travel time estimate between A and B is 15 minutes, this means that 25% of all trips taken between these points within the specified time window are shorter than 15 minutes.
+This holds for the default routing algorithm (FastRaptor). When a `fare_structure` is passed to `travel_time_matrix()`, `accessibility()` or `travel_time_surface()`, always in `pareto_frontier()`, and in `detailed_itineraries()` with `shortest_path = FALSE`, R<sup>5</sup> uses the McRaptor algorithm instead. McRaptor does not route a departure every minute: it routes `time_window * draws_per_minute` departure times sampled at random within the window (consecutive departures are, on average, `1 / draws_per_minute` minutes apart, each origin gets its own departure times, and the same ones in every call with the same origin and `seed`). So with McRaptor, `draws_per_minute` affects results even if the GTFS feeds have no `frequencies.txt` table. `pareto_frontier()` and `detailed_itineraries()` fix it at 1.
 
-
-Let's see a couple concrete examples now.
+The result is not a single estimate but a distribution reflecting the uncertainty within the window. The `percentiles` parameter selects which percentiles to return. For example, a 25th-percentile travel time of 15 minutes from A to B means that 25% of trips departing within the window are shorter than 15 minutes.
 
 ## 3. Demonstration of `time_window`.
 
 ### 3.1 Build routable transport network with `build_network()`
 
-First, let's build the network and create the routing inputs. In this example we'll be using the a sample data set for the city of São Paulo (Brazil) included in `r5r`.
+We use the São Paulo (Brazil) sample data included in `r5r`.
 
 
 ```{r, message = FALSE}
@@ -82,12 +79,9 @@ departure_datetime = as.POSIXct("13-05-2019 14:00:00",
                                 format = "%d-%m-%Y %H:%M:%S")
 ```
 
-ps. Please keep in mind that the Monte Carlo draws in `time_window` only affects the results when the GTFS feeds contain a `frequencies.txt` table. If the GTFS feed does not have a frequency table, r5r still allow for multiple runs over the set `time_window` in a deterministic way.
-
-
 ### 3.2 Accessibility with `time_window`.
 
-In this example we calculate the number of schools accessible from each location within a 60-minute time window departing between 2pm and 3pm. In this example we'll be using a cumulative accessibility metric `decay_function = "step"` with a max time threshold of 45 minutes `cutoffs = 45`.
+Number of schools reachable from each location within 45 minutes (`decay_function = "step"`, `cutoffs = 45`), for departures between 2pm and 3pm (`time_window = 60`):
 
 ```{r, message = FALSE}
 # estimate accessibility
@@ -110,9 +104,9 @@ head(acc, n = 10)
 
 ```
 
-This output is in long format, so the first 5 rows show the result for the same origin. In this case, we see that in only 10% of the trips departing from that origin between 2pm and 3pm a person would be able to access up to 111 schools. Meanwhile, 50% of the times she would only access 79 schools. By contrast, the accessibility from the other origin shown in the output above is 0, meaning there are no schools accessible from that location given the max travel time of 45 minutes.
+The output is in long format, one row per origin and percentile, so the first 5 rows refer to the same origin. The 10th percentile counts the schools reachable in at least 10% of departures, the 50th those reachable in at least half of them; so accessibility never increases as the percentile rises. An accessibility of 0 means no school is reachable within 45 minutes.
 
-We can use a plot like the one below to visualize this uncertainty in how accessibility levels might vary between 2pm and 3pm depending on the departure time within that 60-minute time window.
+The plot shows, for each origin (sorted by median), the range of accessibility between the 10th and 80th percentiles, with the median as a dot:
 
 ```{r}
 # summarize
@@ -137,7 +131,7 @@ ggplot(data=df) +
 
 ### 3.3 Travel time matrix with `time_window`.
 
-Now let's calculate all-to-all travel time estimates within a 60-minute time window departing between 2pm and 3pm and see how the output looks like.
+All-to-all travel times for departures between 2pm and 3pm:
 
 ```{r, message = FALSE}
 # estimate travel time matrix
@@ -158,15 +152,13 @@ head(ttm, n = 10)
 
 ```
 
-Now let's look at the 2nd row of the output above. This output tell us that only 10% of the trips between 2pm and 3pm for that origin-destination pair took 39 minutes or less. Meanwhile, 50% of those trips took up tp 45 minutes and 80% of them were 48-minute long or shorter.
-
-The last row in the result above has a few `NA`s. This tell us that at least 50% of all simulated trips between 2pm and 3pm for that origin-destination pair could not be completed because they took longer than the `max_trip_duration` we have set (90 minutes).
+Each `travel_time_pXX` column gives the travel time within which XX% of the trips departing between 2pm and 3pm are completed: `travel_time_p10` for the fastest 10%, `travel_time_p50` the median, and so on. An `NA` means fewer than XX% of the trips arrive within `max_trip_duration` (90 minutes). A wider `time_window` can include departures with worse service, so it can produce more `NA`s in the higher percentiles.
 
 
 
 ### 3.4 Expanded travel time matrix with `time_window`.
 
-Finally, we can also use the `time_window` in the `expanded_travel_time_matrix()` function. In this case, though, when the user sets a `time_window` value, the `expanded_travel_time_matrix()` will return the fastest route alternative departing each minute within the specified time window. Please note this function can be very memory intensive for large data sets and time windows.
+With `time_window`, `expanded_travel_time_matrix()` returns the fastest route departing at each minute of the window, instead of percentiles. It can be very memory intensive for large data sets and time windows.
 
 ```{r}
 ettm <- r5r::expanded_travel_time_matrix(
@@ -187,25 +179,25 @@ head(ettm, n = 10)
 
 ### 3.5 Detailed itineraries with `time_window`.
 
-In the `detailed_itineraries()` function, the number of Monte Carlo draws per minute is hardcoded to 1. This means that the function simulates only one departure per minute within the `time_window`. So if you set a `time_window` of 10 minutes, it would simulate 10 departures, one in each minute. This is largely because the `time_window` behaves slightly differently here.
+`detailed_itineraries()` returns itineraries rather than travel time or accessibility percentiles. With `time_window`, it returns the fastest itinerary: the shortest travel time measured from its own departure, so it may depart and arrive later than others (use `time_window = 1` for the earliest arrival). With `shortest_path = FALSE`, it also returns sub-optimal alternatives.
 
-See, functions like `travel_time_matrix()` or `accessibility()`, for example, return estimates of travel times or accessibility. In these cases, when we use the `time_window` parameter, these functions output selected percentiles of those values generated based on the distribution of all estimates that result from the multiple trip simulations.
+With the default `shortest_path = TRUE` and no `fare_structure`, it routes one departure at each minute of `time_window`, as `travel_time_matrix()` does with schedule-based GTFS; ties between equally fast itineraries go to the earliest departure.
 
-The `detailed_itineraries()`, on the other hand, does not return travel times or accessibility estimates. It returns alternatives of trip journeys. In this case, when we use the `time_window` parameter, the function will return the optimal trip itinerary found within the time window. It can also return the optimal route along with multiple sub-optimal journey alternatives found within the time window if the the user sets `shortest_path = FALSE`.
+With `shortest_path = FALSE` or a `fare_structure`, it uses the McRaptor algorithm with one draw per minute (see Section 2): consecutive departures are 30 to 90 seconds apart, so a 10-minute `time_window` simulates about 10 departures. Each departure is routed separately, and with the default `suboptimal_minutes = 0` only the itineraries arriving earliest are kept for each departure, even if a slower one has fewer transfers.
 
-*obs.* Mind you that `detailed_itineraries()` cannot be computed for public transport trips if the the network uses a frequencies-based GTFS feed. In these cases, we suggest using `gtfstools::frequencies_to_stop_times()` to create a suitable feed.
+*obs.* `detailed_itineraries()` cannot route public transport trips on frequency-based GTFS feeds; use `gtfstools::frequencies_to_stop_times()` to create a suitable feed.
 
 
 
 ### Cleaning up after usage
 
-`r5r` objects are still allocated to any amount of memory previously set after they are done with their calculations. In order to remove an existing `r5r` object and reallocate the memory it had been using, we use the `stop_r5` function followed by a call to Java's garbage collector, as follows:
+Stop the network and run Java's garbage collector to free the memory it used:
 
 ```{r, message = FALSE}
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
 ```
 
-If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipeaGIT/r5r).
+If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipea/r5r).
 
 ## References

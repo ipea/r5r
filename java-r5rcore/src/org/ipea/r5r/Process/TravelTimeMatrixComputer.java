@@ -88,6 +88,10 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
 
     private static final Logger LOG = LoggerFactory.getLogger(TravelTimeMatrixComputer.class);
 
+    // key of street-only paths; departure keys are seconds from midnight (>= 0), so a 00:00 transit
+    // departure cannot collide with it
+    private static final int DIRECT_KEY = -1;
+
     private final CsvResultOptions csvOptions;
 
     private int monteCarloDrawsPerMinute;
@@ -106,7 +110,7 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
     protected RDataFrame runProcess(int index) throws ParseException {
         RegionalTask request = buildRegionalTask(index);
 
-        TravelTimeComputer computer = new R5TravelTimeComputer(request, transportNetwork);
+        TravelTimeComputer computer = new R5TravelTimeComputer(request, transportNetwork, routingProperties.monteCarloSeed);
         OneOriginResult travelTimeResults = computer.computeTravelTimes();
         RDataFrame travelTimesTable = buildDataFrameStructure(fromIds[index], 10);
         populateDataFrame(travelTimeResults, travelTimesTable);
@@ -127,6 +131,9 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
     }
 
     private void populateRegularResults(OneOriginResult travelTimeResults, RDataFrame travelTimesTable) {
+        // column names built once, not per destination (String.format was ~3% of CPU time with 5 percentiles)
+        String[] columns = new String[this.routingProperties.percentiles.length];
+        for (int p = 0; p < columns.length; p++) columns[p] = String.format("travel_time_p%02d", this.routingProperties.percentiles[p]);
         for (int destination = 0; destination < travelTimeResults.travelTimes.nPoints; destination++) {
             if (travelTimeResults.travelTimes.getValues()[0][destination] <= maxTripDuration) {
 
@@ -139,9 +146,8 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
                 // set percentiles
                 for (int p = 0; p < this.routingProperties.percentiles.length; p++) {
                     int tt = travelTimeResults.travelTimes.getValues()[p][destination];
-                    String ps = String.format("%02d", this.routingProperties.percentiles[p]);
                     if (tt <= maxTripDuration) {
-                        travelTimesTable.set("travel_time_p" + ps, tt);
+                        travelTimesTable.set(columns[p], tt);
                     }
                 }
             }
@@ -184,7 +190,8 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
 
                     int monteCarloDrawsForPath = 0;
                     for (PathBreakdown path : pbs) {
-                        int arrivalTime = departureTime + (int) (path.getTotalTime() * 60);
+                        // exact seconds: getTotalTime() is rounded to 0.1 min (+-3 s)
+                        int arrivalTime = departureTime + (int) Math.round(path.totalTime * 60);
                         monteCarloDrawsForPath++;
                         if (arrivalTime <= desiredArrivalTime) {
                             addPathToDataframe(travelTimesTable, destination, monteCarloDrawsForPath, path);
@@ -196,17 +203,17 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
 
                     // if there are less routes than expected check direct paths
                     if (monteCarloDrawsForPath < monteCarloDrawsPerMinute) {
-                        Collection<PathBreakdown> directPaths = pathBreakdown[destination].get(0);
+                        Collection<PathBreakdown> directPaths = pathBreakdown[destination].get(DIRECT_KEY);
 
                         PathBreakdown directPath;
                         if (!directPaths.isEmpty()) {
                             directPath = directPaths.iterator().next();
                         } else {
-                            return; // if path is unreachable there is no point seeing if it arrives in time
+                            continue; // no direct path: an earlier departure may still arrive in time
                         }
 
                         monteCarloDrawsForPath = 1; // artificial "first draw" for direct path
-                        int arrivalTime = departureTime + (int) (directPath.getTotalTime() * 60);
+                        int arrivalTime = departureTime + (int) Math.round(directPath.totalTime * 60);
 
                         if (arrivalTime <= desiredArrivalTime) {
                             directPath.departureTime = Utils.getTimeFromSeconds(departureTime);
@@ -220,6 +227,15 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
             }
         }
     }
+
+    private static final Comparator<PathBreakdown> PATH_ORDER = Comparator
+            .comparingDouble((PathBreakdown p) -> p.totalTime)
+            .thenComparing(p -> p.routes)
+            .thenComparingDouble(p -> p.accessTime)
+            .thenComparingDouble(p -> p.waitTime)
+            .thenComparingDouble(p -> p.rideTime)
+            .thenComparingDouble(p -> p.transferTime)
+            .thenComparingDouble(p -> p.egressTime);
 
     private Multimap<Integer, PathBreakdown>[] extractPathResults(PathResult paths, TravelTimeResult travelTimes) {
         Multimap<Integer, PathBreakdown>[] pathResults = new Multimap[nDestinations];
@@ -244,20 +260,26 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
                         breakdown.accessTime = routeSequence.stopSequence.access == null ? 0 : routeSequence.stopSequence.access.time / 60.0f;
                         breakdown.waitTime = iteration.waitTimes.sum() / 60.0f;
                         breakdown.rideTime = routeSequence.stopSequence.rideTimesSeconds == null ? 0 : routeSequence.stopSequence.rideTimesSeconds.sum() / 60.0f;
-                        breakdown.transferTime = routeSequence.stopSequence.transferTime(iteration) / 60f;
+                        breakdown.transferTime = routeSequence.stopSequence.totalTransferTimeSeconds() / 60f;
                         breakdown.egressTime = routeSequence.stopSequence.egress == null ? 0 : routeSequence.stopSequence.egress.time / 60.0f;
                         breakdown.totalTime = iteration.totalTime / 60.0f;
 
                         breakdown.routes = path[0];
                         breakdown.nRides = routeSequence.stopSequence.rideTimesSeconds == null ? 0 : routeSequence.stopSequence.rideTimesSeconds.size();
 
-                        if (iteration.departureTime == 0) {
+                        if (breakdown.nRides == 0) { // direct path (R5 street-only iteration)
                             breakdown.departureTime = "";
                             breakdown.routes = this.directModes.toString();
                         }
 
-                        pathResults[d].put(iteration.departureTime, breakdown);
+                        pathResults[d].put(breakdown.nRides == 0 ? DIRECT_KEY : iteration.departureTime, breakdown);
                     }
+                }
+
+                // R5 iterates route sequences in hash order, which changes between runs. Sort the paths of each
+                // departure minute so that draw numbers (and the path picked by the arrival-time filter) are stable.
+                for (Integer key : pathResults[d].keySet()) {
+                    ((List<PathBreakdown>) pathResults[d].get(key)).sort(PATH_ORDER);
                 }
             } else {
                 // if iteration map for this destination is null, add possible direct route if shorter than max trip duration
@@ -266,7 +288,7 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
                     breakdown.departureTime = "";
                     breakdown.routes = this.directModes.toString();
                     breakdown.totalTime = travelTimes.getValues()[0][d];
-                    pathResults[d].put(0, breakdown);
+                    pathResults[d].put(DIRECT_KEY, breakdown);
                 }
             }
         }
@@ -293,7 +315,7 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
 
                     // if there are less routes than expected check direct paths
                     if (monteCarloDrawsForPath < monteCarloDrawsPerMinute) {
-                        Collection<PathBreakdown> directPaths = pathBreakdown[destination].get(0);
+                        Collection<PathBreakdown> directPaths = pathBreakdown[destination].get(DIRECT_KEY);
 
                         PathBreakdown directPath;
                         if (!directPaths.isEmpty()) {
@@ -321,16 +343,19 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
         travelTimesTable.set("draw_number", monteCarloDrawsForPath);
 
         travelTimesTable.set("departure_time", path.departureTime);
-        travelTimesTable.set("routes", path.routes);
-        travelTimesTable.set("total_time", path.getCombinedTravelTime() > 0 ? path.getCombinedTravelTime() : path.getTotalTime());
+        double totalTime = path.getCombinedTravelTime() > 0 ? path.getCombinedTravelTime() : path.getTotalTime();
+        // R turns trips over max_trip_duration into NA after Java returns; CSVs bypass R, so blank those cells here
+        boolean na = Utils.saveOutputToCsv && totalTime > maxTripDuration;
+        travelTimesTable.set("routes", na ? null : path.routes);
+        travelTimesTable.set("total_time", na ? null : totalTime);
 
         if (routingProperties.travelTimesBreakdown) {
-            travelTimesTable.set("access_time", path.getAccessTime());
-            travelTimesTable.set("wait_time", path.getWaitTime());
-            travelTimesTable.set("ride_time", path.getRideTime());
-            travelTimesTable.set("transfer_time", path.getTransferTime());
-            travelTimesTable.set("egress_time", path.getEgressTime());
-            travelTimesTable.set("n_rides", path.nRides);
+            travelTimesTable.set("access_time", na ? null : path.getAccessTime());
+            travelTimesTable.set("wait_time", na ? null : path.getWaitTime());
+            travelTimesTable.set("ride_time", na ? null : path.getRideTime());
+            travelTimesTable.set("transfer_time", na ? null : path.getTransferTime());
+            travelTimesTable.set("egress_time", na ? null : path.getEgressTime());
+            travelTimesTable.set("n_rides", na ? null : path.nRides);
         }
     }
 
@@ -345,7 +370,8 @@ public class TravelTimeMatrixComputer extends R5DataFrameProcess {
             // regular travel time matrix, with percentiles
             for (int p : this.routingProperties.percentiles) {
                 String ps = String.format("%02d", p);
-                travelTimesTable.addIntegerColumn("travel_time_p" + ps, Integer.MAX_VALUE);
+                // cells over max_trip_duration keep this default: R turns it into NA, a CSV gets an empty field
+                travelTimesTable.addIntegerColumn("travel_time_p" + ps, Utils.saveOutputToCsv ? null : Integer.MAX_VALUE);
             }
         } else {
             // expanded travel time matrix, with minute by minute route information

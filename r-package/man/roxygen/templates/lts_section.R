@@ -1,6 +1,6 @@
 #' @section Level of Traffic Stress (LTS):
 #'
-#' When cycling is enabled in `R5` (by passing the value `BIKE` to either
+#' When cycling is enabled in `R5` (by passing the value `BICYCLE` to either
 #' `mode` or `mode_egress`), setting `max_lts` will allow cycling only on
 #' streets with a given level of danger/stress. Setting `max_lts` to 1, for
 #' example, will allow cycling only on separated bicycle infrastructure or

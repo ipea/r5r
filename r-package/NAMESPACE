@@ -23,9 +23,11 @@ export(transit_network_to_sf)
 export(travel_time_matrix)
 export(write_fare_structure)
 importClassesFrom(rJava,jobjRef)
-importFrom(data.table,"%between%")
-importFrom(data.table,"%chin%")
-importFrom(data.table,"%like%")
-importFrom(data.table,":=")
-importFrom(data.table,.N)
+importFrom(data.table,
+  "%between%",
+  "%chin%",
+  "%like%",
+  ":=",
+  .N
+)
 importFrom(lifecycle,deprecated)

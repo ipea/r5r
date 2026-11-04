@@ -24,15 +24,15 @@ that \code{r5r} depends on.
 }
 \section{Usage}{
 
-Please check the vignettes on the \href{https://ipeagit.github.io/r5r/}{website}.
+See the vignettes on the \href{https://ipea.github.io/r5r/}{website}.
 }
 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/ipeaGIT/r5r}
-  \item \url{https://ipeagit.github.io/r5r/}
-  \item Report bugs at \url{https://github.com/ipeaGIT/r5r/issues}
+  \item \url{https://github.com/ipea/r5r}
+  \item \url{https://ipea.github.io/r5r/}
+  \item Report bugs at \url{https://github.com/ipea/r5r/issues}
 }
 
 }
@@ -41,6 +41,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Rafael H. M. Pereira \email{rafa.pereira.br@gmail.com} (\href{https://orcid.org/0000-0003-2125-7465}{ORCID})
   \item Marcus Saraiva \email{marcus.saraiva@gmail.com} (\href{https://orcid.org/0000-0001-6218-2338}{ORCID})
   \item Daniel Herszenhut \email{dhersz@gmail.com} (\href{https://orcid.org/0000-0001-8066-1105}{ORCID})
   \item Alex Magnus \email{alex.magnus@mail.utoronto.ca}

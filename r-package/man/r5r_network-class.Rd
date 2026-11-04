@@ -8,8 +8,8 @@
 Class to internally handle Java reference to R5RCore
 }
 \seealso{
-Other r5r_network: 
-\code{\link{wrap_r5r_network}()}
+Other r5r_network:
+\code{\link[=wrap_r5r_network]{wrap_r5r_network()}}
 }
 \concept{r5r_network}
 \keyword{internal}

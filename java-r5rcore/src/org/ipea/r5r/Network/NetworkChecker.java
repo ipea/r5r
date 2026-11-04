@@ -3,6 +3,7 @@ package org.ipea.r5r.Network;
 import com.conveyal.kryo.InstanceCountingClassResolver;
 import com.conveyal.kryo.TIntArrayListSerializer;
 import com.conveyal.kryo.TIntIntHashMapSerializer;
+import com.conveyal.r5.kryo.KryoNetworkSerializer;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.serializers.ExternalizableSerializer;
@@ -22,10 +23,10 @@ import java.util.BitSet;
 public class NetworkChecker {
 
     /**
-     * This string should be changed to a new value each time the network storage format changes.
-     * I considered using an ISO date string but that could get confusing when seen in filenames.
+     * Network storage format version required by the R5 version in use. Taken from R5 itself, so that networks
+     * written by a different R5 version are rebuilt instead of failing to load.
      */
-    public static final String NETWORK_FORMAT_VERSION = "nv3";
+    public static final String NETWORK_FORMAT_VERSION = KryoNetworkSerializer.NETWORK_FORMAT_VERSION;
 
     public static final byte[] HEADER = "R5NETWORK".getBytes();
 
@@ -52,8 +53,8 @@ public class NetworkChecker {
         LOG.info("Loading network from file format version {}, written by R5 commit {}", formatVersion, commit);
 
         if (!NETWORK_FORMAT_VERSION.equals(formatVersion)) {
-            LOG.error(String.format("File format version is %s, this R5 requires %s",
-                    formatVersion, NETWORK_FORMAT_VERSION));
+            LOG.warn("Network file format version is {}, this R5 requires {}; rebuilding network.",
+                    formatVersion, NETWORK_FORMAT_VERSION);
             return false;
         } else { return true; }
     }

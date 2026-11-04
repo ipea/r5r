@@ -7,7 +7,7 @@ copied_element <- function(element) {
   results
 }
 
-test_that("basic struture is right", {
+test_that("basic structure is right", {
   expect_error(assert_fare_structure("a"))
 
   struc_copy <- struc

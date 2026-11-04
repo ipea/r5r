@@ -94,7 +94,7 @@ public class SpeedSetter {
         // finished building paths
 
         // Load OSM
-        osmRoadNetwork = new OSM(null);
+        osmRoadNetwork = OSM.newWritableTempFile();
         osmRoadNetwork.readFromFile(pbfFilePath.toAbsolutePath().toString());
         LOG.info("Loaded OSM network from file {}", pbfFilePath.getFileName());
 

@@ -10,7 +10,10 @@ import com.conveyal.r5.analyst.scenario.RasterCost;
 import com.conveyal.r5.kryo.KryoNetworkSerializer;
 import com.conveyal.r5.streets.StreetLayer;
 import com.conveyal.r5.transit.TransferFinder;
+import com.conveyal.r5.transit.TransitLayer;
 import com.conveyal.r5.transit.TransportNetwork;
+import com.conveyal.r5.transit.GtfsTransferLoader;
+import com.conveyal.r5.analyst.cluster.TransportNetworkConfig.TransferConfig;
 import org.apache.commons.io.FilenameUtils;
 import org.ipea.r5r.R5RCore;
 import org.ipea.r5r.RDataFrame;
@@ -132,13 +135,24 @@ public class NetworkBuilder {
         network.streetLayer.parentNetwork = network;
         network.streetLayer.indexStreets();
 
-        network.transitLayer = new TransitLayerWithShapes();
+        network.transitLayer = new TransitLayer();
+        // this replaces the old r5r TransitLayerWithShapes class; saving shapes now built in to r5.
+        network.transitLayer.saveShapes = true;
+
+        // Options here are OSM_ONLY (only use OSM data to find transfers, consistent with r5r versions
+        // up to 2.3.0), STOP_TO_PATTERN (only use OSM data to find transfers to stops served by patterns
+        // that do not have a stop with an explicit transfer from the source stop), STOP_TO_STOP (use OSM
+        // to find transfers for all stop pairs that don't have an explicit GTFS transfer), and GTFS_ONLY
+        // (use only transfers specified in GTFS, almost never appropriate).
+        GtfsTransferLoader transferLoader = new GtfsTransferLoader(network.transitLayer, TransferConfig.OSM_ONLY);
 
         gtfsFeeds.forEach(gtfsFeed -> {
-            network.transitLayer.loadFromGtfs(gtfsFeed);
+            network.transitLayer.loadFromGtfs(gtfsFeed, transferLoader);
             // Is there a reason we can't push this close call down into the loader method? Maybe exception handling?
             gtfsFeed.close();
         });
+
+        transferLoader.logErrors();
 
         network.transitLayer.parentNetwork = network;
         network.streetLayer.associateStops(network.transitLayer);
@@ -146,7 +160,7 @@ public class NetworkBuilder {
 
         network.rebuildTransientIndexes();
 
-        TransferFinder transferFinder = new TransferFinder(network);
+        TransferFinder transferFinder = new TransferFinder(network, transferLoader);
         transferFinder.findTransfers();
         transferFinder.findParkRideTransfer();
 
@@ -166,6 +180,7 @@ public class NetworkBuilder {
             }
         } catch (DataSourceException e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         network.scenarioId = "r5r";
@@ -178,7 +193,11 @@ public class NetworkBuilder {
         network.transitLayer.buildDistanceTables(null);
 
         // pre-calculate transfers between transit stops
-        new TransferFinder(network).findTransfers();
+        // TODO mwbc: why is this happening again? It does not happen twice in the R5
+        // TransportNetworkCache#buildNetworkFromConfig. I don't want to remove it though due to
+        // https://github.com/conveyal/r5/issues/991. Maybe we should just move the entire transfer
+        // finding process here?
+        new TransferFinder(network, transferLoader).findTransfers();
 
         return network;
     }
@@ -195,9 +214,7 @@ public class NetworkBuilder {
                 osmFilename = file.getAbsolutePath();
 
                 // Load OSM data into MapDB to pass into network builder.
-                osmFile = new OSM(osmFilename + ".mapdb");
-                osmFile.intersectionDetection = true;
-                osmFile.readFromFile(osmFilename);
+                osmFile = OSM.openOrCreateFile(new File(osmFilename + ".mapdb"), osmFilename);
             }
             if (name.endsWith(".zip")) gtfsFiles.add(file.getAbsolutePath());
             if (name.endsWith(".tif") | name.endsWith(".tiff")) tiffFile = file.getAbsolutePath();
@@ -240,7 +257,7 @@ public class NetworkBuilder {
             return GTFSFeed.reopenReadOnly(dbFile);
         } catch (Exception e) {
             // re-throw as unchecked
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while processing " + feedFile, e);
         }
     }
 
