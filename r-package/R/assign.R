@@ -176,7 +176,7 @@ assign_departure <- function(datetime, mode_list) {
     if (mode_list$transit_mode == "") {
       datetime <- Sys.time()
     } else {
-      stop("When using a transit mode you must pass a departure_datetime", call. = FALSE)
+      stop("When using modes of transit for routing, you must pass a departure_datetime. Without setting a fixed time, results will not be reproducible.", call. = FALSE)
     }
   }
 

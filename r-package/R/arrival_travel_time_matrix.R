@@ -167,7 +167,7 @@ arrival_travel_time_matrix <- function(r5r_network,
 
   # calculate departure datetime
   departure_datetime <- arrival_datetime - as.difftime(max_trip_duration, units = "mins")
-  departure <- assign_departure(departure_datetime)
+  departure <- assign_departure(departure_datetime, mode_list)
 
   # check availability of transit services on the selected date
   if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR') {
