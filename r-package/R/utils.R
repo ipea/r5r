@@ -352,30 +352,3 @@ lts_lines2shp <- function(new_lts_lines){
 
   if (file.exists(file_path)) { return(file_path)}
 }
-
-
-#' Warn about the deprecated `Sys.time()` default of the departure/arrival time
-#'
-#' Relying on the default `Sys.time()` with public transport gives results that
-#' depend on when the code is run (#549). The default will be removed in a
-#' future release.
-#'
-#' @param mode The `mode` passed to the routing function.
-#' @param arg The name of the date-time argument.
-#'
-#' @return Invisibly returns `NULL`.
-#'
-#' @keywords internal
-warn_default_datetime <- function(mode, arg = "departure_datetime") {
-  if (any(grepl("TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR", toupper(mode)))) {
-    cli::cli_warn(
-      c(
-        "!" = "Relying on the default {.code {arg} = Sys.time()} for public transport routing is deprecated as of r5r v2.5.0.",
-        "i" = "Results depend on the departure time. Please set {.arg {arg}} explicitly: the default will be removed in a future release."
-      ),
-      .frequency = "regularly",
-      .frequency_id = "r5r_default_datetime"
-    )
-  }
-  invisible(NULL)
-}

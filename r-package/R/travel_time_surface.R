@@ -31,7 +31,8 @@ setClass("travel_time_surface", slots=list(
 #' @param departure_datetime A POSIXct object. Only affects public transport
 #'        legs; when routing with public transport, it must fall within the
 #'        service period of the GTFS feeds (`calendar.txt`; see
-#'        [check_transit_availability()]). Defaults to `Sys.time()`. See
+#'        [check_transit_availability()]). Required for public transport;
+#'        optional otherwise. See
 #'        details for how datetimes are parsed.
 #' @param time_window An integer. The time window in minutes for which `r5r`
 #'        will calculate multiple travel time matrices departing each minute
@@ -106,7 +107,7 @@ travel_time_surface <- function(r5r_network,
                                zoom = 10,
                                mode = "WALK",
                                mode_egress = "WALK",
-                               departure_datetime = Sys.time(),
+                               departure_datetime = NULL,
                                time_window = 10L,
                                percentiles = 50L,
                                max_walk_time = Inf,
@@ -137,7 +138,7 @@ travel_time_surface <- function(r5r_network,
 
   origins <- assign_points_input(origins, "origins")
   mode_list <- assign_mode(mode, mode_egress)
-  departure <- assign_departure(departure_datetime)
+  departure <- assign_departure(departure_datetime, mode_list)
 
   max_walk_time <- assign_max_street_time(
     max_walk_time,

@@ -13,7 +13,7 @@
 #' information; split larger sets into chunks.
 #'
 #' @inheritParams expanded_travel_time_matrix
-#' @param arrival_datetime A POSIXct object. The time by which trips must
+#' @param arrival_datetime A POSIXct object, required for all modes. The time by which trips must
 #'   arrive. When routing with public transport, services must run on the date
 #'   of `arrival_datetime - max_trip_duration` (see
 #'   [check_transit_availability()]). See details for

@@ -176,7 +176,12 @@ assign_departure <- function(datetime, mode_list) {
     if (mode_list$transit_mode == "") {
       datetime <- Sys.time()
     } else {
-      stop("When using modes of transit for routing, you must pass a departure_datetime. Without setting a fixed time, results will not be reproducible.", call. = FALSE)
+      cli::cli_abort(
+        c(
+          "!" = "You must pass a {.arg departure_datetime} for public transport routing.",
+          "i" = "Results depend on the departure time. Supply an explicit POSIXct value to make results reproducible."
+        )
+      )
     }
   }
 

@@ -123,8 +123,6 @@ pareto_frontier <- function(r5r_network,
     r5r_network <- r5r_core
   }
 
-  if (missing(departure_datetime)) warn_default_datetime(mode)
-
   old_options <- options(datatable.optimize = Inf)
   on.exit(options(old_options), add = TRUE)
 

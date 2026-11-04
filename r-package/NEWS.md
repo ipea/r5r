@@ -18,7 +18,7 @@
 
 **Deprecations**
 
-- Relying on the default `departure_datetime = Sys.time()` (`arrival_datetime` in `arrival_travel_time_matrix()`) when routing on public transport is deprecated and now raises a warning, because the results then depend on when the code is run. Please set the argument explicitly: the default will be removed in a future release. See [#549](https://github.com/ipea/r5r/pull/549).
+- Public transport routing now requires an explicit `departure_datetime`; omitting it or passing `NULL` raises an error. Direct-mode departure routing remains optional. `arrival_travel_time_matrix()` requires `arrival_datetime` for all modes. See [#549](https://github.com/ipea/r5r/pull/549).
 
 **Bug fixes**
 

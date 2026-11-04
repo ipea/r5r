@@ -171,8 +171,6 @@ isochrone <- function(r5r_network,
     r5r_network <- r5r_core
   }
 
-  if (missing(departure_datetime)) warn_default_datetime(mode)
-
   # sample size no longer used
   if (lifecycle::is_present(sample_size)) {
     cli::cli_warn(c(

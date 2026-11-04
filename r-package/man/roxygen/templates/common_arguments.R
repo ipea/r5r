@@ -9,7 +9,8 @@
 #' @param departure_datetime A POSIXct object. Only affects public transport
 #'   legs; when routing with public transport, it must fall within the service
 #'   period of the GTFS feeds (`calendar.txt`; see
-#'   [check_transit_availability()]). Defaults to `Sys.time()`. See details for
+#'   [check_transit_availability()]). Required for public transport; optional
+#'   otherwise. See details for
 #'   how datetimes are parsed.
 #' @param max_walk_time An integer. The maximum walking time (in minutes) to
 #'   access and egress the transit network, make transfers, or complete
