@@ -17,6 +17,13 @@ test_that("routing functions reject omitted and NULL transit datetimes without w
                    accessibility, detailed_itineraries, pareto_frontier)) {
     args <- list(r5r_network = r5r_network, origins = pois[1:2],
                  destinations = pois[1:2], mode = "TRANSIT", progress = FALSE)
+    if (identical(fun, accessibility)) {
+      args$destinations <- data.table::copy(args$destinations)[, opportunities := 1L]
+    }
+    if (identical(fun, pareto_frontier)) {
+      args$fare_structure <- fare_structure
+      args$fare_cutoffs <- 0L
+    }
     for (explicit_null in c(FALSE, TRUE)) {
       if (explicit_null) args["departure_datetime"] <- list(NULL)
       expect_no_warning(expect_error(do.call(fun, args), "must pass a.*departure_datetime"))
