@@ -7,6 +7,7 @@ import com.conveyal.r5.api.util.LegMode;
 import com.conveyal.r5.api.util.TransitModes;
 import com.conveyal.r5.common.GeometryUtils;
 import org.ipea.r5r.Process.R5DataFrameProcess;
+import org.ipea.r5r.Process.R5Process;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.slf4j.LoggerFactory;
@@ -84,9 +85,11 @@ public class Utils {
 
         // Choose smallest # Level as that is the most verbose.
 
-        Level progressLevel = progress ? Level.INFO : Level.OFF;
+        Level progressLevel = progress ? Level.INFO : Level.WARN;
         Level levelToSet = Utils.getLogLevel().toInt() < progressLevel.toInt() ? Utils.getLogLevel() : progressLevel;
         logger.setLevel(levelToSet);
+        // RegularGridProcess (travel time surfaces) logs progress through R5Process
+        loggerContext.getLogger(R5Process.class).setLevel(levelToSet);
     }
 
     public static void setLogModeOther(String level) {

@@ -4,12 +4,17 @@
 \alias{set_max_fare}
 \title{Set max fare}
 \usage{
-set_max_fare(r5r_network, max_fare)
+set_max_fare(r5r_network, max_fare, fare_structure)
 }
 \arguments{
 \item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
 
 \item{max_fare}{A number.}
+
+\item{fare_structure}{A fare structure object, following the convention
+set in \code{\link[=setup_fare_structure]{setup_fare_structure()}}. This object describes how transit fares
+should be calculated. See \code{vignette("fare_structure", package = "r5r")}
+for its structure.}
 }
 \value{
 Invisibly returns \code{TRUE}.
@@ -30,6 +35,7 @@ Other setting functions:
 \code{\link[=set_max_lts]{set_max_lts()}},
 \code{\link[=set_max_rides]{set_max_rides()}},
 \code{\link[=set_monte_carlo_draws]{set_monte_carlo_draws()}},
+\code{\link[=set_monte_carlo_seed]{set_monte_carlo_seed()}},
 \code{\link[=set_n_threads]{set_n_threads()}},
 \code{\link[=set_new_congestion]{set_new_congestion()}},
 \code{\link[=set_new_lts]{set_new_lts()}},

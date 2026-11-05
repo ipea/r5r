@@ -92,7 +92,8 @@ start_r5r_java <- function(data_path,
   r5_version <- paste0("-DR5_VER=", r5r_env$r5_jar_version)
   r5r_version <- paste0("-DR5R_VER=", utils::packageVersion("r5r"))
 
-  rJava::.jinit(parameters = c(log_path, r5_version, r5r_version))
+  # passing `parameters` replaces .jinit()'s default, so keep the user's options(java.parameters)
+  rJava::.jinit(parameters = c(getOption("java.parameters"), log_path, r5_version, r5r_version))
 
   ver <- get_java_version()
 
@@ -140,9 +141,9 @@ start_r5r_java <- function(data_path,
       file.path( r5r_env$cache_dir, filename)
     )
 
-    # If there isn't a JAR already larger than 60MB, download it
-    if (checkmate::test_file_exists(jar_file) && file.info(jar_file)$size > r5r_env$r5_jar_size) {
-      if (!verbose) message("Using cached R5 version from ", jar_file)
+    # If there isn't a complete JAR already, download it
+    if (checkmate::test_file_exists(jar_file) && file.info(jar_file)$size >= r5r_env$r5_jar_size) {
+      if (verbose) message("Using cached R5 version from ", jar_file)
     } else {
       check  <- download_r5(temp_dir = temp_dir, quiet = !verbose)
       if (is.null(check)) { return(invisible(NULL)) }

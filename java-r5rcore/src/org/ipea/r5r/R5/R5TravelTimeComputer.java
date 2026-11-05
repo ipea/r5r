@@ -17,12 +17,15 @@ import com.conveyal.r5.streets.StreetRouter;
 import com.conveyal.r5.transit.TransportNetwork;
 import com.conveyal.r5.transit.path.Path;
 import gnu.trove.map.TIntIntMap;
+import org.apache.commons.math3.random.MersenneTwister;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
@@ -35,17 +38,62 @@ public class R5TravelTimeComputer extends TravelTimeComputer {
 
     private final AnalysisWorkerTask request;
     private final TransportNetwork network;
+    private final Integer seed;
 
     /**
      * Constructor.
      *
      * @param request
      * @param network
+     * @param seed seed for the Monte Carlo frequency offsets, or null for R5's unseeded draws
      */
-    public R5TravelTimeComputer(AnalysisWorkerTask request, TransportNetwork network) {
+    public R5TravelTimeComputer(AnalysisWorkerTask request, TransportNetwork network, Integer seed) {
         super(request, network);
         this.request = request;
         this.network = network;
+        this.seed = seed;
+    }
+
+    /**
+     * Seeds the random frequency offsets of a router, so that results with frequency-based GTFS are reproducible.
+     * R5 creates them unseeded (FrequencyRandomOffsets.mt) and offers no way to set a seed, so this uses reflection.
+     * The seed is combined with the origin coordinates: each origin gets its own stream, independent of the order
+     * in which origins are routed and of the number of threads.
+     */
+    public static void seedOffsets(FastRaptorWorker worker, Integer seed, double fromLat, double fromLon) {
+        if (seed != null) seedOffsets(FastRaptorWorker.class, worker, seed, fromLat, fromLon);
+    }
+
+    /**
+     * McRAPTOR also samples its departure times with its own generator (mersenneTwister), which R5 seeds from
+     * (int) (fromLat * 1e9): this overflows beyond about 2.15 degrees of latitude, so almost every origin gets the
+     * same sample (#601, conveyal/r5#1026). It is always reseeded here: from the origin coordinates when seed is
+     * null (deterministic, as in R5, but different for each origin), and otherwise also from the seed, with a stream
+     * distinct from the offsets one.
+     */
+    public static void seedOffsets(McRaptorSuboptimalPathProfileRouter router, Integer seed, double fromLat, double fromLon) {
+        if (seed != null) seedOffsets(McRaptorSuboptimalPathProfileRouter.class, router, seed, fromLat, fromLon);
+        long departureSeed = seed == null ? Objects.hash(fromLat, fromLon) : Objects.hash(seed, fromLat, fromLon, 1);
+        try {
+            Field mtField = McRaptorSuboptimalPathProfileRouter.class.getDeclaredField("mersenneTwister");
+            mtField.setAccessible(true);
+            ((MersenneTwister) mtField.get(router)).setSeed(departureSeed);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("McRAPTOR departure-time sampling cannot be seeded with this version of R5.", e);
+        }
+    }
+
+    private static void seedOffsets(Class<?> routerClass, Object router, int seed, double fromLat, double fromLon) {
+        try {
+            Field offsetsField = routerClass.getDeclaredField("offsets");
+            offsetsField.setAccessible(true);
+            Field mtField = FrequencyRandomOffsets.class.getDeclaredField("mt");
+            mtField.setAccessible(true);
+            MersenneTwister mt = (MersenneTwister) mtField.get(offsetsField.get(router));
+            mt.setSeed((long) Objects.hash(seed, fromLat, fromLon));
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("`seed` is not supported with this version of R5.", e);
+        }
     }
 
     /**
@@ -163,7 +211,9 @@ public class R5TravelTimeComputer extends TravelTimeComputer {
             // Change to walking in order to reach transit stops in pedestrian-only areas like train stations.
             // This implies you are dropped off or have a very easy parking spot for your vehicle.
             // This kind of multi-stage search should also be used when building egress distance cost tables.
-            if (accessMode != StreetMode.WALK) {
+            // Only with transit, as in upstream R5 v7.5 (TravelTimeComputer): this walk can take as long as the car/bike
+            // search itself, and without transit it would let car-only trips end with a walk not bounded by max_walk_time.
+            if (accessMode != StreetMode.WALK && request.hasTransit()) {
                 sr.keepRoutingOnFoot();
             }
 
@@ -286,6 +336,7 @@ public class R5TravelTimeComputer extends TravelTimeComputer {
         FastRaptorWorker worker = null;
         if (request.inRoutingFareCalculator == null) {
             worker = new FastRaptorWorker(network.transitLayer, request, bestAccessOptions.getTimes());
+            seedOffsets(worker, seed, request.fromLat, request.fromLon);
             if (request.includePathResults || request.makeTauiSite) {
                 // By default, this is false and intermediate results (e.g. paths) are discarded.
                 // TODO do we really need to save all states just to get the travel time breakdown?
@@ -313,6 +364,7 @@ public class R5TravelTimeComputer extends TravelTimeComputer {
                             departureTime + request.maxTripDurationMinutes * FastRaptorWorker.SECONDS_PER_MINUTE);
             McRaptorSuboptimalPathProfileRouter mcRaptorWorker = new McRaptorSuboptimalPathProfileRouter(network,
                     request, accessTimes, null, listSupplier, InRoutingFareCalculator.getCollator(request));
+            seedOffsets(mcRaptorWorker, seed, request.fromLat, request.fromLon);
             mcRaptorWorker.route();
             transitTravelTimesToStops = mcRaptorWorker.getBestTimes();
         }
@@ -341,6 +393,7 @@ public class R5TravelTimeComputer extends TravelTimeComputer {
         // annotating with the access mode, then use the annotated paths to initialize the appropriate field in the
         // propagater. Not supported for fare requests, which use the McRaptor router and path style.
         if ((request.includePathResults || request.makeTauiSite) && worker != null) {
+            perTargetPropagater.departureTimeForIteration = worker.departureTimeForIteration;
             perTargetPropagater.pathsToStopsForIteration = worker.pathsPerIteration.stream().peek(paths -> {
                 for (Path path : paths) {
                     if (path != null) {

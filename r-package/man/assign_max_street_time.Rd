@@ -10,8 +10,9 @@ assign_max_street_time(max_time, speed, max_trip_duration, mode)
 \item{max_time}{A numeric of length 1. Maximum walking distance (in
 meters) for the whole trip. Passed from routing functions.}
 
-\item{speed}{A numeric of length 1. Average walk speed in km/h.
-Defaults to 3.6 Km/h. Passed from routing functions.}
+\item{speed}{A numeric of length 1. Average walk or bike speed in km/h,
+passed from routing functions and only validated here. \code{NULL} for car,
+which has no speed argument.}
 
 \item{max_trip_duration}{A numeric of length 1. Maximum trip duration in
 seconds. Defaults to 120 minutes (2 hours). Passed from routing functions.}

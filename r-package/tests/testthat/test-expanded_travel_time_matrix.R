@@ -207,10 +207,44 @@ test_that("output is correct", {
 
 test_that("using transit outside the gtfs dates throws an error", {
   expect_error(
-    tester(r5r_network,
-           mode='transit',
-           departure_datetime = as.POSIXct("13-05-2025 14:00:00",
-                                           format = "%d-%m-%Y %H:%M:%S")
-    )
+    default_tester(r5r_network,
+                   mode='transit',
+                   departure_datetime = as.POSIXct("13-05-2025 14:00:00",
+                                                   format = "%d-%m-%Y %H:%M:%S")
+    ),
+    "no transit services"
   )
+})
+
+test_that("output_dir CSVs equal the in-memory result, NA as empty fields", {
+  f <- function(od = NULL) expanded_travel_time_matrix(
+    r5r_network, pois, pois, mode = c("WALK", "TRANSIT"), departure_datetime = departure_datetime,
+    max_trip_duration = 20, time_window = 5, breakdown = TRUE, n_threads = 2, progress = FALSE,
+    output_dir = od)
+  od <- tempfile("r5r_csv_"); dir.create(od); on.exit(unlink(od, recursive = TRUE), add = TRUE)
+  mem <- f(); f(od)
+  csv <- data.table::rbindlist(lapply(list.files(od, full.names = TRUE), data.table::fread,
+    na.strings = "", colClasses = list(character = c("from_id", "to_id", "departure_time"))))
+  k <- c("from_id", "to_id", "departure_time", "draw_number")
+  data.table::setkeyv(mem, k); data.table::setkeyv(csv, k)
+  expect_true(anyNA(mem$total_time))
+  expect_false(any(csv$total_time > 20, na.rm = TRUE))
+  expect_true(isTRUE(all.equal(as.data.frame(csv[, names(mem), with = FALSE]), as.data.frame(mem),
+                               check.attributes = FALSE)))
+})
+
+test_that("more than 5000 destinations give R5's error message", {
+  big <- data.table::rbindlist(rep(list(points[, .(id, lon, lat)]), 5))[1:5001][, id := as.character(.I)]
+  # transit mode: walk-only calls may be swapped into 5001 origins x 1 destination, which works
+  expect_error(expanded_travel_time_matrix(r5r_network, points[1, ], big, mode = c("WALK", "TRANSIT"),
+    departure_datetime = departure_datetime, max_trip_duration = 15, time_window = 1,
+    n_threads = 2, progress = FALSE), "5000")
+})
+
+test_that("a departure at 00:00 gives one row per minute and pair", {
+  mid <- as.POSIXct("13-05-2019 00:00:00", format = "%d-%m-%Y %H:%M:%S")
+  r <- expanded_travel_time_matrix(r5r_network, pois[1:4, ], pois[1:4, ], mode = c("WALK", "TRANSIT"),
+    departure_datetime = mid, max_trip_duration = 60, time_window = 3, n_threads = 2, progress = FALSE)
+  expect_true(all(r[, .N, by = .(from_id, to_id)]$N == 3))
+  expect_false(any(r$departure_time == "" | is.na(r$departure_time)))
 })

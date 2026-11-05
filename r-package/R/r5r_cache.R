@@ -7,7 +7,7 @@
 #'        file is deleted. If `delete_file = "all"`, then all cached files are
 #'        deleted.
 #'
-#' @return A message indicating which file exist and/or which ones have been
+#' @return A message indicating which files exist and/or which ones have been
 #'         deleted from local cache directory.
 #' @export
 #' @family Cache data

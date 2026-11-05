@@ -17,7 +17,7 @@ street_network_bbox(
 \code{"polygon"} (the default), \code{"bbox"}, or \code{"vector"}.}
 
 \item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0.
-Please use the \code{r5r_network} argument instead.}
+Use the \code{r5r_network} argument instead.}
 }
 \value{
 By default (\code{output = "polygon"}), an \code{sf} object with a single \code{POLYGON}
@@ -27,7 +27,7 @@ All outputs use the WGS84 coordinate reference system (EPSG: 4326).
 }
 \description{
 Extracts the geographic bounding box of the street network layer from a
-routable transport network built with \code{\link[=build_network]{build_network()}}). It is a fast and
+routable transport network built with \code{\link[=build_network]{build_network()}}. It is a fast and
 memory-efficient alternative to \code{sf::st_bbox(street_network_to_sf(r5r_net))}.
 }
 \examples{

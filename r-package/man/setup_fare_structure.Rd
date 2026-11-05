@@ -6,18 +6,15 @@
 \usage{
 setup_fare_structure(
   r5r_network,
-  r5r_core = deprecated(),
   base_fare,
   by = "MODE",
   debug_path = NULL,
-  debug_info = NULL
+  debug_info = NULL,
+  r5r_core = deprecated()
 )
 }
 \arguments{
 \item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
-
-\item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0.
-Please use the \code{r5r_network} argument instead.}
 
 \item{base_fare}{A numeric. A base value used to populate the fare
 structure.}
@@ -30,8 +27,8 @@ a given city cost $5). \code{AGENCY} is used when the agency that operates each
 route is what determines its price (i.e. when two different routes/modes
 operated by a single agency cost the same; note that you can also use
 \code{AGENCY_NAME}, if the agency_ids listed in your GTFS cannot be easily
-interpreted). \code{GENERIC} is used when all the routes cost the same. Please
-note that this classification can later be edited to better suit your
+interpreted). \code{GENERIC} is used when all the routes cost the same. This
+classification can later be edited to better suit your
 needs (when, for example, two types of buses cost the same, but one offers
 discounts after riding the subway and the other one doesn't), but this
 parameter may save you some work.}
@@ -44,20 +41,17 @@ specified file. How each itinerary is described is controlled by
 \code{debug_info}.}
 
 \item{debug_info}{Either a string (when \code{debug_path} is a path) or \code{NULL}
-(the default). Doesn't have any effect if \code{debug_path} is \code{NULL}. When a
-string, accepts the values \code{MODE}, \code{ROUTE} and \code{MODE_ROUTE}. These values
-dictates how itinerary information is written to the output. Let's suppose
-we have an itinerary composed by two transit legs: first a subway leg
-whose route_id is 001, and then a bus legs whose route_id is 007. If
-\code{debug_info} is \code{MODE}, then this itinerary will be described as
-\code{SUBWAY|BUS}. If \code{ROUTE}, as \code{001|007}. If \code{MODE_ROUTE}, as \verb{SUBWAY 001|BUS 007}. Please note that the final debug information will contain
-not only the itineraries that were in fact used in the itineraries
-returned in \code{\link[=travel_time_matrix]{travel_time_matrix()}}, \code{\link[=accessibility]{accessibility()}} and
-\code{\link[=pareto_frontier]{pareto_frontier()}}, but all the itineraries that \code{R5} checked when
-calculating the routes. This imposes a performance penalty when tracking
-debug information (but has the positive effect of returning a larger
-sample of itineraries, which might help finding some implementation issues
-on the fare structure).}
+(the default). Ignored if \code{debug_path} is \code{NULL}. One of \code{MODE}, \code{ROUTE}
+or \code{MODE_ROUTE}, setting how each itinerary is written. E.g. a subway leg
+on route 001 followed by a bus leg on route 007 is written as
+\code{SUBWAY|BUS}, \code{001|007} or \verb{SUBWAY 001|BUS 007}, respectively. The debug
+output lists all itineraries \code{R5} checked when calculating routes, not
+only those returned by \code{\link[=travel_time_matrix]{travel_time_matrix()}}, \code{\link[=accessibility]{accessibility()}} and
+\code{\link[=pareto_frontier]{pareto_frontier()}}. This slows computation, but the larger sample of
+itineraries helps find issues in the fare structure.}
+
+\item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0.
+Use the \code{r5r_network} argument instead.}
 }
 \value{
 A fare structure object.
@@ -67,7 +61,7 @@ Creates a basic fare structure that describes how transit fares should be
 calculated in \code{\link[=travel_time_matrix]{travel_time_matrix()}}, \code{\link[=expanded_travel_time_matrix]{expanded_travel_time_matrix()}},
 \code{\link[=accessibility]{accessibility()}} and \code{\link[=pareto_frontier]{pareto_frontier()}}. This fare structure can be
 manually edited and adjusted to the existing rules in your study area, as
-long as they stick to some basic premises. Please see the \href{../doc/fare_structure.html}{fare-structure vignette} for more information.
+long as they stick to some basic premises. See the \href{../doc/fare_structure.html}{fare-structure vignette}.
 }
 \examples{
 \dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) withAutoprint(\{ # examplesIf}

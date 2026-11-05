@@ -302,3 +302,104 @@ test_that("using transit outside the gtfs dates throws an error", {
 })
 
 
+test_that("ferry-only transit mode also checks transit availability on the date", {
+  expect_error(
+    tester(r5r_network,
+           mode = c("WALK", "FERRY"),
+           departure_datetime = as.POSIXct("13-05-2025 14:00:00",
+                                           format = "%d-%m-%Y %H:%M:%S")
+    ),
+    regexp = "no transit services available"
+  )
+})
+
+test_that("duplicated ids in origins or destinations raise an error", {
+  pois_dup <- data.table::setDT(data.table::copy(pois))
+  pois_dup[2, id := pois$id[1]]
+  expect_error(tester(origins = pois_dup), regexp = "duplicated ids")
+  expect_error(tester(destinations = pois_dup), regexp = "duplicated ids")
+})
+
+test_that("a finite max_fare requires a fare_structure", {
+  expect_error(tester(max_fare = 5, fare_structure = NULL), regexp = "fare_structure")
+  expect_s3_class(tester(max_fare = Inf, fare_structure = NULL), "data.table")
+})
+
+test_that("origins and destinations can be passed positionally", {
+  expect_no_warning(
+    ttm <- travel_time_matrix(r5r_network, pois, pois, mode = "WALK",
+                              departure_datetime = departure_datetime)
+  )
+  expect_s3_class(ttm, "data.table")
+})
+
+test_that("max_car_time caps car-only trips", {
+  ttm <- travel_time_matrix(
+    r5r_network,
+    origins = pois,
+    destinations = pois,
+    mode = "CAR",
+    departure_datetime = departure_datetime,
+    max_car_time = 10
+  )
+  expect_true(nrow(ttm) > 0)
+  expect_true(max(ttm$travel_time_p50, na.rm = TRUE) <= 10)
+})
+
+test_that("integer arguments reject non-integer values", {
+  expect_error(tester(max_walk_time = 15.5))
+  expect_error(tester(max_bike_time = 15.5))
+  expect_error(tester(max_trip_duration = 60.5))
+  expect_error(tester(time_window = 10.5))
+  expect_error(tester(percentiles = 50.7))
+  expect_error(tester(percentiles = c(25, 50.5)))
+  expect_error(tester(n_threads = 2.5))
+  expect_error(tester(max_rides = 2.5))
+  expect_error(tester(max_lts = 2.5))
+  expect_error(tester(draws_per_minute = 1.5))
+
+  # whole-number doubles and Inf where allowed still work
+  expect_s3_class(
+    tester(max_walk_time = 30, max_trip_duration = 60, time_window = 5,
+           n_threads = Inf, max_rides = 2, draws_per_minute = 1),
+    "data.table"
+  )
+})
+
+test_that("output_dir CSVs leave percentiles over max_trip_duration empty", {
+  f <- function(od = NULL) travel_time_matrix(
+    r5r_network, pois, pois, mode = c("WALK", "TRANSIT"), departure_datetime = departure_datetime,
+    percentiles = c(5, 95), max_trip_duration = 30, time_window = 30, n_threads = 2, progress = FALSE,
+    output_dir = od)
+  od <- tempfile("r5r_csv_"); dir.create(od); on.exit(unlink(od, recursive = TRUE), add = TRUE)
+  mem <- f(); f(od)
+  csv <- data.table::rbindlist(lapply(list.files(od, full.names = TRUE), data.table::fread,
+    na.strings = "", colClasses = list(character = c("from_id", "to_id"))))
+  data.table::setkey(mem, from_id, to_id); data.table::setkey(csv, from_id, to_id)
+  expect_true(anyNA(mem$travel_time_p95))
+  expect_true(isTRUE(all.equal(as.data.frame(csv), as.data.frame(mem), check.attributes = FALSE)))
+})
+
+test_that("from_id and to_id keep the input ids (transferred as positions)", {
+  # unusual, unsorted ids: positions must map back to exactly these strings
+  odd <- data.table::copy(pois)
+  odd$id <- paste0("id ç,\"", rev(seq_len(nrow(odd))))
+  lookup <- stats::setNames(odd$id, pois$id)
+
+  ttm <- tester()
+  ttm_odd <- tester(origins = odd, destinations = odd)
+  ttm[, `:=`(from_id = unname(lookup[from_id]), to_id = unname(lookup[to_id]))]
+  expect_identical(ttm_odd, ttm)
+
+  # a single origin is still passed to Java as String[]
+  one <- tester(origins = odd[2], destinations = odd)
+  expect_identical(one, ttm_odd[from_id == odd$id[2]])
+
+  # walk-only with more origins than destinations swaps them in Java (spo has no .tif)
+  orig <- data.table::copy(spo_points[1:20]); orig$id <- paste0("o", orig$id)
+  dest <- data.table::copy(spo_points[21:25]); dest$id <- paste0("d", dest$id)
+  rev_ttm <- tester(spo_network, origins = orig, destinations = dest)
+  expect_true(nrow(rev_ttm) > 0)
+  expect_true(all(rev_ttm$from_id %in% orig$id))
+  expect_true(all(rev_ttm$to_id %in% dest$id))
+})

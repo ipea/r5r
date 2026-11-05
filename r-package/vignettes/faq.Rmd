@@ -5,8 +5,8 @@ output: rmarkdown::html_vignette
 abstract: "A short list of responses and clarifications about Frequently Asked Questions from r5r users."
 urlcolor: blue
 vignette: >
-  %\VignetteIndexEntry{FAQ - Frequently Asked Questions} 
-  %\VignetteEngine{knitr::rmarkdown} 
+  %\VignetteIndexEntry{FAQ - Frequently Asked Questions}
+  %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 
@@ -30,22 +30,22 @@ knitr::opts_chunk$set(
 
 
 
-# 2. Is it possible to run `r5r` with custom modifications to street nework data?
+# 2. Is it possible to run `r5r` with custom modifications to street network data?
 
 <details><summary>click to expand</summary>
 
-> Yes, all routing and accessibility functions in `r5r` have new parameters `new_carspeeds`, `carspeed_scale` and `new_lts` which allow one to use custom car speeds and LTS levels for cycling. These parameters provide convient and efficient ways to build different scenarios of traffic congestion, road closure and interventions in cycling infrastructure. [See this vignette](https://ipeagit.github.io/r5r/articles/scenarios.html). For other changes to the OSM network (e.g. including a new road link), you would need to edit the OpenStreetMap `.pbf` file direclty before using it in `r5r`. To to this, you can edit the `.pbf` file with [JOSM (https://wiki.openstreetmap.org/wiki/JOSM)](https://wiki.openstreetmap.org/wiki/JOSM). Mind you that the the OpenStreetMap tags can be changed but they cannot be removed from the data.
+> Yes, all routing and accessibility functions in `r5r` have the parameters `new_carspeeds`, `carspeed_scale` and `new_lts` which allow one to use custom car speeds and LTS levels for cycling. These parameters provide convenient and efficient ways to build different scenarios of traffic congestion, road closure and interventions in cycling infrastructure. [See this vignette](https://ipea.github.io/r5r/articles/scenarios.html). For other changes to the OSM network (e.g. including a new road link), you would need to edit the OpenStreetMap `.pbf` file directly before using it in `r5r`. To do this, you can edit the `.pbf` file with [JOSM (https://wiki.openstreetmap.org/wiki/JOSM)](https://wiki.openstreetmap.org/wiki/JOSM). OpenStreetMap tags can be changed but not removed.
 
 </details>
 
 
 
 
-# 3. Why are the output results of `time_travel_matrix()` and `detailed_itineraries()` different?
-  
+# 3. Why are the output results of `travel_time_matrix()` and `detailed_itineraries()` different?
+
 <details><summary>click to expand</summary>
 
-> The functions `time_travel_matrix()` (and `expanded_time_travel_matrix`) and `detailed_itineraries()` use different routing algorithms, as explained in the documentation of these functions. As such, we advise not to use or combine the output of these functions.
+> `travel_time_matrix()` (and `expanded_travel_time_matrix()`) and `detailed_itineraries()` compute different things, as explained in the documentation of these functions. `detailed_itineraries()` returns the fastest itinerary over the time window rather than a percentile of travel times, and it routes the walk or bike legs to and from public transport with separate street searches for each origin-destination pair (`travel_time_matrix()` uses precomputed street times between stops and destinations). With `shortest_path = FALSE` or a `fare_structure`, it also uses a different routing algorithm (McRAPTOR), which simulates departures at random seconds. As such, we advise not to combine the output of these functions.
 
 </details>
 
@@ -56,7 +56,7 @@ knitr::opts_chunk$set(
 
 <details><summary>click to expand</summary>
 
-> If you an error message says something like: *"Geographic extent of street layer (5315196 km2) exceeds limit of 975000 km2"*. This means the your study area is too large. Unfortunately, this is a limit hardcoded upstream in R5 so we cannot change it in r5r. The advised **solution** here would be to reduce the extent of the `OpenStreetMap.pbf` to a smaller area of interest. One can do this using the [Osmosis](https://wiki.openstreetmap.org/wiki/Osmosis) software. The code below illustrates how to do this by calling Osmosis from within R. You need to donwload the Osmosis program to your computer. The latest releases can be downloaded from [here](https://github.com/openstreetmap/osmosis/releases). Next, you can use this step-by-step illustrated in the example below:
+> An error like *"Geographic extent of street layer (5315196 km2) exceeds limit of 975000 km2"* means your study area is too large. The limit is hardcoded in R5, so r5r cannot change it. The **solution** is to crop the `OpenStreetMap.pbf` to your area of interest, e.g. with [Osmosis](https://wiki.openstreetmap.org/wiki/Osmosis). Download the [latest Osmosis release](https://github.com/openstreetmap/osmosis/releases), then call it from R:
 
 ```
 # get the bounding box of your study area
@@ -72,8 +72,8 @@ smaller_pbf <-"./project_dir/smaller.pbf"
 
 # prepare call to osmosis
 osmosis_cmd <- sprintf("%s --read-pbf %s --bounding-box left=%s bottom=%s right=%s top=%s --write-pbf %s",
-                       osmosis_path, large_pbf_path, 
-                       area_bbox@xmin, area_bbox@ymin, area_bbox@xmax, area_bbox@ymax,
+                       osmosis_path, large_pbf_path,
+                       area_bbox["xmin"], area_bbox["ymin"], area_bbox["xmax"], area_bbox["ymax"],
                        smaller_pbf)
 
 # call to osmosis
@@ -87,7 +87,7 @@ shell(osmosis_cmd, translate = TRUE)
 
 <details><summary>click to expand</summary>
 
-> By default, R5 considers the max speed limit of each road as set in OpenStreetMap data. Unfortunately, there is currently no easy way to change the car speeds of road segments from within R. Although you could probably do that by editing the osm.pbf file using other programs. See issue [#289](https://github.com/ipeaGIT/r5r/issues/289).
+> Yes. By default, R5 considers the max speed limit of each road as set in OpenStreetMap data. You can change car speeds from within R with the `new_carspeeds` and `carspeed_scale` parameters of the routing functions. [See this vignette](https://ipea.github.io/r5r/articles/scenarios.html).
 
 </details>
 
@@ -101,4 +101,3 @@ shell(osmosis_cmd, translate = TRUE)
 > If your travel time / accessibility results are identical for public transport and walking, it is probably because R5 did not detect that the public transport network is available for your requested trips. This is likely to occur in case you set a `departure_datetime` outside the calendar of public transport operations in your GTFS data. Check the `calendar.txt` file in your gtfs.zip feed. Alternatively, this could occur because there is no public transport trip option that would be faster than walking for the given origin-destination pair you queried.
 
 </details>
-

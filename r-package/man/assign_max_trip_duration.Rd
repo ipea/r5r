@@ -8,7 +8,8 @@ assign_max_trip_duration(
   max_trip_duration,
   modes,
   max_walk_time,
-  max_bike_time
+  max_bike_time,
+  max_car_time
 )
 }
 \arguments{

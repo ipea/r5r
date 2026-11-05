@@ -10,7 +10,7 @@ set_elevation(elevation)
 \item{elevation}{Character.}
 }
 \value{
-Character. Corretly formatted elevation.
+Character. Correctly formatted elevation.
 }
 \description{
 Verifies whether elevation mode is correct.
@@ -28,6 +28,7 @@ Other setting functions:
 \code{\link[=set_max_lts]{set_max_lts()}},
 \code{\link[=set_max_rides]{set_max_rides()}},
 \code{\link[=set_monte_carlo_draws]{set_monte_carlo_draws()}},
+\code{\link[=set_monte_carlo_seed]{set_monte_carlo_seed()}},
 \code{\link[=set_n_threads]{set_n_threads()}},
 \code{\link[=set_new_congestion]{set_new_congestion()}},
 \code{\link[=set_new_lts]{set_new_lts()}},

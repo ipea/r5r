@@ -15,8 +15,8 @@ expand_od_pairs <- function(origins, destinations, all_to_all) {
   n_dests <- nrow(destinations)
 
   if (all_to_all || n_origs == 1 || n_dests == 1) {
-    origins <- origins[rep(1:n_origs, each = n_dests), ]
-    destinations <- destinations[rep(1:n_dests, times = n_origs), ]
+    origins <- origins[rep(seq_len(n_origs), each = n_dests), ]
+    destinations <- destinations[rep(seq_len(n_dests), times = n_origs), ]
 
     if (!all_to_all && (n_origs > 1 || n_dests > 1)) {
       if (n_origs == 1) {

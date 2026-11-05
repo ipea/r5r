@@ -2,13 +2,16 @@
 #'
 #' @param df Either a `data.frame` or a `POINT sf`.
 #' @param name Object name.
+#' @param unique_ids A logical. Whether to raise an error when `df$id` has
+#'   duplicated values. Defaults to `TRUE`. Set to `FALSE` for row-paired
+#'   inputs, where the same point may legitimately appear in several rows.
 #'
 #' @return A `data.frame` with columns `id`, `lon` and `lat`.
 #'
 #' @family assigning functions
 #'
 #' @keywords internal
-assign_points_input <- function(df, name) {
+assign_points_input <- function(df, name, unique_ids = TRUE) {
   if (!inherits(df, "data.frame")) {
     stop("'", name, "' must be either a 'data.frame' or a 'POINT sf'.")
   }
@@ -28,9 +31,15 @@ assign_points_input <- function(df, name) {
       )
     }
 
-    df <- sfheaders::sf_to_df(df, fill = TRUE)
+    # coordinates come from the geometry, never from attribute columns.
+    # sfheaders::sf_to_df() appends x/y next to any existing lon/lat (or x/y)
+    # attribute columns and df$lon would then pick the stale one.
+    # positional indexing: a 0-row sf gives a coords matrix without dimnames.
+    coords <- sf::st_coordinates(df)
+    df <- sf::st_drop_geometry(df)
+    df$lon <- coords[, 1L]
+    df$lat <- coords[, 2L]
     data.table::setDT(df)
-    data.table::setnames(df, c("x", "y"), c("lon", "lat"))
   }
 
   checkmate::assert_names(
@@ -44,6 +53,26 @@ assign_points_input <- function(df, name) {
   if (!is.character(df$id)) {
     df$id <- as.character(df$id)
     warning("'", name, "$id' forcefully cast to character.")
+  }
+
+  # points with missing coordinates cannot be snapped to the network and are
+  # silently dropped by R5, so tell the user which ones they are
+  na_coords <- is.na(df$lon) | is.na(df$lat)
+  if (any(na_coords)) {
+    na_ids <- df$id[na_coords]
+    cli::cli_warn(c(
+      "!" = "{sum(na_coords)} point{?s} in {.arg {name}} {cli::qty(sum(na_coords))}{?has/have} missing {.field lon}/{.field lat} coordinates and will not be routed.",
+      "i" = "Affected id{?s}: {.val {na_ids}}."
+    ))
+  }
+
+  checkmate::assert_logical(unique_ids, len = 1, any.missing = FALSE)
+  if (unique_ids && anyDuplicated(df$id) > 0) {
+    dup_ids <- unique(df$id[duplicated(df$id)])
+    cli::cli_abort(c(
+      "{.arg {name}} must not contain duplicated ids.",
+      "x" = "Duplicated id{?s}: {.val {dup_ids}}."
+    ))
   }
 
   return(df)
@@ -63,7 +92,7 @@ assign_points_input <- function(df, name) {
 #' @family assigning functions
 #'
 #' @keywords internal
-assign_mode <- function(mode, mode_egress, style) {
+assign_mode <- function(mode, mode_egress) {
   dr_modes <- c("WALK", "BICYCLE", "CAR", "BICYCLE_RENT", "CAR_PARK")
   tr_modes <- c(
     "TRANSIT",
@@ -142,7 +171,21 @@ assign_mode <- function(mode, mode_egress, style) {
 #' @family assigning functions
 #'
 #' @keywords internal
-assign_departure <- function(datetime) {
+assign_departure <- function(datetime, mode_list) {
+  if (is.null(datetime)) {
+    if (mode_list$transit_mode == "") {
+      datetime <- Sys.time()
+    } else {
+      cli::cli_abort(
+        c(
+          "!" = "You must pass a {.arg departure_datetime} for public transport routing.",
+          "i" = "Results depend on the departure time. Supply an explicit POSIXct value to make results reproducible."
+        )
+      )
+    }
+  }
+
+
   checkmate::assert_posixct(
     datetime,
     len = 1,
@@ -168,8 +211,9 @@ assign_departure <- function(datetime) {
 #'
 #' @param max_time A numeric of length 1. Maximum walking distance (in
 #'   meters) for the whole trip. Passed from routing functions.
-#' @param speed A numeric of length 1. Average walk speed in km/h.
-#'   Defaults to 3.6 Km/h. Passed from routing functions.
+#' @param speed A numeric of length 1. Average walk or bike speed in km/h,
+#'   passed from routing functions and only validated here. `NULL` for car,
+#'   which has no speed argument.
 #' @param max_trip_duration A numeric of length 1. Maximum trip duration in
 #'   seconds. Defaults to 120 minutes (2 hours). Passed from routing functions.
 #' @param mode A string. Either `"bike"` or `"walk"`.
@@ -193,16 +237,24 @@ assign_max_street_time <- function(max_time, speed, max_trip_duration, mode) {
     lower = 1,
     finite = FALSE
   )
+  if (is.finite(max_time)) {
+    checkmate::assert_count(
+      max_time,
+      positive = TRUE,
+      .var.name = paste0("max_", mode, "_time")
+    )
+  }
 
   checkmate::assert_number(
     speed,
     finite = TRUE,
+    null.ok = TRUE,
     .var.name = paste0(mode, "_speed")
   )
 
-  checkmate::assert_number(max_trip_duration, lower = 1, finite = TRUE)
+  checkmate::assert_count(max_trip_duration, positive = TRUE)
 
-  if (speed <= 0) {
+  if (!is.null(speed) && speed <= 0) {
     stop(
       "Assertion on '", mode, "_speed' failed: ",
       "Must have value greater than 0."
@@ -232,8 +284,9 @@ assign_max_street_time <- function(max_time, speed, max_trip_duration, mode) {
 assign_max_trip_duration <- function(max_trip_duration,
                                      modes,
                                      max_walk_time,
-                                     max_bike_time) {
-  checkmate::assert_number(max_trip_duration, lower = 1, finite = TRUE)
+                                     max_bike_time,
+                                     max_car_time) {
+  checkmate::assert_count(max_trip_duration, positive = TRUE)
 
   max_trip_duration <- as.integer(max_trip_duration)
 
@@ -243,6 +296,9 @@ assign_max_trip_duration <- function(max_trip_duration,
     }
     if (modes$direct_modes == "BICYCLE" & max_bike_time < max_trip_duration) {
       max_trip_duration <- max_bike_time
+    }
+    if (modes$direct_modes == "CAR" & max_car_time < max_trip_duration) {
+      max_trip_duration <- max_car_time
     }
   }
 
@@ -279,9 +335,22 @@ assign_opportunities <- function(destinations, opportunities_colnames) {
   opportunities_data <- lapply(
     opportunities_colnames,
     function(colname) {
-      checkmate::assert_numeric(destinations[[colname]])
+      checkmate::assert_numeric(
+        destinations[[colname]],
+        finite = TRUE,
+        .var.name = colname
+      )
 
-      opp_array <- as.integer(destinations[[colname]])
+      opp_array <- as.double(destinations[[colname]])
+
+      # R5 cannot handle missing values, which would turn every sum into NaN
+      if (anyNA(opp_array)) {
+        cli::cli_warn(
+          "{.arg {colname}} has {sum(is.na(opp_array))} missing value{?s}, treated as 0."
+        )
+        opp_array[is.na(opp_array)] <- 0
+      }
+
       opp_array <- rJava::.jarray(opp_array)
 
       opp_array
@@ -349,6 +418,16 @@ assign_decay_function <- function(decay_function, decay_value) {
         decay_function, "."
       )
     }
+  }
+
+  # R5 takes the linear width as whole minutes, under one hour
+  if (decay_function == "linear") {
+    checkmate::assert_integerish(
+      decay_value,
+      lower = 1,
+      upper = 59,
+      .var.name = "decay_value"
+    )
   }
 
   decay_function <- toupper(decay_function)

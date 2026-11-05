@@ -4,12 +4,16 @@
 \alias{assign_points_input}
 \title{Check and convert origin and destination inputs}
 \usage{
-assign_points_input(df, name)
+assign_points_input(df, name, unique_ids = TRUE)
 }
 \arguments{
 \item{df}{Either a \code{data.frame} or a \verb{POINT sf}.}
 
 \item{name}{Object name.}
+
+\item{unique_ids}{A logical. Whether to raise an error when \code{df$id} has
+duplicated values. Defaults to \code{TRUE}. Set to \code{FALSE} for row-paired
+inputs, where the same point may legitimately appear in several rows.}
 }
 \value{
 A \code{data.frame} with columns \code{id}, \code{lon} and \code{lat}.

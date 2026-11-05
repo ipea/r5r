@@ -93,7 +93,7 @@ test_that("detailed_itineraries adequately raises errors", {
   numeric_datetime <- as.numeric(as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"))
 
   expect_error(default_tester(r5r_network, departure_datetime = "13-05-2019 14:00:00"))
-  expect_error(default_tester(r5r_network, numeric_datetime))
+  expect_error(default_tester(r5r_network, departure_datetime = numeric_datetime))
 
   # errors related to max_walk_time
   expect_error(default_tester(r5r_network, max_walk_time = "1"))
@@ -283,9 +283,25 @@ test_that("detailed_itineraries output is correct", {
   df <- default_tester(r5r_network, origins, destinations,
                        max_trip_duration = max_trip_duration, shortest_path = FALSE)
 
-  max_duration <- data.table::setDT(df)[, sum(segment_duration), by = .(from_id, to_id, option)][, max(V1)]
+  expect_true(max(df$total_duration) <= max_trip_duration + 0.1)
 
-  expect_true(max_duration < max_trip_duration)
+  # a transfer walk through a stop with a steep stop-to-street link used to be
+  # reported with an elevation-costed duration (40 min for 119 m), pushing this
+  # option to 73 min under a 40-min limit
+  df <- detailed_itineraries(
+    r5r_network,
+    origins = pois[pois$id == "gasometer_museum", ],
+    destinations = pois[pois$id == "beira_rio_stadium", ],
+    mode = c("WALK", "TRANSIT"),
+    departure_datetime = as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"),
+    time_window = 1,
+    max_trip_duration = 40L,
+    shortest_path = FALSE,
+    drop_geometry = TRUE
+  )
+  expect_true(max(df$total_duration) <= 40.1)
+  totals <- df[, .(legs = sum(segment_duration + wait), total = total_duration[1]), by = option]
+  expect_true(all(abs(totals$legs - totals$total) <= 0.3))
 
   # expect an empty data.table as output when no routes are found between the pairs
 
@@ -304,10 +320,130 @@ test_that("detailed_itineraries output is correct", {
 
 test_that("using transit outside the gtfs dates throws an error", {
   expect_error(
-    tester(r5r_network,
-           mode='transit',
-           departure_datetime = as.POSIXct("13-05-2025 14:00:00",
-                                           format = "%d-%m-%Y %H:%M:%S")
-    )
+    default_tester(r5r_network,
+                   mode = "transit",
+                   departure_datetime = as.POSIXct("13-05-2025 14:00:00",
+                                                   format = "%d-%m-%Y %H:%M:%S")
+    ),
+    "no transit services"
   )
+})
+
+test_that("zero-row inputs return an empty result", {
+  expect_equal(nrow(default_tester(r5r_network, origins = points[0, ], destinations = points[1, ])), 0)
+  expect_equal(nrow(default_tester(r5r_network, origins = points[1, ], destinations = points[0, ])), 0)
+})
+
+test_that("output_dir rejects repeated pairs and ids not allowed in file names", {
+  di_to_dir <- function(origins, destinations) {
+    detailed_itineraries(
+      r5r_network,
+      origins = origins,
+      destinations = destinations,
+      mode = "WALK",
+      departure_datetime = as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"),
+      output_dir = tempdir()
+    )
+  }
+
+  expect_error(di_to_dir(points[c(1, 1), ], points[c(2, 2), ]), "must be unique")
+
+  slash_origin <- points[1, ]
+  slash_origin$id <- "a/b"
+  expect_error(di_to_dir(slash_origin, points[2, ]), "a/b")
+})
+
+test_that("output_dir writes CSV files that can be read back", {
+  out_dir <- file.path(tempdir(), "di_csv_test")
+  unlink(out_dir, recursive = TRUE)
+  dir.create(out_dir)
+
+  di <- function(output_dir = NULL) {
+    detailed_itineraries(
+      r5r_network,
+      origins = pois[pois$id == "gasometer_museum", ],
+      destinations = pois[pois$id == "beira_rio_stadium", ],
+      mode = c("WALK", "TRANSIT"),
+      departure_datetime = as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"),
+      time_window = 1,
+      shortest_path = FALSE,
+      osm_link_ids = TRUE,
+      output_dir = output_dir
+    )
+  }
+  in_memory <- di()
+  di(output_dir = out_dir)
+
+  files <- list.files(out_dir, full.names = TRUE)
+  expect_length(files, 1)
+  from_csv <- data.table::fread(files, colClasses = list(character = c("osm_id_list", "edge_id_list", "geometry")))
+
+  expect_equal(nrow(from_csv), nrow(in_memory))
+  expect_setequal(names(from_csv), names(in_memory))
+  expect_equal(sort(from_csv$edge_id_list), sort(in_memory$edge_id_list))
+  expect_equal(
+    sort(lengths(sf::st_as_sfc(from_csv$geometry))),
+    sort(lengths(sf::st_geometry(in_memory)))
+  )
+})
+
+test_that("transfer walks from stop index 0 follow the street network", {
+  # poa_eptc:1000 is the stop with internal index 0; transfers from it used to
+  # keep a straight line between the stops, with no edge ids
+  df <- detailed_itineraries(
+    r5r_network,
+    origins = data.frame(id = "o", lat = -30.085368, lon = -51.221805),
+    destinations = data.frame(id = "d", lat = -30.094863, lon = -51.24486),
+    mode = c("WALK", "TRANSIT"),
+    departure_datetime = as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"),
+    time_window = 10,
+    max_walk_time = 5,
+    shortest_path = FALSE,
+    suboptimal_minutes = 10,
+    osm_link_ids = TRUE
+  )
+  df <- df[order(df$option, df$segment), ]
+  after_stop0 <- which(df$alight_stop_id == "poa_eptc:1000") + 1
+  skip_if(length(after_stop0) == 0, "no itinerary transfers at poa_eptc:1000")
+
+  expect_true(all(df$mode[after_stop0] == "WALK"))
+  expect_true(all(df$edge_id_list[after_stop0] != "[]"))
+  expect_true(all(lengths(sf::st_geometry(df)[after_stop0]) / 2 > 2))
+})
+
+test_that("row-paired inputs may repeat ids, all-to-all inputs may not", {
+  paired_origins <- points[c(1, 1, 2), ]
+  paired_destinations <- points[c(2, 3, 3), ]
+
+  expect_s3_class(
+    detailed_itineraries(
+      r5r_network,
+      origins = paired_origins,
+      destinations = paired_destinations,
+      departure_datetime = as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"),
+      all_to_all = FALSE
+    ),
+    "sf"
+  )
+  expect_error(
+    detailed_itineraries(
+      r5r_network,
+      origins = paired_origins,
+      destinations = paired_destinations,
+      departure_datetime = as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"),
+      all_to_all = TRUE
+    ),
+    regexp = "duplicated ids"
+  )
+})
+
+test_that("leg geometries have no repeated consecutive vertices", {
+  di <- detailed_itineraries(r5r_network, pois[1:5, ], pois[1:5, ], mode = c("WALK", "TRANSIT"),
+    departure_datetime = departure_datetime, max_trip_duration = 60, all_to_all = TRUE,
+    shortest_path = TRUE, n_threads = 2, progress = FALSE)
+  rep_v <- vapply(sf::st_geometry(di), function(g) {
+    m <- sf::st_coordinates(g)[, 1:2, drop = FALSE]
+    nrow(m) > 2 && any(rowSums(abs(diff(m))) == 0)
+  }, logical(1))
+  expect_false(any(rep_v))
 })

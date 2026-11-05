@@ -6,20 +6,20 @@
 \usage{
 check_transit_availability(
   r5r_network,
-  r5r_core = deprecated(),
   dates = NULL,
   start_date = NULL,
-  end_date = NULL
+  end_date = NULL,
+  r5r_core = deprecated()
 )
 }
 \arguments{
-\item{r5r_network}{A routable transport network created with \code{build_network()}.}
-
-\item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0. Please use the \code{r5r_network} argument instead.}
+\item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
 
 \item{dates}{A vector of specific dates to be checked. Can be character strings
-in #'   "YYYY-MM-DD" format, or objects of class \code{Date}. This argument
-cannot be used with \code{start_date} or \code{end_date}.}
+in "YYYY-MM-DD" format, or objects of class \code{Date}. This argument
+cannot be used with \code{start_date} or \code{end_date}. Defaults to \code{NULL};
+when all date arguments are \code{NULL}, operating dates are discovered
+from the network.}
 
 \item{start_date}{The start date for a continuous date range. Must be a single
 character string in "YYYY-MM-DD" format or a \code{Date} object. Must be used
@@ -28,26 +28,40 @@ with \code{end_date}.}
 \item{end_date}{The end date for a continuous date range. Must be a single
 character string in "YYYY-MM-DD" format or a \code{Date} object. Must be used
 with \code{start_date}.}
+
+\item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0.
+Use the \code{r5r_network} argument instead.}
 }
 \value{
 A \code{data.table} with four columns: \code{date}, \code{total_services},
 \code{active_services}, and \code{pct_active} (the proportion of active services).
+Automatic discovery returns dates in ascending order, or a zero-row
+table with these columns if no retained transit trips operate.
 }
 \description{
-This function checks the number and proportion of public transport services
-from the GTFS feeds in a \code{r5r_network} that are active on specified dates. This
-is useful to verify that the selected departure dates for routing analysis are
-valid and have adequate service levels. When routing with public transport, it
-is crucial to use a departure date where services are operational, as indicated
-in the GTFS \code{calendar.txt} file.
+Counts the public transport services in the GTFS feeds of a \code{r5r_network}
+that are active on given dates, and their proportion of all services. Use it
+to pick a departure date with adequate service: public transport routing only
+finds trips on dates when services run (per the GTFS calendars and date
+exceptions).
 }
 \details{
-You can specify the dates to check in two ways:
+When no date arguments are supplied, the function discovers all dates with
+an active service referenced by a retained transit trip, including
+frequency-based trips. This accounts for weekday calendars and date
+exceptions, including exception-only services. A date with active service
+does not guarantee a trip at every departure time or between every pair of
+points.
+
+You can also specify the dates to check in two ways:
 \itemize{
 \item Using the \code{dates} argument to provide a vector of specific dates.
 \item Using the \code{start_date} and \code{end_date} arguments to provide a continuous date range.
 }
-You must use one of these two methods, but not both in the same function call.
+You cannot combine these methods. In all modes, \code{total_services} counts every
+imported service, not only those used by trips; counts are of services, not
+trips. If calendar bounds are invalid, automatic discovery reports the
+affected service; explicit date queries remain available.
 }
 \examples{
 \dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) withAutoprint(\{ # examplesIf}
@@ -55,26 +69,33 @@ library(r5r)
 data_path <- system.file("extdata/poa", package = "r5r")
 r5r_network <- build_network(data_path)
 
-# Example 1: Check a vector of specific dates
+# Discover operating dates without knowing the feed's date range
+availability1 <- check_transit_availability(r5r_network)
+head(availability1)
+# plot availability over the year
+library(ggplot2)
+ggplot(availability1, aes(x = date, y = pct_active)) +
+  geom_line() +
+  geom_point() +
+  theme_classic(base_size = 16)
+
+# Example 2: Check a vector of specific dates
 # Let's check a regular weekday and a Sunday, where service may differ.
 dates_to_check <- c("2019-05-13", "2019-05-19")
-availability1 <- check_transit_availability(r5r_network, dates = dates_to_check)
-availability1
-
-# Example 2: Check a continuous date range using start_date and end_date
 availability2 <- check_transit_availability(
+  r5r_network,
+  dates = dates_to_check
+)
+head(availability2)
+
+# Example 3: Check a continuous date range using start_date and end_date
+availability3 <- check_transit_availability(
   r5r_network,
   start_date = "2019-01-01",
   end_date = "2019-12-31"
 )
-availability2[121:124,]
+availability3[121:124,]
 
-# plot availability over the year
-library(ggplot2)
-ggplot(availability2, aes(x = date, y = pct_active)) +
-  geom_line() +
-  geom_point() +
-  theme_classic(base_size = 16)
 
 stop_r5(r5r_network)
 \dontshow{\}) # examplesIf}

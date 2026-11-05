@@ -12,13 +12,18 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
 
-    runs-on: ubuntu-latest
+    # pinned: the R packages below are Ubuntu 24.04 (noble) binaries
+    runs-on: ubuntu-24.04
+
+    # the job commits the rebuilt JAR back to the branch
+    permissions:
+      contents: write
 
     # don't build on merges to master
     if: ${{ !github.ref_protected }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
 #        with:
@@ -42,17 +47,17 @@ jobs:
         working-directory: r-package
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v2
+        uses: gradle/actions/wrapper-validation@v6
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629
-        with:
-          arguments: build
-          build-root-directory: java-r5rcore
+        run: ./gradlew build
+        working-directory: java-r5rcore
 
       - name: Create pull request
         # https://github.com/actions/checkout/pull/1184
@@ -103,7 +108,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -122,7 +127,7 @@ jobs:
       # Java setup for macOS (using the proper arm64 architecture)
       - name: Java setup (macOS)
         if: runner.os == 'macOS'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -131,7 +136,7 @@ jobs:
       # Java setup for non-macOS runners
       - name: Java setup (non-macOS)
         if: runner.os != 'macOS'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -164,7 +169,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -199,7 +204,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -212,10 +217,10 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
 
       - name: Java setup
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v5
         with:
+          distribution: temurin
           java-version: '21'
-          java-package: jdk
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -234,12 +239,12 @@ jobs:
         shell: Rscript {0}
         working-directory: r-package
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v7
         with:
-          # Fail if error if not on PR, or if on PR and token is given
-          fail_ci_if_error: ${{ github.event_name != 'pull_request' || secrets.CODECOV_TOKEN }}
-          file: ./cobertura.xml
-          plugin: noop
+          # Fail on upload error only when a token is set (forks have none)
+          fail_ci_if_error: ${{ secrets.CODECOV_TOKEN != '' }}
+          files: ./cobertura.xml
+          plugins: noop
           disable_search: true
           token: ${{ secrets.CODECOV_TOKEN }}
           working-directory: r-package

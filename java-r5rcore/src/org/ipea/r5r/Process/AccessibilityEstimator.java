@@ -50,7 +50,7 @@ public class AccessibilityEstimator extends R5DataFrameProcess {
     protected RDataFrame runProcess(int index) throws ParseException {
         RegionalTask request = buildRegionalTask(index);
 
-        TravelTimeComputer computer = new R5TravelTimeComputer(request, transportNetwork);
+        TravelTimeComputer computer = new R5TravelTimeComputer(request, transportNetwork, routingProperties.monteCarloSeed);
         OneOriginResult travelTimeResults = computer.computeTravelTimes();
         RDataFrame travelTimesTable = buildDataFrameStructure(fromIds[index], 10);
         populateDataFrame(travelTimeResults, travelTimesTable);

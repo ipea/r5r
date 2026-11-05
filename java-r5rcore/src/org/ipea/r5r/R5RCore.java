@@ -29,8 +29,15 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.locationtech.jts.geom.Envelope;
 
@@ -79,7 +86,7 @@ public class R5RCore {
     }
 
     public void setSuboptimalMinutes(int suboptimalMinutes) {
-        this.routingProperties.suboptimalMinutes = suboptimalMinutes;
+        this.routingProperties.suboptimalMinutes = Math.max(suboptimalMinutes, 0);
     }
 
     public int getTimeWindowSize() {
@@ -96,6 +103,10 @@ public class R5RCore {
 
     public void setNumberOfMonteCarloDraws(int numberOfMonteCarloDraws) {
         this.routingProperties.numberOfMonteCarloDraws = numberOfMonteCarloDraws;
+    }
+
+    public void setMonteCarloSeed(int monteCarloSeed) {
+        this.routingProperties.monteCarloSeed = monteCarloSeed;
     }
 
     public void setPercentiles(int[] percentiles) {
@@ -122,6 +133,18 @@ public class R5RCore {
 
     public int getMaxRides() {
         return this.routingProperties.maxRides;
+    }
+
+    public void setFastRaptor(boolean fastRaptor) {
+        this.routingProperties.fastRaptor = fastRaptor;
+    }
+
+    public boolean getFastRaptor() {
+        return this.routingProperties.fastRaptor;
+    }
+
+    public void setFastRaptorPerOrigin(boolean perOrigin) {
+        this.routingProperties.fastRaptorPerOrigin = perOrigin;
     }
 
     public void setMaxRides(int maxRides) {
@@ -186,14 +209,24 @@ public class R5RCore {
         return this.numberOfThreads;
     }
 
+    // called from R before every routing call: reuse the pool when the number of threads is unchanged
     public void setNumberOfThreads(int numberOfThreads) {
+        if (r5rThreadPool != null && r5rThreadPool != ForkJoinPool.commonPool()
+                && r5rThreadPool.getParallelism() == numberOfThreads) return;
+        shutdownThreadPool();
         this.numberOfThreads = numberOfThreads;
         r5rThreadPool = new ForkJoinPool(numberOfThreads);
     }
 
     public void setNumberOfThreadsToMax() {
+        shutdownThreadPool();
         r5rThreadPool = ForkJoinPool.commonPool();
         numberOfThreads = ForkJoinPool.commonPool().getParallelism();
+    }
+
+    // the common pool cannot be shut down; routing calls are sequential, so the old pool is idle here
+    private void shutdownThreadPool() {
+        if (r5rThreadPool != null && r5rThreadPool != ForkJoinPool.commonPool()) r5rThreadPool.shutdown();
     }
 
     public void silentMode() {
@@ -306,9 +339,7 @@ public class R5RCore {
             if (dropItineraryGeometry) { detailedItineraryPlanner.dropItineraryGeometry(); }
             if (osmLinkIds) detailedItineraryPlanner.OSMLinkIds();
 
-            RDataFrame out = detailedItineraryPlanner.run();
-            this.routingProperties.reset();
-            return out;
+            return runProcess(detailedItineraryPlanner);
         } else {
             // call regular detailed itineraries, based on PointToPointQuery
             DetailedItineraryPlanner detailedItineraryPlanner = new DetailedItineraryPlanner(this.r5rThreadPool, this.routingProperties);
@@ -319,9 +350,7 @@ public class R5RCore {
             detailedItineraryPlanner.setTripDuration(maxWalkTime, maxBikeTime, maxCarTime, maxTripDuration);
             if (dropItineraryGeometry) { detailedItineraryPlanner.dropItineraryGeometry(); }
 
-            RDataFrame out = detailedItineraryPlanner.run();
-            this.routingProperties.reset();
-            return out;
+            return runProcess(detailedItineraryPlanner);
         }
     }
 
@@ -393,9 +422,7 @@ public class R5RCore {
         travelTimeMatrixComputer.setDepartureDateTime(date, departureTime);
         travelTimeMatrixComputer.setTripDuration(maxWalkTime, maxBikeTime, maxCarTime, maxTripDuration);
 
-        RDataFrame out = travelTimeMatrixComputer.run();
-        this.routingProperties.reset();
-        return out;
+        return runProcess(travelTimeMatrixComputer);
     }
 
     // ----------------------------------  PARETO FRONTIERS  -----------------------------------------
@@ -465,9 +492,7 @@ public class R5RCore {
         paretoFrontierCalculator.setDepartureDateTime(date, departureTime);
         paretoFrontierCalculator.setTripDuration(maxWalkTime, maxBikeTime, maxCarTime, maxTripDuration);
 
-        RDataFrame out = paretoFrontierCalculator.run();
-        this.routingProperties.reset();
-        return out;
+        return runProcess(paretoFrontierCalculator);
     }
 
     /**
@@ -498,7 +523,7 @@ public class R5RCore {
 
     public RDataFrame accessibility(String[] fromIds, double[] fromLats, double[] fromLons,
                                     String[] toIds, double[] toLats, double[] toLons,
-                                    String[] opportunities, int[][] opportunityCounts,
+                                    String[] opportunities, double[][] opportunityCounts,
                                     String decayFunction, double decayValue,
                                     String directModes, String transitModes, String accessModes, String egressModes,
                                     String date, String departureTime,
@@ -513,9 +538,7 @@ public class R5RCore {
         accessibilityEstimator.setDepartureDateTime(date, departureTime);
         accessibilityEstimator.setTripDuration(maxWalkTime, maxBikeTime, maxCarTime, maxTripDuration);
 
-        RDataFrame out = accessibilityEstimator.run();
-        routingProperties.reset();
-        return out;
+        return runProcess(accessibilityEstimator);
     }
 
     // Test decay functions used to calculate accessibility
@@ -600,6 +623,110 @@ public class R5RCore {
     }
 
     // ------------------------------ SCENARIOS ----------------------------------------
+
+    // Discards the scenario network and restores the default routing properties.
+    // Called from R on exit of every routing function, so that nothing set for a
+    // call that fails (in R or in Java) leaks into the next call.
+    public void resetRoutingProperties() {
+        // an interrupted call must not leave a job running against the reset properties
+        cancelJob();
+        this.routingProperties.reset();
+        setCsvOutput("");
+    }
+
+    // ------------------------------ BACKGROUND JOBS ----------------------------------------
+    // R calls deferNextRun() before a routing method, so that the method starts the routing on a
+    // background thread and returns null at once. R then polls waitForJob() and getJobProcessed()
+    // to print progress from its own thread, and collects the output with getJobResult().
+
+    private boolean deferNext = false;
+    private ExecutorService jobExecutor;
+    private Future<Object> job;
+    private R5Process<?, ?> jobProcess;
+    private int jobProcessed = 0;
+    private int jobTotal = 0;
+
+    public void deferNextRun() { deferNext = true; }
+
+    private <A> A runProcess(R5Process<?, A> process) throws ExecutionException, InterruptedException {
+        if (!deferNext) {
+            A out = process.run();
+            this.routingProperties.reset();
+            return out;
+        }
+
+        deferNext = false;
+        if (job != null && !job.isDone()) throw new IllegalStateException("A routing job is already running.");
+        if (jobExecutor == null) {
+            jobExecutor = Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "r5r-job");
+                t.setDaemon(true);
+                return t;
+            });
+        }
+
+        jobProcess = process;
+        job = jobExecutor.submit((Callable<Object>) () -> {
+            try {
+                return process.run();
+            } finally {
+                this.routingProperties.reset();
+            }
+        });
+        return null;
+    }
+
+    // true when the job has ended (or there is none), false if it is still running after millis
+    public boolean waitForJob(int millis) throws InterruptedException {
+        if (job == null) return true;
+        try {
+            job.get(millis, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException e) {
+            return false;
+        } catch (ExecutionException | CancellationException e) {
+            // reported by getJobResult()
+        }
+        return true;
+    }
+
+    public int getJobProcessed() { return jobProcess != null ? jobProcess.getProcessed() : jobProcessed; }
+
+    public int getJobTotal() { return jobProcess != null ? jobProcess.getTotal() : jobTotal; }
+
+    public Object getJobResult() throws Throwable {
+        if (job == null) return null;
+        try {
+            return job.get();
+        } catch (ExecutionException e) {
+            // rethrow the error raised by the routing itself
+            throw e.getCause();
+        } finally {
+            clearJob();
+        }
+    }
+
+    // stops a running job after its in-flight origins and waits for it
+    private void cancelJob() {
+        deferNext = false;
+        if (job == null) return;
+        jobProcess.cancel();
+        try {
+            job.get();
+        } catch (Exception e) {
+            // the job is being discarded
+        }
+        clearJob();
+    }
+
+    // keep the final counts, but not the process and its output
+    private void clearJob() {
+        if (jobProcess != null) {
+            jobProcessed = jobProcess.getProcessed();
+            jobTotal = jobProcess.getTotal();
+        }
+        job = null;
+        jobProcess = null;
+    }
 
     public String applyCongestionPolygon(String filePath, String scalingAttribute, String priorityAttribute, String nameAttribute, float defaultScaling){
         Path fileJPath = Paths.get(filePath).toAbsolutePath().normalize();
@@ -757,14 +884,40 @@ public class R5RCore {
         regularGridProcess.setDepartureDateTime(date, departureTime);
         regularGridProcess.setTripDuration(maxWalkTime, maxBikeTime, maxCarTime, maxTripDuration);
 
-        RegularGridResult[] out = regularGridProcess.run();
-        this.routingProperties.reset();
-        return out;
+        return runProcess(regularGridProcess);
     }
 
     // --------------------------------  UTILITY FUNCTIONS  -----------------------------------------
 
-    // Returns list of public transport services active on a given date
+    /** Operating dates for services referenced by retained trips. */
+    public String[] getTransitServiceDates() {
+        return TransitServiceDates.getDates(routingProperties.getTransportNetworkBase().transitLayer);
+    }
+
+    /** Summarize calendars in one transfer, preserving explicit date order and duplicates. */
+    public RDataFrame getTransitServiceAvailability(String[] dates) {
+        RDataFrame table = new RDataFrame();
+        table.addStringColumn("date", "");
+        table.addIntegerColumn("total_services", 0);
+        table.addIntegerColumn("active_services", 0);
+        table.addDoubleColumn("pct_active", 0.0);
+        var services = routingProperties.getTransportNetworkBase().transitLayer.services;
+        for (String dateString : dates) {
+            LocalDate date = LocalDate.parse(dateString);
+            int active = 0;
+            for (Service service : services) {
+                if (service.activeOn(date)) active++;
+            }
+            table.append();
+            table.set("date", dateString);
+            table.set("total_services", services.size());
+            table.set("active_services", active);
+            table.set("pct_active", services.isEmpty() ? 0.0 : (double) active / services.size());
+        }
+        return table;
+    }
+
+    // Returns list of public transport services active on a given date.
     public RDataFrame getTransitServicesByDate(String date) {
         RDataFrame servicesTable = new RDataFrame();
         servicesTable.addStringColumn("service_id", "");

@@ -9,9 +9,8 @@ write_fare_structure(fare_structure, file_path)
 \arguments{
 \item{fare_structure}{A fare structure object, following the convention
 set in \code{\link[=setup_fare_structure]{setup_fare_structure()}}. This object describes how transit fares
-should be calculated. Please see the fare structure vignette to
-understand how this object is structured:
-\code{vignette("fare_structure", package = "r5r")}.}
+should be calculated. See \code{vignette("fare_structure", package = "r5r")}
+for its structure.}
 
 \item{file_path}{A path to a \code{.zip} file. Where the fare structure should be
 written to.}
@@ -20,7 +19,7 @@ written to.}
 The path passed to \code{file_path}, invisibly.
 }
 \description{
-Writes a fare structure object do disk. Fare structure is saved as a
+Writes a fare structure object to disk. Fare structure is saved as a
 collection of \code{.csv} files inside a \code{.zip} file.
 }
 \examples{

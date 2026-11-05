@@ -18,6 +18,14 @@
         </encoder>
     </appender>
 
+    <!-- progress counters go to the log file only: R prints the progress itself -->
+    <logger name="org.ipea.r5r.Process.R5Process" additivity="false">
+        <appender-ref ref="RFILE"/>
+    </logger>
+    <logger name="org.ipea.r5r.Process.R5DataFrameProcess" additivity="false">
+        <appender-ref ref="RFILE"/>
+    </logger>
+
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="RFILE"/>

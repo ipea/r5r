@@ -1,7 +1,8 @@
 #' @section Routing algorithm:
 #'
-#' The [detailed_itineraries()] and [pareto_frontier()] functions use an
-#' `R5`-specific extension to the McRAPTOR routing algorithm. The
+#' The [pareto_frontier()] function, and [detailed_itineraries()] with
+#' `shortest_path = FALSE` or a `fare_structure`, use an `R5`-specific
+#' extension to the McRAPTOR routing algorithm. The
 #' implementation used in `detailed_itineraries()` allows the router to find
 #' paths that are optimal and less than optimal in terms of travel time, with
 #' some heuristics around multiple access modes, riding the same patterns, etc.

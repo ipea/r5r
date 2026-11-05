@@ -36,7 +36,7 @@ knitr::opts_chunk$set(
 
 # 1. Introduction 
 
-**r5r** is an [R package for rapid realistic routing on multimodal transport networks](https://github.com/ipeaGIT/r5r) (walk, bike, public transport and car). It provides a simple and friendly interface to R<sup>5</sup>, a really fast and open source Java-based routing engine developed separately by [Conveyal](https://www.conveyal.com/). R<sup>5</sup> stands for [Rapid Realistic Routing on Real-world and Reimagined networks](https://github.com/conveyal/r5). More details about **r5r** can be found on the [package webpage](https://ipeagit.github.io/r5r/index.html) or on this [paper](
+**r5r** is an [R package for rapid realistic routing on multimodal transport networks](https://github.com/ipea/r5r) (walk, bike, public transport and car). It provides a simple and friendly interface to R<sup>5</sup>, a really fast and open source Java-based routing engine developed separately by [Conveyal](https://www.conveyal.com/). R<sup>5</sup> stands for [Rapid Realistic Routing on Real-world and Reimagined networks](https://github.com/conveyal/r5). More details about **r5r** can be found on the [package webpage](https://ipea.github.io/r5r/index.html) or on this [paper](
 https://doi.org/10.32866/001c.21262).
 
 # 2. Installation
@@ -48,19 +48,17 @@ You can install `{r5r}` from CRAN, or the development version from github.
 install.packages('r5r')
 
 # dev version with latest features
-devtools::install_github("ipeaGIT/r5r", subdir = "r-package")
+devtools::install_github("ipea/r5r", subdir = "r-package")
 ```
 
 
-Please bear in mind that you need to have *Java Development Kit (JDK) 21* installed 
-on your computer to use `{r5r}`. No worries, you don't have to pay for it. There are
-numerous open-source JDK implementations, and you only need to install one JDK. Here are a few options:
+`{r5r}` requires the *Java Development Kit (JDK) 21*. Any free, open-source JDK works, for example:
 
 - [Adoptium/Eclipse Temurin](https://adoptium.net/) (our preferred option)
 - [Amazon Corretto](https://aws.amazon.com/corretto/)
 - [Oracle OpenJDK](https://jdk.java.net/21/). 
 
-The easiest way to install JDK is using the new [{rJavaEnv}](https://www.ekotov.pro/rJavaEnv/) package in R:
+The easiest way to install JDK 21 is with the [{rJavaEnv}](https://www.ekotov.pro/rJavaEnv/) package in R:
 
 ```{r, eval = FALSE}
 # install {rJavaEnv} from CRAN
@@ -82,9 +80,9 @@ rJavaEnv::java_check_version_rjava()
 ```
 
 
-# 3. Usage
+# 3. Usage {#usage}
 
-First, we need to increase the memory available to Java. This has to be done **before** loading the `{r5r}` library because, by default, `R` allocates only 512MB of memory for Java processes, which is not enough for large queries using `{r5r}`. To increase available memory to 2GB, for example, we need to set the `java.parameters` option at the beginning of the script, as follows:
+First, set the memory available to Java with the `java.parameters` option (2 GB is enough for the sample data). Do this **before** loading `{r5r}` or any other Java-based package: `rJava` starts the Java Virtual Machine only once per R session, so later changes only take effect after restarting R.
 
 ```{r, message = FALSE}
 options(java.parameters = "-Xmx2G")
@@ -93,8 +91,6 @@ options(java.parameters = "-Xmx2G")
 # number of CPUs to 4, for example, you can run:  
 options(java.parameters = c("-Xmx2G", "-XX:ActiveProcessorCount=4"))
 ```
-
-Note: It's very important to allocate enough memory before loading `{r5r}` or any other Java-based package, since `rJava` starts a Java Virtual Machine only once for each R session. It might be useful to restart your R session and execute the code above right after, if you notice that you haven't succeeded in your previous attempts. 
 
 Then we can load the packages used in this vignette:
 
@@ -105,39 +101,29 @@ library(data.table)
 library(ggplot2)
 ```
 
-The `{r5r}` package has seven **fundamental functions**:
+`{r5r}` has eight **fundamental functions**:
 
-1. `build_network()` to build a routable transport network;
+| Function | Returns |
+|---|---|
+| `build_network()` | A routable multimodal transport network |
+| `accessibility()` | Access to opportunities from each origin, given a decay function |
+| `travel_time_matrix()` | Travel times between origin/destination pairs for a departure time |
+| `arrival_travel_time_matrix()` | Travel times for an arrival time, with routes used (and a time breakdown with `breakdown = TRUE`) |
+| `expanded_travel_time_matrix()` | Travel times per departure minute, with routes used (and a time breakdown with `breakdown = TRUE`) |
+| `detailed_itineraries()` | One or more alternative routes per origin/destination pair, detailed by trip segment |
+| `pareto_frontier()` | The trade-off between travel time and monetary cost of route alternatives |
+| `isochrone()` | Areas reachable from an origin within given travel times |
 
-2. `accessibility()` for fast computation of access to opportunities considering
-a selected decay function;
+Most of them can also account for monetary travel costs ([fare structure vignette](https://ipea.github.io/r5r/articles/fare_structure.html)).
 
-3. `travel_time_matrix()` for fast computation of travel time estimates between origin/destination pairs considering departure time;
+**Support functions**:
 
-4. `arrival_travel_time_matrix()` for calculating travel time matrices between origin destination pairs considering a time of arrival. The output includes additional information such as the routes used and total time disaggregated by access, waiting, in-vehicle and transfer times.
-
-5. `expanded_travel_time_matrix()` for calculating travel matrices between origin destination pairs with additional information such as routes used and total time disaggregated by access, waiting, in-vehicle and transfer times.
-
-6. `detailed_itineraries()` to get detailed information on one or multiple alternative routes between origin/destination pairs.
-
-7. `pareto_frontier()` for analyzing the trade-off between the travel time and monetary costs of multiple route alternatives between origin/destination pairs.
-
-8. `isochrone()` to estimate the polygons of the areas that can be reached from an origin point at different travel time limits.
-
-Most of these functions also allow users to account for monetary travel costs 
-when generating travel time matrices and accessibility estimates. More info about
-how to consider monetary costs can be found in [this vignette](https://ipeagit.github.io/r5r/articles/fare_structure.html).
-
-
-The package also includes a few **support functions**.
-
-1. `street_network_to_sf()` to extract OpenStreetMap network in sf format from a `network.dat` file.
-
-2. `transit_network_to_sf()` to extract transit network in sf format from a `network.dat` file.
-
-3. `find_snap()` to find snapped locations of input points on street network.
-
-4. `r5r_sitrep()` to generate a situation report to help debug eventual errors.
+| Function | Returns |
+|---|---|
+| `street_network_to_sf()` | The OpenStreetMap street network of a `network.dat` file, as `sf` |
+| `transit_network_to_sf()` | The public transport network of a `network.dat` file, as `sf` |
+| `find_snap()` | Where input points snap to the street network |
+| `r5r_sitrep()` | A situation report to help debug errors |
 
 
 ## 3.1 Data requirements:
@@ -166,15 +152,11 @@ Here are a few places from where you can download these data sets:
   - Nasa's SRTMGL1 website
 
 
-Let's have a quick look at how `{r5r}` works using a sample data set.
-
-
-
 # 4. Demonstration on sample data
 
 ## Data
 
-To illustrate the functionalities of `{r5r}`, the package includes a small sample data for the city of Porto Alegre (Brazil). It includes seven files:
+`{r5r}` includes sample data for Porto Alegre (Brazil):
 
 * An OpenStreetMap network: `poa_osm.pbf`
 * Two public transport feeds: `poa_eptc.zip` and `poa_trensurb.zip`
@@ -189,20 +171,20 @@ data_path <- system.file("extdata/poa", package = "r5r")
 list.files(data_path)
 ```
 
-The points of interest data can be seen below.  In this example, we will be looking at transport alternatives between some of those places.
+Points of interest, used below as origins and destinations:
 
 ```{r}
 poi <- fread(file.path(data_path, "poa_points_of_interest.csv"))
 head(poi)
 ```
 
-The data with origin destination pairs is shown below. In this example, we will be using  200 points randomly selected from this data set.
+Hexagonal grid points; we use a random sample of 200:
 
 ```{r}
 points <- fread(file.path(data_path, "poa_hexgrid.csv"))
 
 # sample points
-sampled_rows <- sample(1:nrow(points), 200, replace=TRUE)
+sampled_rows <- sample(1:nrow(points), 200, replace = FALSE)
 points <- points[ sampled_rows, ]
 head(points)
 ```
@@ -211,7 +193,7 @@ head(points)
 
 ## 4.1 Building routable transport network with `build_network()`
 
-The first step is to build the multimodal transport network used for routing in R<sup>5</sup>. This is done with the `build_network` function. This function does two things: (1) downloads/updates a compiled JAR file of R<sup>5</sup> and stores it locally in the `{r5r}` package directory for future use; and (2) combines the osm.pbf and gtfs.zip data sets to build a routable network object.
+`build_network()` (1) downloads the R<sup>5</sup> JAR (on first use or when the R<sup>5</sup> version changes) and caches it locally; and (2) combines the `.pbf`, GTFS `.zip` and optional elevation `.tif` files in `data_path` into a routable network.
 
 ```{r, message = FALSE}
 # Indicate the path where OSM and GTFS data are stored
@@ -221,12 +203,9 @@ r5r_network <- build_network(data_path = data_path)
 
 ## 4.2 Accessibility analysis
 
-The fastest way to calculate accessibility estimates is using the `accessibility()`
-function. In this example, we calculate the number of schools and health care 
-facilities accessible in less than 60 minutes by public transport and walking.
-More details in this vignette on [Calculating and visualizing Accessibility](https://ipeagit.github.io/r5r/articles/accessibility.html).
+`accessibility()` is the fastest way to estimate accessibility. Here we count the schools and healthcare facilities reachable in less than 60 minutes by public transport and walking ([accessibility vignette](https://ipea.github.io/r5r/articles/accessibility.html)).
 
-```{r, message = FALSE}
+```{r, message = FALSE, warning = FALSE}
 # set departure datetime input
 departure_datetime <- as.POSIXct("13-05-2019 14:00:00",
                                  format = "%d-%m-%Y %H:%M:%S")
@@ -256,16 +235,9 @@ For fast routing analysis, **r5r** currently has three core functions:
 
 ### Fast many to many travel time matrix
 
-The `travel_time_matrix()` function is a really simple and fast function to 
-compute travel time estimates between one or multiple origin/destination pairs. 
-The origin/destination input can be either a spatial `sf POINT` object, or a 
-`data.frame` containing the columns `id, lon, lat`. The function also receives 
-as inputs the *max walking distance*, in meters, and the *max trip duration*, in
-minutes. Resulting travel times are also output in minutes.
+`travel_time_matrix()` computes travel times between origin/destination pairs. Origins and destinations can be an `sf POINT` object or a `data.frame` with columns `id`, `lon` and `lat`. `max_walk_time` and `max_trip_duration` are in minutes, as are the resulting travel times.
 
-This function also allows users to very efficiently capture the travel time 
-uncertainties inside a given time window considering multiple departure times. 
-[More info on this vignette](https://ipeagit.github.io/r5r/articles/time_window.html). 
+It can also capture travel time variation across departures within a time window ([time window vignette](https://ipea.github.io/r5r/articles/time_window.html)). 
 
 
 ```{r, message = FALSE}
@@ -291,17 +263,13 @@ head(ttm)
 ```
 
 ```{r ttm head, echo=FALSE, message=FALSE, out.width='100%', eval = FALSE}
-knitr::include_graphics("https://github.com/ipeaGIT/r5r/blob/master/r-package/inst/img/vig_output_ttm.png?raw=true")
+knitr::include_graphics("https://github.com/ipea/r5r/blob/master/r-package/inst/img/vig_output_ttm.png?raw=true")
 ```
 
 
 ### Expanded travel time matrix with minute-by-minute estimates
 
-For those interested in more detailed outputs, the `expanded_travel_time_matrix()` 
-works very similarly with `travel_time_matrix()` but it brings much more 
-information. It estimates for each origin destination pair the routes used and 
-total time disaggregated by access, waiting, in-vehicle and transfer times. 
-Please note this  function can be very memory intensive for large data sets.
+`expanded_travel_time_matrix()` works like `travel_time_matrix()` but also returns, for each origin/destination pair, the routes used and (with `breakdown = TRUE`) the access, waiting, in-vehicle and transfer times. It can be very memory intensive for large data sets.
 
 
 ```{r, message = FALSE}
@@ -324,13 +292,9 @@ head(ettm)
 
 ### Detailed itineraries
 
-Most routing packages only return the fastest route. A key advantage of the `detailed_itineraries()` function is that is allows for fast routing analysis 
-while providing multiple alternative routes between origin destination pairs. 
-The output also brings detailed information for each route alternative at the 
-trip segment level, including the transport mode, waiting times, travel time and
-distance of each trip segment. 
+Most routing packages return only the fastest route. `detailed_itineraries()` can also return alternative routes between origin/destination pairs, detailed by trip segment: transport mode, waiting time, travel time and distance.
 
-In this example below, we want to know some alternative routes between one origin/destination pair only.
+Below, alternative routes for a single origin/destination pair:
 
 ```{r, message = FALSE}
 # set inputs
@@ -355,15 +319,14 @@ det <- detailed_itineraries(
 head(det)
 ```
 ```{r detailed head, echo = FALSE, out.width='100%', message = FALSE, eval = FALSE}
-knitr::include_graphics("https://github.com/ipeaGIT/r5r/blob/master/r-package/inst/img/vig_output_detailed.png?raw=true")
+knitr::include_graphics("https://github.com/ipea/r5r/blob/master/r-package/inst/img/vig_output_detailed.png?raw=true")
 ```
 
-The output is a `data.frame sf` object, so we can easily visualize the results.
+The output is an `sf` data.frame, ready to map.
 
 #### Visualize results
 
-**Static visualization** with `ggplot2` package: To provide a geographic context 
-for the visualization of the results in `ggplot2`, you can also use the `street_network_to_sf()` function to  extract the OSM street network used in the routing.
+`street_network_to_sf()` extracts the OSM street network used in routing, to give the map geographic context:
 
 ```{r, message = FALSE}
 # extract OSM network
@@ -382,25 +345,19 @@ ggplot() +
 ```
 
 ```{r ggplot2 output, echo = FALSE, out.width='100%', message = FALSE, eval = FALSE}
-knitr::include_graphics("https://github.com/ipeaGIT/r5r/blob/master/r-package/inst/img/vig_detailed_ggplot.png?raw=true")
+knitr::include_graphics("https://github.com/ipea/r5r/blob/master/r-package/inst/img/vig_detailed_ggplot.png?raw=true")
 ```
 
 
 ### Cleaning up after usage
 
-`{r5r}` objects are still allocated to any amount of memory previously set after they are done with their calculations. In order to remove an existing `{r5r}` object and reallocate the memory it had been using, we use the `stop_r5` function followed by a call to Java's garbage collector, as follows:
+Stop the network and run Java's garbage collector to free the memory it used:
 
 ```{r, message = FALSE}
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
 ```
 
-```{r, eval = TRUE, include = FALSE, message = FALSE}
-# clean cache (CRAN policy)
-r5r::r5r_cache(delete_file = 'all')
-
-```
-
-If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipeaGIT/r5r).
+If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipea/r5r).
 
 

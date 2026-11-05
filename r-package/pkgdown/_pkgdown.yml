@@ -1,46 +1,50 @@
-url: https://ipeagit.github.io/r5r/
+url: https://ipea.github.io/r5r/
 
-development:
-  mode: auto
+repo:
+  url:
+    source: https://github.com/ipea/r5r/blob/HEAD/r-package/
 
 template:
   bootstrap: 5
   light-switch: true
 
+development:
+  mode: auto
+
 reference:
   - title: "Building routable transport network"
-  - contents:
-    - build_network
-    - setup_r5
+    contents:
+      - build_network
+      - setup_r5
   - title: "Accessibility"
-  - contents:
-    - accessibility
+    contents:
+      - accessibility
   - title: "Routing"
-  - contents:
-    - travel_time_matrix
-    - arrival_travel_time_matrix
-    - expanded_travel_time_matrix
-    - detailed_itineraries
-    - pareto_frontier
+    contents:
+      - travel_time_matrix
+      - arrival_travel_time_matrix
+      - expanded_travel_time_matrix
+      - detailed_itineraries
+      - pareto_frontier
   - title: "Isochrone"
-  - contents:
-    - isochrone
+    contents:
+      - isochrone
   - title: "Extracting transport network spatial data"
-  - contents:
-    - street_network_to_sf
-    - transit_network_to_sf
-    - street_network_bbox
+    contents:
+      - street_network_to_sf
+      - transit_network_to_sf
+      - street_network_bbox
   - title: "Fare structure"
-  - contents:
-    - setup_fare_structure
-    - read_fare_structure
-    - write_fare_structure
+    contents:
+      - setup_fare_structure
+      - read_fare_structure
+      - write_fare_structure
   - title: "Support functions"
-  - contents:
-    - check_transit_availability
-    - find_snap
-    - get_gtfs_errors
-    - r5r_sitrep
-    - r5r_cache
-    - download_r5
-    - stop_r5
+    contents:
+      - check_transit_availability
+      - find_snap
+      - get_gtfs_errors
+      - r5r_sitrep
+      - r5r_cache
+      - download_r5
+      - stop_r5

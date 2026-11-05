@@ -4,7 +4,13 @@
 \alias{set_monte_carlo_draws}
 \title{Set number of Monte Carlo draws}
 \usage{
-set_monte_carlo_draws(r5r_network, draws_per_minute, time_window)
+set_monte_carlo_draws(
+  r5r_network,
+  draws_per_minute,
+  time_window,
+  fare_structure = NULL,
+  mcraptor = !is.null(fare_structure)
+)
 }
 \arguments{
 \item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
@@ -12,6 +18,13 @@ set_monte_carlo_draws(r5r_network, draws_per_minute, time_window)
 \item{draws_per_minute}{A number.}
 
 \item{time_window}{A number.}
+
+\item{fare_structure}{A fare structure or \code{NULL}. When set, R5 uses the
+McRaptor algorithm, and combinations of \code{draws_per_minute} and
+\code{time_window} that its departure-time sampler cannot handle are rejected.}
+
+\item{mcraptor}{A logical. Whether the routing uses the McRaptor algorithm.
+Defaults to \code{TRUE} when a \code{fare_structure} is set.}
 }
 \value{
 Invisibly returns \code{TRUE}.
@@ -32,6 +45,7 @@ Other setting functions:
 \code{\link[=set_max_fare]{set_max_fare()}},
 \code{\link[=set_max_lts]{set_max_lts()}},
 \code{\link[=set_max_rides]{set_max_rides()}},
+\code{\link[=set_monte_carlo_seed]{set_monte_carlo_seed()}},
 \code{\link[=set_n_threads]{set_n_threads()}},
 \code{\link[=set_new_congestion]{set_new_congestion()}},
 \code{\link[=set_new_lts]{set_new_lts()}},

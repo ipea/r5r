@@ -7,24 +7,18 @@ tasks.withType(Jar).configureEach {
     reproducibleFileOrder = true
 }
 
-group 'org.ipea'
-version '1.1.0999-SNAPSHOT'
+group = 'org.ipea'
+version = '1.1.0999-SNAPSHOT'
 
 // Build against the version of R5 that the current r5r download_r5 function will
-// grab
-def baos = new ByteArrayOutputStream()
-exec {
-    commandLine 'R', '--no-save', '-q', '-s', '-e', 'setwd("../r-package"); devtools::load_all(quiet=T); cat(download_r5());'
-    standardOutput = baos
-}
-def r5Path = baos.toString()
+// grab. R code uses single quotes so the arguments survive Windows quoting.
+def r5Path = providers.exec {
+    commandLine 'R', '--no-save', '-q', '-s', '-e', "setwd('../r-package'); devtools::load_all(quiet=T); cat(download_r5());"
+}.standardOutput.asText.get().trim()
 
-def rjava_baos = new ByteArrayOutputStream()
-exec {
-    commandLine 'R', '--no-save', '-q', '-s', '-e', 'cat(system.file("jri/JRI.jar", package="rJava"))'
-    standardOutput = rjava_baos
-}
-def rJavaPath = rjava_baos.toString()
+def rJavaPath = providers.exec {
+    commandLine 'R', '--no-save', '-q', '-s', '-e', "cat(system.file('jri/JRI.jar', package='rJava'))"
+}.standardOutput.asText.get().trim()
 
 println(rJavaPath)
 
@@ -38,5 +32,6 @@ sourceSets {
 
 dependencies {
     implementation files(r5Path)
-    implementation files(rJavaPath)
+    // JRI.jar is missing from some rJava builds; Gradle 9 rejects an empty path
+    if (rJavaPath) implementation files(rJavaPath)
 }

@@ -1,32 +1,35 @@
 #' Calculate travel time matrix between origin destination pairs considering a
 #' time of arrival
 #'
-#' Computation of travel time estimates between one or multiple origin
-#' destination pairs considering a time of arrival. This function considers a
-#' time of arrival set by the user. The function returns the travel time of the
-#' trip with the latest departure time that arrives before the arrival time set
-#' by the user. If you want to calculate travel times considering a departure
-#' time, have a' look at the [travel_time_matrix()] function. This function is a
-#' wrapper around [expanded_travel_time_matrix()]. On one hand, this means this
-#' the output of this function has more columns (more info) compared the output
-#' of [travel_time_matrix()]. On the other hand, this function can be very memory
-#' intensive if the user allows for really long max trip duration.
+#' Computes travel times between origin-destination pairs for a given arrival
+#' time: for each pair, the trip with the latest departure that arrives by
+#' `arrival_datetime`. Departures are searched minute by minute between
+#' `arrival_datetime - max_trip_duration` and `arrival_datetime`, so
+#' `max_trip_duration` also sets the search window. For a departure time, use
+#' [travel_time_matrix()]. This function wraps [expanded_travel_time_matrix()],
+#' so its output has more columns than that of [travel_time_matrix()], and it
+#' can be very memory intensive with a long `max_trip_duration`.
+#' `destinations` can have at most 5000 rows, a limit of R5 for detailed path
+#' information; split larger sets into chunks.
 #'
 #' @inheritParams expanded_travel_time_matrix
-#' @param arrival_datetime A POSIXct object.
+#' @param arrival_datetime A POSIXct object, required for all modes. The time by which trips must
+#'   arrive. When routing with public transport, services must run on the date
+#'   of `arrival_datetime - max_trip_duration` (see
+#'   [check_transit_availability()]). See details for
+#'   how datetimes are parsed.
 #'
-#' @return A `data.table` with travel time estimates (in minutes) and the
-#'   routes used in each trip between origin and destination pairs, for each
-#'   minute of the specified time window. Each set of origin, destination and
-#'   departure minute can appear up to N times, where N is the number of Monte
-#'   Carlo draws specified in the function arguments (please note that this
-#'   only applies when the GTFS feeds that describe the transit network include
-#'   a frequencies table, otherwise only a single draw is performed). A pair is
-#'   completely absent from the final output if no trips could be completed in
-#'   any of the minutes of the time window. If for a single pair trips could be
-#'   completed in some of the minutes of the time window, but not for all of
-#'   them, the minutes in which trips couldn't be completed will have `NA`
-#'   travel time and routes used. If `output_dir` is not `NULL`, the function
+#' @return A `data.table` with one row per origin-destination pair that can be
+#'   reached by `arrival_datetime`, describing the trip with the latest
+#'   departure that still arrives in time: its `departure_time`, the `routes`
+#'   used and its `total_time` (in minutes), plus the columns added by
+#'   `breakdown = TRUE` (see [expanded_travel_time_matrix()]). Pairs that
+#'   cannot be reached in time are absent from the output. When the search
+#'   window crosses midnight, departure times after midnight are reported as
+#'   `"24:MM:SS"`, and only the public transport services of the departure
+#'   day are considered. Trips made only by walking, cycling or driving have
+#'   travel times in whole minutes, so they can arrive up to 59 seconds after
+#'   `arrival_datetime`. If `output_dir` is not `NULL`, the function
 #'   returns the path specified in that parameter, in which the `.csv` files
 #'   containing the results are saved.
 #'
@@ -81,12 +84,11 @@
 #' stop_r5(r5r_network)
 #' @export
 arrival_travel_time_matrix <- function(r5r_network,
-                                       r5r_core = deprecated(),
                                        origins,
                                        destinations,
                                        mode = "WALK",
                                        mode_egress = "WALK",
-                                       arrival_datetime = Sys.time(),
+                                       arrival_datetime,
                                        breakdown = FALSE,
                                        max_walk_time = Inf,
                                        max_bike_time = Inf,
@@ -100,10 +102,12 @@ arrival_travel_time_matrix <- function(r5r_network,
                                        carspeed_scale = 1,
                                        new_lts = NULL,
                                        draws_per_minute = 5L,
+                                       seed = NULL,
                                        n_threads = Inf,
                                        verbose = FALSE,
-                                       progress = FALSE,
-                                       output_dir = NULL) {
+                                       progress = TRUE,
+                                       output_dir = NULL,
+                                       r5r_core = deprecated()) {
 
   # deprecating r5r_core --------------------------------------
   if (lifecycle::is_present(r5r_core)) {
@@ -114,6 +118,12 @@ arrival_travel_time_matrix <- function(r5r_network,
     ))
 
     r5r_network <- r5r_core
+  }
+
+  if (missing(arrival_datetime) || is.null(arrival_datetime)) {
+    cli::cli_abort(
+      "{.arg arrival_datetime} is required. Supply a POSIXct value specifying when trips must arrive. For trips that do not depend on time, use {.fun travel_time_matrix}."
+    )
   }
 
   old_options <- options(datatable.optimize = Inf)
@@ -132,26 +142,7 @@ arrival_travel_time_matrix <- function(r5r_network,
   destinations <- assign_points_input(destinations, "destinations")
   mode_list <- assign_mode(mode, mode_egress)
 
-  # calculate departure datetime
-  departure_datetime <- arrival_datetime - as.difftime(max_trip_duration, units = "mins")
-  departure <- assign_departure(departure_datetime)
-
-  # check availability of transit services on the selected date
-  if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|CABLE_CAR|GONDOLA|FUNICULAR') {
-    check_transit_availability_on_date(r5r_network, departure_date = departure$date)
-  }
-
-  r5r_network <- r5r_network@jcore
-
-  # in direct modes reverse origin/destination to take advantage of R5's One to Many algorithm
-  data_path <- r5r_network$getDataPath()
-  res <- reverse_if_direct_mode(origins, destinations, mode_list, data_path)
-  if (!is.null(res)) {
-    origins <- res$origins
-    destinations <- res$destinations
-  }
-
-
+  # set before the departure datetime, which depends on the final max_trip_duration
   max_walk_time <- assign_max_street_time(
     max_walk_time,
     walk_speed,
@@ -166,7 +157,7 @@ arrival_travel_time_matrix <- function(r5r_network,
   )
   max_car_time <- assign_max_street_time(
     max_car_time,
-    8, # 8 km/h, R5's default.
+    NULL, # no car speed argument to validate
     max_trip_duration,
     "car"
   )
@@ -174,11 +165,40 @@ arrival_travel_time_matrix <- function(r5r_network,
     max_trip_duration,
     mode_list,
     max_walk_time,
-    max_bike_time
+    max_bike_time,
+    max_car_time
   )
+
+  # calculate departure datetime
+  departure_datetime <- arrival_datetime - as.difftime(max_trip_duration, units = "mins")
+  departure <- assign_departure(departure_datetime, mode_list)
+
+  # check availability of transit services on the selected date
+  if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR') {
+    check_transit_availability_on_date(r5r_network, departure_date = departure$date)
+  }
+
+  r5r_network <- r5r_network@jcore
+  on.exit(r5r_network$resetRoutingProperties(), add = TRUE)
+
+  # in direct modes reverse origin/destination to take advantage of R5's One to Many algorithm.
+  # skipped when output_dir is set: Java writes the CSVs with the swapped from_id/to_id and names
+  # the files after the swapped origins, and the swap is only undone in the in-memory result
+  # also skipped for more than 5000 origins: they would become destinations, above R5's limit
+  data_path <- r5r_network$getDataPath()
+  res <- NULL
+  if (is.null(output_dir) && nrow(origins) <= 5000) {
+    res <- reverse_if_direct_mode(origins, destinations, mode_list, data_path)
+  }
+  if (!is.null(res)) {
+    origins <- res$origins
+    destinations <- res$destinations
+  }
+
 
   set_time_window(r5r_network, max_trip_duration)
   set_monte_carlo_draws(r5r_network, draws_per_minute, max_trip_duration)
+  set_monte_carlo_seed(r5r_network, seed)
   set_speed(r5r_network, walk_speed, "walk")
   set_speed(r5r_network, bike_speed, "bike")
   set_max_rides(r5r_network, max_rides)
@@ -199,7 +219,7 @@ arrival_travel_time_matrix <- function(r5r_network,
 
   # call r5r_network method and process result -------------------------------
 
-  travel_times <- r5r_network$travelTimeMatrix(
+  travel_times <- run_routing_job(r5r_network, r5r_network$travelTimeMatrix(
     origins$id,
     origins$lat,
     origins$lon,
@@ -216,11 +236,14 @@ arrival_travel_time_matrix <- function(r5r_network,
     max_bike_time,
     max_car_time,
     max_trip_duration
-  )
+  ), progress)
 
   if (!verbose & progress) cat("Preparing final output...", file = stderr())
 
-  travel_times <- java_to_dt(travel_times)
+  travel_times <- java_to_dt(
+    travel_times,
+    ids = list(from_id = origins$id, to_id = destinations$id)
+  )
 
   # reverse order of origins destinations back ONLY if the order had been swapped before
   if (!is.null(res)) {

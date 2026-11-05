@@ -66,7 +66,7 @@ sticker(net,
         # h_fill="gray20", h_color="gray80", h_size=1.3,
 
         # url
-        url = "github.com/ipeaGIT/r5r", u_color= "gray95", u_family = "Roboto", u_size = 1.8,
+        url = "github.com/ipea/r5r", u_color= "gray95", u_family = "Roboto", u_size = 1.8,
 
         # save output name and resolution
         filename="./man/figures/r5r_biagaa.png", dpi=300 #

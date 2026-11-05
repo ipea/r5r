@@ -16,7 +16,8 @@ Determine the Java version installed locally
 Other java support functions:
 \code{\link[=dt_to_lts_map]{dt_to_lts_map()}},
 \code{\link[=dt_to_speed_map]{dt_to_speed_map()}},
-\code{\link[=java_to_dt]{java_to_dt()}}
+\code{\link[=java_to_dt]{java_to_dt()}},
+\code{\link[=run_routing_job]{run_routing_job()}}
 }
 \concept{java support functions}
 \keyword{internal}

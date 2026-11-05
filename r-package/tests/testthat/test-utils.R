@@ -122,6 +122,50 @@ test_that("assign_points_input output is coherent", {
   expect_equal(sf_points_output$lon, df_points_output$lon)
 })
 
+test_that("assign_points_input uses the geometry, not stale lon/lat or x/y columns", {
+  base <- as.data.frame(points)
+  sf_kept <- sf::st_as_sf(base, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
+  sf_kept$lon <- sf_kept$lon + 1
+  sf_kept$lat <- sf_kept$lat + 1
+  out <- assign_points_input(sf_kept, "points")
+  expect_equal(out$lon, points$lon)
+  expect_equal(out$lat, points$lat)
+  expect_false(anyDuplicated(names(out)) > 0)
+
+  sf_xy <- sf::st_as_sf(base, coords = c("lon", "lat"), crs = 4326)
+  sf_xy$x <- 1
+  sf_xy$y <- 2
+  out_xy <- assign_points_input(sf_xy, "points")
+  expect_equal(out_xy$lon, points$lon)
+  expect_equal(out_xy$x, rep(1, nrow(points)))
+})
+
+test_that("assign_points_input warns on missing coordinates and lists the ids", {
+  points_na <- data.table::setDT(data.table::copy(points))
+  points_na[2, lat := NA_real_]
+  points_na[4, lon := NA_real_]
+  expect_warning(
+    out <- assign_points_input(points_na, "points"),
+    regexp = "2 points in .*points.* have missing"
+  )
+  expect_warning(assign_points_input(points_na, "points"), regexp = points$id[2])
+  expect_warning(assign_points_input(points_na, "points"), regexp = points$id[4])
+  expect_equal(nrow(out), nrow(points))
+})
+
+test_that("assign_points_input errors on duplicated ids unless unique_ids = FALSE", {
+  points_dup <- data.table::setDT(data.table::copy(points))
+  points_dup[2, id := points$id[1]]
+  expect_error(
+    assign_points_input(points_dup, "points"),
+    regexp = "must not contain duplicated ids"
+  )
+  expect_error(assign_points_input(points_dup, "points"), regexp = points$id[1])
+  expect_silent(out <- assign_points_input(points_dup, "points", unique_ids = FALSE))
+  expect_equal(nrow(out), nrow(points))
+  expect_error(assign_points_input(points, "points", unique_ids = NA))
+})
+
 
 
   # assign_decay_function -----------------------------------------------------
@@ -133,6 +177,9 @@ test_that("assign_points_input output is coherent", {
     expect_error(assign_decay_function(decay_function='bananas', decay_value=4))
     expect_error(assign_decay_function(decay_function= 444, decay_value=4))
     expect_error(assign_decay_function(decay_function= 'logistic', decay_value=0.4))
+    expect_error(assign_decay_function(decay_function= 'linear', decay_value=10.5))
+    expect_error(assign_decay_function(decay_function= 'linear', decay_value=60))
+    expect_type(assign_decay_function(decay_function= 'linear', decay_value=59), "list")
   })
 
   test_that("assign_decay_function expected behavior", {

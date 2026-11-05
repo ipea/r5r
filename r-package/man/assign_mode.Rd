@@ -4,7 +4,7 @@
 \alias{assign_mode}
 \title{Check and select transport modes from user input}
 \usage{
-assign_mode(mode, mode_egress, style)
+assign_mode(mode, mode_egress)
 }
 \arguments{
 \item{mode}{A character vector, passed from routing functions.}

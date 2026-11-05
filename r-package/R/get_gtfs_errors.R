@@ -1,9 +1,8 @@
-#' Get GTFS eventual errors encountered in network building
+#' Get GTFS errors encountered in network building
 #'
-#' This returns a data frame of GTFS errors R5 encountered when building the
-#' network. You can call this with the network itself as the main parameter. If
-#' network build fails, you won't have a network object, so you can also call
-#' this with the `data_path` to where the network is stored.
+#' Returns a data frame of the GTFS errors R5 encountered when building the
+#' network. If the build failed and there is no network object, pass the
+#' path where the network is stored as `r5r_network` instead.
 #'
 #' @param r5r_network the R5R network object, or a path to the location where
 #'     the network is stored (useful if network build failed).

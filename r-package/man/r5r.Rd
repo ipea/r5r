@@ -24,15 +24,15 @@ that \code{r5r} depends on.
 }
 \section{Usage}{
 
-Please check the vignettes on the \href{https://ipeagit.github.io/r5r/}{website}.
+See the vignettes on the \href{https://ipea.github.io/r5r/}{website}.
 }
 
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/ipeaGIT/r5r}
-  \item \url{https://ipeagit.github.io/r5r/}
-  \item Report bugs at \url{https://github.com/ipeaGIT/r5r/issues}
+  \item \url{https://github.com/ipea/r5r}
+  \item \url{https://ipea.github.io/r5r/}
+  \item Report bugs at \url{https://github.com/ipea/r5r/issues}
 }
 
 }

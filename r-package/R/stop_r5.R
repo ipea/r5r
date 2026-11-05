@@ -1,6 +1,7 @@
 #' Stop running r5r network
 #'
-#' @description Stops running r5r network
+#' @description Stops the given `r5r_network` objects, or all `r5r_network`
+#' objects in the calling environment if none is supplied.
 #'
 #' @param ... \code{r5r_network} objects currently running. By default, if no
 #'            r5r network is supplied all running networks are stopped.

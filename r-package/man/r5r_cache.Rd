@@ -16,7 +16,7 @@ file is deleted. If \code{delete_file = "all"}, then all cached files are
 deleted.}
 }
 \value{
-A message indicating which file exist and/or which ones have been
+A message indicating which files exist and/or which ones have been
 deleted from local cache directory.
 }
 \description{

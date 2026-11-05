@@ -4,7 +4,7 @@
 #' calculated in [travel_time_matrix()], [expanded_travel_time_matrix()],
 #' [accessibility()] and [pareto_frontier()]. This fare structure can be
 #' manually edited and adjusted to the existing rules in your study area, as
-#' long as they stick to some basic premises. Please see the \href{../doc/fare_structure.html}{fare-structure vignette} for more information.
+#' long as they stick to some basic premises. See the \href{../doc/fare_structure.html}{fare-structure vignette}.
 #'
 #' @template r5r_network
 #' @template r5r_core
@@ -18,8 +18,8 @@
 #'   route is what determines its price (i.e. when two different routes/modes
 #'   operated by a single agency cost the same; note that you can also use
 #'   `AGENCY_NAME`, if the agency_ids listed in your GTFS cannot be easily
-#'   interpreted). `GENERIC` is used when all the routes cost the same. Please
-#'   note that this classification can later be edited to better suit your
+#'   interpreted). `GENERIC` is used when all the routes cost the same. This
+#'   classification can later be edited to better suit your
 #'   needs (when, for example, two types of buses cost the same, but one offers
 #'   discounts after riding the subway and the other one doesn't), but this
 #'   parameter may save you some work.
@@ -30,21 +30,14 @@
 #'   specified file. How each itinerary is described is controlled by
 #'   `debug_info`.
 #' @param debug_info Either a string (when `debug_path` is a path) or `NULL`
-#'   (the default). Doesn't have any effect if `debug_path` is `NULL`. When a
-#'   string, accepts the values `MODE`, `ROUTE` and `MODE_ROUTE`. These values
-#'   dictates how itinerary information is written to the output. Let's suppose
-#'   we have an itinerary composed by two transit legs: first a subway leg
-#'   whose route_id is 001, and then a bus legs whose route_id is 007. If
-#'   `debug_info` is `MODE`, then this itinerary will be described as
-#'   `SUBWAY|BUS`. If `ROUTE`, as `001|007`. If `MODE_ROUTE`, as `SUBWAY
-#'   001|BUS 007`. Please note that the final debug information will contain
-#'   not only the itineraries that were in fact used in the itineraries
-#'   returned in [travel_time_matrix()], [accessibility()] and
-#'   [pareto_frontier()], but all the itineraries that `R5` checked when
-#'   calculating the routes. This imposes a performance penalty when tracking
-#'   debug information (but has the positive effect of returning a larger
-#'   sample of itineraries, which might help finding some implementation issues
-#'   on the fare structure).
+#'   (the default). Ignored if `debug_path` is `NULL`. One of `MODE`, `ROUTE`
+#'   or `MODE_ROUTE`, setting how each itinerary is written. E.g. a subway leg
+#'   on route 001 followed by a bus leg on route 007 is written as
+#'   `SUBWAY|BUS`, `001|007` or `SUBWAY 001|BUS 007`, respectively. The debug
+#'   output lists all itineraries `R5` checked when calculating routes, not
+#'   only those returned by [travel_time_matrix()], [accessibility()] and
+#'   [pareto_frontier()]. This slows computation, but the larger sample of
+#'   itineraries helps find issues in the fare structure.
 #'
 #' @return A fare structure object.
 #'
@@ -73,11 +66,11 @@
 #'
 #' @export
 setup_fare_structure <- function(r5r_network,
-                                 r5r_core = deprecated(),
                                  base_fare,
                                  by = "MODE",
                                  debug_path = NULL,
-                                 debug_info = NULL) {
+                                 debug_info = NULL,
+                                 r5r_core = deprecated()) {
 
   # deprecating r5r_core --------------------------------------
   if (lifecycle::is_present(r5r_core)) {
@@ -152,7 +145,7 @@ setup_fare_structure <- function(r5r_network,
 
 #' Write a fare structure object to disk
 #'
-#' Writes a fare structure object do disk. Fare structure is saved as a
+#' Writes a fare structure object to disk. Fare structure is saved as a
 #' collection of `.csv` files inside a `.zip` file.
 #'
 #' @template fare_structure
@@ -239,8 +232,8 @@ write_fare_structure <- function(fare_structure, file_path) {
 #' @param file_path A path pointing to a fare structure with a `.zip`
 #'   extension.
 #' @param encoding A string. Passed to [data.table::fread()], defaults to
-#'   `"UTF-8"`. Other possible options are `"unknown"` and `"Latin-1"`. Please
-#'   note that this is not used to re-encode the input, but to enable handling
+#'   `"UTF-8"`. Other possible options are `"unknown"` and `"Latin-1"`. This
+#'   is not used to re-encode the input, but to enable handling
 #'   encoded strings in their native encoding.
 #'
 #' @return A fare structure object.

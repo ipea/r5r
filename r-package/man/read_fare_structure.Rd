@@ -11,8 +11,8 @@ read_fare_structure(file_path, encoding = "UTF-8")
 extension.}
 
 \item{encoding}{A string. Passed to \code{\link[data.table:fread]{data.table::fread()}}, defaults to
-\code{"UTF-8"}. Other possible options are \code{"unknown"} and \code{"Latin-1"}. Please
-note that this is not used to re-encode the input, but to enable handling
+\code{"UTF-8"}. Other possible options are \code{"unknown"} and \code{"Latin-1"}. This
+is not used to re-encode the input, but to enable handling
 encoded strings in their native encoding.}
 }
 \value{

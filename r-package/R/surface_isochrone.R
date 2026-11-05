@@ -6,8 +6,9 @@ surface_isochrone <- function (travel_time_surface, cutoffs) {
 
   # get the iso, in web mercator pixel space
   bands = isoband::isobands(
-    travel_time_surface@west:(travel_time_surface@west + travel_time_surface@width - 1),
-    travel_time_surface@north:(travel_time_surface@north + travel_time_surface@height - 1),
+    # R5 computes travel times at pixel centres, hence the 0.5 offset
+    travel_time_surface@west + seq_len(travel_time_surface@width) - 0.5,
+    travel_time_surface@north + seq_len(travel_time_surface@height) - 0.5,
     travel_time_surface@matrix,
     rep(0, length(nonzero_cutoffs)), # bands should all start at 0 minutes
     nonzero_cutoffs

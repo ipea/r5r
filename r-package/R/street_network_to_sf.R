@@ -1,7 +1,7 @@
 #' Extract OpenStreetMap network in sf format
 #'
 #' Extracts the OpenStreetMap network in `sf` format from a routable transport
-#' network built with [build_network()]).
+#' network built with [build_network()].
 #'
 #' @template r5r_network
 #' @template r5r_core

@@ -9,9 +9,8 @@ assert_fare_structure(fare_structure)
 \arguments{
 \item{fare_structure}{A fare structure object, following the convention
 set in \code{\link[=setup_fare_structure]{setup_fare_structure()}}. This object describes how transit fares
-should be calculated. Please see the fare structure vignette to
-understand how this object is structured:
-\code{vignette("fare_structure", package = "r5r")}.}
+should be calculated. See \code{vignette("fare_structure", package = "r5r")}
+for its structure.}
 }
 \value{
 Throws and error upon failure and invisibly returns \code{TRUE} on

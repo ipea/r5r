@@ -14,7 +14,8 @@ r5r network is supplied all running networks are stopped.}
 No return value, called for side effects.
 }
 \description{
-Stops running r5r network
+Stops the given \code{r5r_network} objects, or all \code{r5r_network}
+objects in the calling environment if none is supplied.
 }
 \examples{
 \dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) withAutoprint(\{ # examplesIf}

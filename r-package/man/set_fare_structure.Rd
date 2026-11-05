@@ -11,9 +11,8 @@ set_fare_structure(r5r_network, fare_structure)
 
 \item{fare_structure}{A fare structure object, following the convention
 set in \code{\link[=setup_fare_structure]{setup_fare_structure()}}. This object describes how transit fares
-should be calculated. Please see the fare structure vignette to
-understand how this object is structured:
-\code{vignette("fare_structure", package = "r5r")}.}
+should be calculated. See \code{vignette("fare_structure", package = "r5r")}
+for its structure.}
 }
 \value{
 Invisibly returns \code{TRUE}.
@@ -36,6 +35,7 @@ Other setting functions:
 \code{\link[=set_max_lts]{set_max_lts()}},
 \code{\link[=set_max_rides]{set_max_rides()}},
 \code{\link[=set_monte_carlo_draws]{set_monte_carlo_draws()}},
+\code{\link[=set_monte_carlo_seed]{set_monte_carlo_seed()}},
 \code{\link[=set_n_threads]{set_n_threads()}},
 \code{\link[=set_new_congestion]{set_new_congestion()}},
 \code{\link[=set_new_lts]{set_new_lts()}},

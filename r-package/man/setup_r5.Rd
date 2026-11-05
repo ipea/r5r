@@ -17,10 +17,9 @@ setup_r5(
 stored and where the built \code{network.dat} will be saved.}
 
 \item{verbose}{A logical. Whether to show \code{R5} informative messages when
-running the function. Defaults to \code{FALSE} (please note that in such case
-\code{R5} error messages are still shown). Setting \code{verbose} to \code{TRUE} shows
-detailed output, which can be useful for debugging issues not caught by
-\code{r5r}.}
+running the function. Defaults to \code{FALSE} (\code{R5} error messages are still
+shown). \code{TRUE} shows detailed output, useful for debugging issues not
+caught by \code{r5r}.}
 
 \item{temp_dir}{A logical. Whether the \code{network.dat} file should be saved to
 a temporary directory. Defaults to \code{FALSE}.}
@@ -38,15 +37,15 @@ or to use a cached file. Defaults to \code{FALSE} (i.e. use a cached
 network).}
 }
 \value{
-A \code{r5r_network} object representing the built network to connect with
-\code{R5} routing engine.
+An \code{r5r_network} object, used by r5r's routing and support
+functions.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
 
 \code{setup_r5()} was renamed to \code{\link[=build_network]{build_network()}} to create a more consistent
 API. \strong{\code{setup_r5()} is being deprecated} after \emph{r5r} v2.3.0 and will be
-\strong{removed in a future release}. Please switch to \code{\link[=build_network]{build_network()}}.
+\strong{removed in a future release}. Use \code{\link[=build_network]{build_network()}} instead.
 }
 \section{Elevation}{
 

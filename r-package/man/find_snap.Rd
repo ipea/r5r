@@ -6,17 +6,14 @@
 \usage{
 find_snap(
   r5r_network,
-  r5r_core = deprecated(),
   points,
   radius = 1600,
-  mode = "WALK"
+  mode = "WALK",
+  r5r_core = deprecated()
 )
 }
 \arguments{
 \item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
-
-\item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0.
-Please use the \code{r5r_network} argument instead.}
 
 \item{points}{Either a \verb{POINT sf} object with WGS84 CRS, or a \code{data.frame}
 containing the columns \code{id}, \code{lon} and \code{lat}.}
@@ -26,6 +23,9 @@ Defaults to 1600m.}
 
 \item{mode}{A string. Which mode to consider when trying to snap the points
 to the network. Defaults to \code{WALK}, also allows \code{BICYCLE} and \code{CAR}.}
+
+\item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0.
+Use the \code{r5r_network} argument instead.}
 }
 \value{
 A \code{data.table} with the original points, their respective

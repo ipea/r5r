@@ -1,7 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^tests_marcus$
-^tests_rafa$
+^tests/tests_marcus$
+^tests/tests_rafa$
 ^paper2021
 ^doc$
 ^Meta$
@@ -16,3 +16,9 @@
 ^inst/jar/r5-.*\.jar$
 ^man/figures
 ^cran-comments\.md$
+^rjavaenv$
+^\.Rprofile$
+^inst/extdata/.*/.*\.mapdb$
+^inst/extdata/.*/gtfs_errors\.csv$
+^inst/extdata/.*/network_settings\.json$
+stackdump$

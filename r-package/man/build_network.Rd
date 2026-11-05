@@ -17,10 +17,9 @@ build_network(
 stored and where the built \code{network.dat} will be saved.}
 
 \item{verbose}{A logical. Whether to show \code{R5} informative messages when
-running the function. Defaults to \code{FALSE} (please note that in such case
-\code{R5} error messages are still shown). Setting \code{verbose} to \code{TRUE} shows
-detailed output, which can be useful for debugging issues not caught by
-\code{r5r}.}
+running the function. Defaults to \code{FALSE} (\code{R5} error messages are still
+shown). \code{TRUE} shows detailed output, useful for debugging issues not
+caught by \code{r5r}.}
 
 \item{temp_dir}{A logical. Whether the \code{network.dat} file should be saved to
 a temporary directory. Defaults to \code{FALSE}.}
@@ -38,8 +37,8 @@ or to use a cached file. Defaults to \code{FALSE} (i.e. use a cached
 network).}
 }
 \value{
-A \code{r5r_network} object representing the built network to connect with
-\code{R5} routing engine.
+An \code{r5r_network} object, used by r5r's routing and support
+functions.
 }
 \description{
 Builds a multimodal transport network used for routing in \code{R5}, combining
@@ -49,8 +48,8 @@ saved to. The directory must contain only one street network file (in
 GTFS feeds (in \code{.zip} format), when used for public transport routing, and a
 \code{.tif} file describing the elevation profile of the study area. If there is
 more than one GTFS feed in the directory, all feeds are automatically merged.
-If there is already a \code{'network.dat'} file in the directory, the function will
-simply read it and load it to memory (unless specified not to do so).
+If there is already a \code{'network.dat'} file in the directory, the function
+reads it instead (see \code{overwrite}).
 }
 \section{Elevation}{
 

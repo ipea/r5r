@@ -9,14 +9,14 @@ set_verbose(r5r_network, verbose)
 \arguments{
 \item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
 
-\item{verbose}{A logical, passed from function above.}
+\item{verbose}{A logical, passed from the function above.}
 }
 \value{
 Invisibly returns \code{TRUE}.
 }
 \description{
-Indicates whether R5 should output informative messages or not. Please note
-that R5 error messages are still reported even when \code{verbose} is \code{FALSE}.
+Indicates whether R5 should output informative messages or not. R5 error
+messages are still reported even when \code{verbose} is \code{FALSE}.
 }
 \seealso{
 Other setting functions:
@@ -32,6 +32,7 @@ Other setting functions:
 \code{\link[=set_max_lts]{set_max_lts()}},
 \code{\link[=set_max_rides]{set_max_rides()}},
 \code{\link[=set_monte_carlo_draws]{set_monte_carlo_draws()}},
+\code{\link[=set_monte_carlo_seed]{set_monte_carlo_seed()}},
 \code{\link[=set_n_threads]{set_n_threads()}},
 \code{\link[=set_new_congestion]{set_new_congestion()}},
 \code{\link[=set_new_lts]{set_new_lts()}},

@@ -214,9 +214,7 @@ public class NetworkBuilder {
                 osmFilename = file.getAbsolutePath();
 
                 // Load OSM data into MapDB to pass into network builder.
-                osmFile = new OSM(osmFilename + ".mapdb");
-                osmFile.intersectionDetection = true;
-                osmFile.readFromFile(osmFilename);
+                osmFile = OSM.openOrCreateFile(new File(osmFilename + ".mapdb"), osmFilename);
             }
             if (name.endsWith(".zip")) gtfsFiles.add(file.getAbsolutePath());
             if (name.endsWith(".tif") | name.endsWith(".tiff")) tiffFile = file.getAbsolutePath();
@@ -259,7 +257,7 @@ public class NetworkBuilder {
             return GTFSFeed.reopenReadOnly(dbFile);
         } catch (Exception e) {
             // re-throw as unchecked
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error while processing " + feedFile, e);
         }
     }
 

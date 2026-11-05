@@ -2,8 +2,8 @@
 
 [![CRAN/METACRAN Version](https://www.r-pkg.org/badges/version/r5r)](https://CRAN.R-project.org/package=r5r)
 [![CRAN/METACRAN Total downloads](https://cranlogs.r-pkg.org/badges/grand-total/r5r?color=blue)](https://CRAN.R-project.org/package=r5r)
-[![R build status](https://github.com/ipeaGIT/r5r/workflows/R-CMD-check/badge.svg)](https://github.com/ipeaGIT/r5r/actions)
-[![Codecov test coverage](https://codecov.io/gh/ipeaGIT/r5r/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ipeaGIT/r5r?branch=master)
+[![R build status](https://github.com/ipea/r5r/workflows/R-CMD-check/badge.svg)](https://github.com/ipea/r5r/actions)
+[![Codecov test coverage](https://codecov.io/gh/ipea/r5r/branch/master/graph/badge.svg)](https://app.codecov.io/gh/ipea/r5r?branch=master)
 [![Lifecycle: maturing](https://lifecycle.r-lib.org/articles/figures/lifecycle-stable.svg)](https://lifecycle.r-lib.org/articles/stages.html)
 [![Publication](https://img.shields.io/badge/DOI-10.32866%2F001c.21262-yellow)](https://doi.org/10.32866/001c.21262)
 
@@ -14,8 +14,8 @@ friendly interface to R<sup>5</sup>, the [Rapid Realistic Routing on Real-world 
 **r5r** is a simple way to run R<sup>5</sup> locally, allowing `R` users to
 generate detailed routing analysis or calculate travel time matrices and 
 accessibility using seamless parallel computing. See a detailed demonstration of
-`r5r` in the [intro Vignette](https://ipeagit.github.io/r5r/articles/r5r.html).
-More details about **r5r** can be found on the [package webpage](https://ipeagit.github.io/r5r/index.html) or on this [paper](
+`r5r` in the [intro Vignette](https://ipea.github.io/r5r/articles/r5r.html).
+More details about **r5r** can be found on the [package webpage](https://ipea.github.io/r5r/index.html) or on this [paper](
 https://doi.org/10.32866/001c.21262). Over time, `r5r` might be expanded to 
 incorporate other functionality from R<sup>5</sup>.
 
@@ -32,7 +32,7 @@ install.packages("r5r")
 
 # dev version with latest features
 utils::remove.packages('r5r')
-devtools::install_github("ipeaGIT/r5r", subdir = "r-package")
+devtools::install_github("ipea/r5r", subdir = "r-package")
 
 ```
 
@@ -97,11 +97,11 @@ The package has seven **fundamental functions** :
 8. `isochrone()`
    * Returns a `sf" "data.frame"` showing the area that can be reached from an origin point at a given travel time limit.
 
-<small>[See more details about each function here](https://ipeagit.github.io/r5r/reference/index.html)</small>
+<small>[See more details about each function here](https://ipea.github.io/r5r/reference/index.html)</small>
 
 obs. Most of these functions also allow users to account for monetary travel costs 
 when generating travel time matrices and accessibility estimates. More info on
-how to consider monetary costs can be found in [this vignette](https://ipeagit.github.io/r5r/articles/fare_structure.html).
+how to consider monetary costs can be found in [this vignette](https://ipea.github.io/r5r/articles/fare_structure.html).
 
 
 The package also includes a few **support functions**.
@@ -147,7 +147,7 @@ Here are a few places from where you can download these data sets:
 
 ### Demonstration on sample data
 
-See a detailed demonstration of `r5r` in this [intro Vignette](https://ipeagit.github.io/r5r/articles/r5r.html). To illustrate
+See a detailed demonstration of `r5r` in this [intro Vignette](https://ipea.github.io/r5r/articles/r5r.html). To illustrate
 functionality, the package includes a small sample data set of the public transport
 and Open Street Map networks of Porto Alegre (Brazil). Three steps are required to 
 use `r5r`, as follows.

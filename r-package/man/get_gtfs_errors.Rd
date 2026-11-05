@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_gtfs_errors.R
 \name{get_gtfs_errors}
 \alias{get_gtfs_errors}
-\title{Get GTFS eventual errors encountered in network building}
+\title{Get GTFS errors encountered in network building}
 \usage{
 get_gtfs_errors(r5r_network)
 }
@@ -14,10 +14,9 @@ the network is stored (useful if network build failed).}
 A \code{data.frame}
 }
 \description{
-This returns a data frame of GTFS errors R5 encountered when building the
-network. You can call this with the network itself as the main parameter. If
-network build fails, you won't have a network object, so you can also call
-this with the \code{data_path} to where the network is stored.
+Returns a data frame of the GTFS errors R5 encountered when building the
+network. If the build failed and there is no network object, pass the
+path where the network is stored as \code{r5r_network} instead.
 }
 \examples{
 \dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) withAutoprint(\{ # examplesIf}

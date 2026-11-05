@@ -1,13 +1,10 @@
 #' Detailed itineraries between origin-destination pairs
 #'
-#' Returns detailed trip information between origin-destination pairs. The
-#' output includes the waiting and moving time in each trip leg, as well as some
-#' info such as the distance traveled, the routes used and the geometry of each
-#' leg. Please note that this function was originally conceptualized as a trip
-#' planning functionality, similar to other commercial and non-commercial APIs
-#' and apps (e.g. Moovit, Google's Directions API, OpenTripPlanning's
-#' PlannerResource API). Thus, it consumes much more time and memory than the
-#' other (more analytical) routing functions included in the package.
+#' Returns detailed trip information between origin-destination pairs: the
+#' waiting and moving time, distance, route and geometry of each trip leg.
+#' Designed for trip planning (like Google's Directions API or
+#' OpenTripPlanner), it takes much more time and memory than the package's
+#' other, more analytical, routing functions.
 #'
 #' @template r5r_network
 #' @template r5r_core
@@ -17,40 +14,57 @@
 #' @template fare_structure
 #' @template max_fare
 #' @param time_window An integer. The time window in minutes for which `r5r`
-#'   will calculate multiple itineraries departing each minute. Defaults to 10
-#'   minutes. If the same sequence of routes appear in different minutes of the
-#'   time window, only the fastest of them will be kept in the output. This
-#'   happens because the result is not aggregated by percentile, as opposed to
-#'   other routing functions in the package. Because of that, the output may
-#'   contain trips departing after the specified `departure_datetime`, but
-#'   still within the time window. Please read the time window vignette for
-#'   more details on how this argument affects the results of each routing
-#'   function: `vignette("time_window", package = "r5r")`.
-#' @param suboptimal_minutes A number. The difference in minutes that each
-#'   non-optimal RAPTOR branch can have from the optimal branch without being
-#'   disregarded by the routing algorithm. If, for example, users set
-#'   `suboptimal_minutes = 10`, the routing algorithm will consider sub-optimal
-#'   routes that arrive up to 10 minutes after the arrival of the optimal one.
-#'   This argument emulates the real-life behaviour that makes people want to
-#'   take a path that is technically not optimal in terms of travel time, for
-#'   example, for some practical reasons (e.g. mode preference, safety, etc).
-#'   In practice, the higher this value, the more itineraries will be returned
-#'   in the final result.
+#'   will calculate multiple itineraries. Defaults to 10. Unlike other routing
+#'   functions, results are not aggregated by percentile, so the output may
+#'   contain trips departing after `departure_datetime` but within the window.
+#'   With `shortest_path = TRUE` and no `fare_structure`, a trip is routed for
+#'   each minute from `departure_datetime` until `time_window` minutes later,
+#'   and the fastest one is returned (ties go to the earliest departure).
+#'   Otherwise, departures are simulated at random seconds, about one per
+#'   minute (30 to 90 seconds apart), with the same departure times in every
+#'   call with the same origin, and each departure is routed separately: an
+#'   itinerary may appear or disappear when `departure_datetime` changes by one
+#'   minute, and when the same sequence of routes appears in several
+#'   departures, only the fastest is kept. See
+#'   `vignette("time_window", package = "r5r")`.
+#' @param suboptimal_minutes A number. How many minutes after the optimal
+#'   arrival a non-optimal McRAPTOR branch may arrive and still be kept (e.g.
+#'   with `10`, routes arriving up to 10 minutes after the fastest one are
+#'   considered). It can only be used when `shortest_path = FALSE` and 
+#'   `fare_structure` is `NULL`. The comparison is made separately for each 
+#'   departure within `time_window` and uses arrival time only: a route beyond 
+#'   this margin is discarded even if it has fewer transfers. The default, `0`, 
+#'   keeps only routes arriving at the earliest time for each departure. Higher 
+#'   values return more itineraries, emulating people who take a slower route for
+#'   practical reasons (e.g. mode preference, safety).
 #' @param shortest_path A logical. Whether the function should only return the
 #'   fastest itinerary between each origin and destination pair (the default)
-#'   or multiple alternatives.
+#'   or multiple alternatives. The fastest itinerary is the one with the
+#'   shortest travel time, measured from its own departure time, among all
+#'   departures within `time_window`. With a large `time_window`, it may depart
+#'   later and arrive later than other itineraries; use `time_window = 1` to
+#'   get the itinerary with the earliest arrival for a given departure time.
+#'   Without a `fare_structure`, public transport trips are then routed with
+#'   R5's RAPTOR algorithm, which is much faster than the McRAPTOR algorithm
+#'   used for alternative routes and fares (see the Fastest itinerary section).
 #' @param all_to_all A logical. Whether to query routes between the 1st origin
 #'   to the 1st destination, then the 2nd origin to the 2nd destination, and so
 #'   on (`FALSE`, the default) or to query routes between all origins to all
-#'   destinations (`TRUE`).
-#' @param drop_geometry A logical. Whether the output should include the
-#'   geometry of each trip leg or not. The default value of `FALSE` keeps the
-#'   geometry column in the result.
+#'   destinations (`TRUE`). With `shortest_path = TRUE` and no `fare_structure`,
+#'   `all_to_all = TRUE` runs one public transport search per origin for all
+#'   its destinations, which is much faster than listing the same pairs with
+#'   `all_to_all = FALSE`.
+#' @param drop_geometry A logical. Whether to drop the geometry of each trip
+#'   leg from the output. Defaults to `FALSE` (geometry kept).
 #' @param osm_link_ids A logical. Whether the output should include additional
-#'   columns: `osm_id_list` for the OSM ids of the road
-#'   segments used along the trip geometry, and `board_stop_id` and
-#'   `alight_stop_id` for the OSM ids of transit boarding and alighting stops.
-#'   Defaults to `FALSE`.
+#'   columns: `osm_id_list` for the OSM ids of the road segments used along the
+#'   trip geometry, `edge_id_list` for the ids of the internal street network
+#'   edges used, and `board_stop_id` and `alight_stop_id` for the GTFS ids of
+#'   transit boarding and alighting stops, prefixed by the feed name (e.g.
+#'   `"poa_eptc:1649"`). `osm_id_list` and `edge_id_list` are character
+#'   columns formatted as `"[id1, id2, ...]"`, and are `"[]"` for transit
+#'   segments. Can only be `TRUE` when `drop_geometry` is `FALSE`. Defaults to
+#'   `FALSE`.
 #'
 #'   Keep in mind that `osm_id_list` will contain an id even if the route only
 #'   uses a small stretch of the road (e.g. 5m of a 600m street segment). For
@@ -64,12 +78,53 @@
 #' @template datetime_parsing_section
 #' @template mcraptor_algorithm_section
 #'
+#' @section Fastest itinerary:
+#'
+#' When only the fastest itinerary is returned (`shortest_path = TRUE`) and no
+#' `fare_structure` is used, public transport is routed with R5's RAPTOR
+#' algorithm (Conway et al, 2017), the one used by [travel_time_matrix()],
+#' which is much faster than McRAPTOR. Compared with McRAPTOR, the results can
+#' differ slightly: departures are routed every minute of `time_window`
+#' instead of at random seconds, so the itinerary returned is never more than
+#' about a minute slower and often faster; walking transfers between stops are
+#' limited by `max_walk_time` (McRAPTOR only applies it to the first and last
+#' legs); stops where the GTFS `pickup_type` or `drop_off_type` does not allow
+#' boarding or alighting are respected; and when two trips are equally fast,
+#' the route chosen may differ.
+#'
+#' - Conway, M. W., Byrd, A., & van der Linden, M. (2017). Evidence-based
+#' transit and land use sketch planning using interactive accessibility methods
+#' on combined schedule and headway-based networks. Transportation Research
+#' Record, 2653(1), 45-53. \doi{10.3141/2653-06}
+#'
 #' @return When `drop_geometry` is `FALSE`, the function outputs a `LINESTRING
 #'   sf` with detailed information on the itineraries between the specified
 #'   origins and destinations. When `TRUE`, the output is a `data.table`. All
-#'   distances are in meters and travel times are in minutes. If `output_dir`
-#'   is not `NULL`, the function returns the path specified in that parameter,
-#'   in which the `.csv` files containing the results are saved.
+#'   distances are in meters and travel times are in minutes. Each row is one
+#'   segment (trip leg) of one itinerary, with the columns:
+#'   - `from_id`, `from_lat`, `from_lon`, `to_id`, `to_lat`, `to_lon`: the
+#'     origin and destination of the pair;
+#'   - `option`: the itinerary number within the pair. Options are ordered
+#'     with direct (non-transit) trips first, then by number of segments, then
+#'     by duration, so `option` 1 is not necessarily the fastest one. With
+#'     `shortest_path = TRUE`, each pair has a single itinerary (`option` 1);
+#'   - `departure_time`: the departure time of the itinerary (`"HH:MM:SS"`);
+#'   - `total_duration`, `total_distance`: duration and distance of the whole
+#'     itinerary;
+#'   - `segment`, `mode`, `segment_duration`, `wait`, `distance`, `route`: the
+#'     segment number, its transport mode, its in-motion duration, the waiting
+#'     time before it, its distance and the transit route used (empty for
+#'     non-transit segments);
+#'   - `total_fare`, `cumulative_fare`: only when a `fare_structure` is used;
+#'   - `osm_id_list`, `edge_id_list`, `board_stop_id`, `alight_stop_id`: only
+#'     when `osm_link_ids` is `TRUE`;
+#'   - `geometry`: only when `drop_geometry` is `FALSE`.
+#'
+#'   If `output_dir` is not `NULL`, the function returns the path specified in
+#'   that parameter, in which the `.csv` files containing the results are
+#'   saved. This function writes one file per origin-destination pair, named
+#'   `from_<origin id>_to_<destination id>.csv`, so pairs must be unique and
+#'   ids cannot contain characters that are not allowed in file names.
 #'
 #' @family routing
 #'
@@ -102,12 +157,11 @@
 #' stop_r5(r5r_network)
 #' @export
 detailed_itineraries <- function(r5r_network,
-                                 r5r_core = deprecated(),
                                  origins,
                                  destinations,
                                  mode = "WALK",
                                  mode_egress = "WALK",
-                                 departure_datetime = Sys.time(),
+                                 departure_datetime = NULL,
                                  time_window = 10L,
                                  suboptimal_minutes = 0L,
                                  max_walk_time = Inf,
@@ -127,10 +181,11 @@ detailed_itineraries <- function(r5r_network,
                                  new_lts = NULL,
                                  n_threads = Inf,
                                  verbose = FALSE,
-                                 progress = FALSE,
+                                 progress = TRUE,
                                  drop_geometry = FALSE,
                                  osm_link_ids = FALSE,
-                                 output_dir = NULL) {
+                                 output_dir = NULL,
+                                 r5r_core = deprecated()) {
 
   # deprecating r5r_core --------------------------------------
   if (lifecycle::is_present(r5r_core)) {
@@ -155,21 +210,39 @@ detailed_itineraries <- function(r5r_network,
 
   checkmate::assert_class(r5r_network, "r5r_network")
 
-  origins <- assign_points_input(origins, "origins")
-  destinations <- assign_points_input(destinations, "destinations")
+  # row-paired inputs (all_to_all = FALSE) may legitimately repeat an id
+  origins <- assign_points_input(origins, "origins", unique_ids = all_to_all)
+  destinations <- assign_points_input(destinations, "destinations", unique_ids = all_to_all)
   od_list <- expand_od_pairs(origins, destinations, all_to_all)
   origins <- od_list$origins
   destinations <- od_list$destinations
 
+  # with output_dir, each pair is written to a file named after its ids
+  if (!is.null(output_dir)) {
+    if (anyDuplicated(data.table::data.table(origins$id, destinations$id)) > 0) {
+      cli::cli_abort(
+        "With {.arg output_dir}, origin-destination pairs must be unique, because each pair is written to a file named {.file from_<id>_to_<id>.csv}."
+      )
+    }
+    bad_ids <- unique(grep('[/\\\\:*?"<>|]', c(origins$id, destinations$id), value = TRUE))
+    if (length(bad_ids) > 0) {
+      cli::cli_abort(c(
+        "With {.arg output_dir}, ids cannot contain characters that are not allowed in file names ({.code / \\ : * ? \" < > |}).",
+        "x" = "Invalid id{?s}: {.val {bad_ids}}."
+      ))
+    }
+  }
+
   mode_list <- assign_mode(mode, mode_egress)
-  departure <- assign_departure(departure_datetime)
+  departure <- assign_departure(departure_datetime, mode_list)
 
   # check availability of transit services on the selected date
-  if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|CABLE_CAR|GONDOLA|FUNICULAR') {
+  if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR') {
     check_transit_availability_on_date(r5r_network, departure_date = departure$date)
   }
 
   r5r_network <- r5r_network@jcore
+  on.exit(r5r_network$resetRoutingProperties(), add = TRUE)
 
   # detailed itineraries via public transport cannot be computed on frequencies-based GTFS
   if (mode_list$transit_mode != "" & r5r_network$hasFrequencies()) {
@@ -194,7 +267,7 @@ detailed_itineraries <- function(r5r_network,
   )
   max_car_time <- assign_max_street_time(
     max_car_time,
-    8, # 8 km/h, R5's default.
+    NULL, # no car speed argument to validate
     max_trip_duration,
     "car"
   )
@@ -202,14 +275,21 @@ detailed_itineraries <- function(r5r_network,
     max_trip_duration,
     mode_list,
     max_walk_time,
-    max_bike_time
+    max_bike_time,
+    max_car_time
   )
   shortest_path <- assign_shortest_path(shortest_path)
   drop_geometry <- assign_drop_geometry(drop_geometry)
   osm_link_ids <- assign_osm_link_ids(osm_link_ids, drop_geometry)
 
   set_time_window(r5r_network, time_window)
-  set_monte_carlo_draws(r5r_network, 1, time_window)
+  set_monte_carlo_draws(
+    r5r_network,
+    1,
+    time_window,
+    mcraptor = mode_list$transit_mode != "" &&
+      !(shortest_path && is.null(fare_structure))
+  )
   set_speed(r5r_network, walk_speed, "walk")
   set_speed(r5r_network, bike_speed, "bike")
   set_max_rides(r5r_network, max_rides)
@@ -218,7 +298,7 @@ detailed_itineraries <- function(r5r_network,
   set_verbose(r5r_network, verbose)
   set_progress(r5r_network, progress)
   set_fare_structure(r5r_network, fare_structure)
-  set_max_fare(r5r_network, max_fare)
+  set_max_fare(r5r_network, max_fare, fare_structure)
   set_output_dir(r5r_network, output_dir)
   set_suboptimal_minutes(
     r5r_network,
@@ -231,9 +311,17 @@ detailed_itineraries <- function(r5r_network,
   set_new_congestion(r5r_network, new_carspeeds, carspeed_scale)
   set_new_lts(r5r_network, new_lts)
 
+  # the fastest trip without fares is routed with R5's RAPTOR instead of
+  # McRAPTOR; with all_to_all, one search per origin serves all its
+  # destinations. Both flags are reset on exit with the other properties
+  if (shortest_path && is.null(fare_structure)) {
+    r5r_network$setFastRaptor(TRUE)
+    r5r_network$setFastRaptorPerOrigin(all_to_all)
+  }
+
   # call r5r_network method and process result -------------------------------
 
-  path_options <- r5r_network$detailedItineraries(
+  path_options <- run_routing_job(r5r_network, r5r_network$detailedItineraries(
     origins$id,
     origins$lat,
     origins$lon,
@@ -253,7 +341,7 @@ detailed_itineraries <- function(r5r_network,
     drop_geometry,
     shortest_path,
     osm_link_ids
-  )
+  ), progress)
 
   if (!is.null(output_dir)) return(output_dir)
 

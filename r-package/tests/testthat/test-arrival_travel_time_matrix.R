@@ -85,7 +85,7 @@ test_that("adequately raises errors", {
   numeric_datetime <- as.numeric(as.POSIXct("13-05-2019 14:00:00", format = "%d-%m-%Y %H:%M:%S"))
 
   expect_error(default_tester(r5r_network, arrival_datetime = "13-05-2019 14:00:00"))
-  expect_error(default_tester(r5r_network, numeric_datetime))
+  expect_error(default_tester(r5r_network, arrival_datetime = numeric_datetime))
 
 
   # error with breakdown
@@ -205,10 +205,32 @@ test_that("output is correct", {
 
 test_that("using transit outside the gtfs dates throws an error", {
   expect_error(
-    tester(r5r_network,
-           mode='transit',
-           arrival_datetime = as.POSIXct("13-05-2025 14:00:00",
-                                           format = "%d-%m-%Y %H:%M:%S")
-    )
+    default_tester(r5r_network,
+                   mode='transit',
+                   arrival_datetime = as.POSIXct("13-05-2025 14:00:00",
+                                                 format = "%d-%m-%Y %H:%M:%S")
+    ),
+    "no transit services"
   )
+})
+
+test_that("search window follows max_walk_time in walk-only trips", {
+  # max_trip_duration is lowered to max_walk_time, so departures must be
+  # searched in the 20 minutes before the arrival time
+  df <- default_tester(r5r_network, mode = "WALK", max_trip_duration = 120L,
+                       max_walk_time = 20)
+  expect_true(nrow(df) > 0)
+  expect_true(all(df$departure_time >= "13:40:00"))
+})
+
+test_that("arrival finds every pair that an earlier departure reaches in time", {
+  a <- arrival_travel_time_matrix(r5r_network, pois, pois, mode = c("WALK", "TRANSIT"),
+    arrival_datetime = departure_datetime, max_trip_duration = 60, n_threads = 2, progress = FALSE)
+  e <- expanded_travel_time_matrix(r5r_network, pois, pois, mode = c("WALK", "TRANSIT"),
+    departure_datetime = departure_datetime - 3600, max_trip_duration = 60, time_window = 60,
+    n_threads = 2, progress = FALSE)[!is.na(total_time)]
+  e[, arr := as.numeric(as.difftime(departure_time, format = "%H:%M:%S", units = "secs")) + total_time * 60]
+  # 30 s margin: expanded's total_time is a sum of parts rounded to 0.1 min
+  strict <- unique(e[arr <= 14 * 3600 - 30, .(from_id, to_id)])
+  expect_equal(nrow(data.table::fsetdiff(strict, unique(a[, .(from_id, to_id)]))), 0)
 })

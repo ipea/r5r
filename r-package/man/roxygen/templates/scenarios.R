@@ -9,11 +9,11 @@
 #'        the table must contain the columns \code{poly_id} with a unique id for
 #'        each polygon, \code{scale} with the new speed scaling factors and
 #'        \code{priority}, which is a number ranking which polygon should be
-#'        considered in case of overlapping polygons. See more into in the
-#'        `link to congestion vignette`.
-#' @param carspeed_scale Numeric. The default car speed to use for road segments
-#'        not specified in `new_carspeeds`. By default, it is `NULL` and the speeds
-#'        of the unlisted roads are kept unchanged.
+#'        considered in case of overlapping polygons. See more info in the
+#'        scenarios vignette (`vignette("scenarios", package = "r5r")`).
+#' @param carspeed_scale Numeric. The scaling factor applied to the car speed
+#'        of road segments not specified in `new_carspeeds`. Defaults to `1`,
+#'        which keeps the speeds of the unlisted roads unchanged.
 #' @param new_lts A `data.frame` specifying the new LTS levels for each OSM edge
 #'        id. The table must contain columns \code{osm_id} and \code{lts}.
 #'        Alternatively, the `new_lts` parameter can receive an `sf data.frame`

@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
 
@@ -60,7 +59,8 @@ public abstract class R5DataFrameProcess extends R5Process<RDataFrame, RDataFram
 
     // we override this here so we can handle benchmarking and saving output to CSV
     @Override
-    protected RDataFrame tryRunProcess(AtomicInteger totalProcessed, int index) {
+    protected RDataFrame tryRunProcess(int index) {
+        if (cancelled) return null;
         RDataFrame results = null;
         try {
             long start = System.currentTimeMillis();
@@ -78,13 +78,13 @@ public abstract class R5DataFrameProcess extends R5Process<RDataFrame, RDataFram
             }
 
             int nProcessed = totalProcessed.getAndIncrement();
-            if (nProcessed % 1000 == 1 || (nProcessed == nOrigins)) {
+            if (isProgressStep(nProcessed)) {
                 LOG.info("{} out of {} origins processed.", nProcessed, nOrigins);
             }
         } catch (Exception e) {
             e.printStackTrace();
             // re-throw as unchecked so we get an error on the R side
-            throw new RuntimeException();
+            throw new RuntimeException(e);
         }
 
         return Utils.saveOutputToCsv ? null : results;

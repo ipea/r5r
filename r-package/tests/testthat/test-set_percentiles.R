@@ -17,6 +17,36 @@ test_that("input is correct", {
   expect_error(tester(Inf))
 })
 
+test_that("percentiles are sorted internally", {
+  ttm_sorted <- travel_time_matrix(
+    r5r_network,
+    origins = pois,
+    destinations = pois,
+    mode = c("TRANSIT", "WALK"),
+    departure_datetime = departure_datetime,
+    draws_per_minute = 1,
+    time_window = 30,
+    max_trip_duration = 60,
+    percentiles = c(25, 75)
+  )
+  ttm_unsorted <- travel_time_matrix(
+    r5r_network,
+    origins = pois,
+    destinations = pois,
+    mode = c("TRANSIT", "WALK"),
+    departure_datetime = departure_datetime,
+    draws_per_minute = 1,
+    time_window = 30,
+    max_trip_duration = 60,
+    percentiles = c(75, 25)
+  )
+  expect_identical(
+    names(ttm_unsorted),
+    c("from_id", "to_id", "travel_time_p25", "travel_time_p75")
+  )
+  expect_identical(ttm_unsorted, ttm_sorted)
+})
+
 test_that("set_percentiles argument works in travel_time_matrix()", {
   basic_expr <- call(
     "travel_time_matrix",

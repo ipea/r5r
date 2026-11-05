@@ -38,10 +38,13 @@ public class RoutingProperties {
     public int suboptimalMinutes = DEFAULT_SUBOPTIMAL_MINUTES; // Suboptimal minutes in point-to-point queries
     public int timeWindowSize = DEFAULT_TIME_WINDOW_SIZE; // minutes
     public int numberOfMonteCarloDraws = DEFAULT_NUMBER_OF_MONTE_CARLO_DRAWS; //
+    public Integer monteCarloSeed = null; // null: R5's unseeded frequency offsets
     public int[] percentiles = DEFAULT_PERCENTILES;
     public int[] cutoffs = DEFAULT_CUTOFFS;
     public boolean travelTimesBreakdown = false;
     public boolean expandedTravelTimes = false;
+    public boolean fastRaptor = false; // detailed_itineraries(), shortest path without fares: FastRaptorWorker, not McRAPTOR
+    public boolean fastRaptorPerOrigin = false; // all_to_all: one FastRaptor search per origin, shared by its pairs
     public PathResult.Stat travelTimesBreakdownStat = PathResult.Stat.MEAN;
 
     public float maxFare = DEFAULT_MAX_FARE;
@@ -85,10 +88,13 @@ public class RoutingProperties {
         suboptimalMinutes = DEFAULT_SUBOPTIMAL_MINUTES;
         timeWindowSize = DEFAULT_TIME_WINDOW_SIZE;
         numberOfMonteCarloDraws = DEFAULT_NUMBER_OF_MONTE_CARLO_DRAWS;
+        monteCarloSeed = null;
 
         travelTimesBreakdown = false;
         travelTimesBreakdownStat = PathResult.Stat.MEAN;
         expandedTravelTimes = false;
+        fastRaptor = false;
+        fastRaptorPerOrigin = false;
 
         percentiles = DEFAULT_PERCENTILES;
         cutoffs = DEFAULT_CUTOFFS;

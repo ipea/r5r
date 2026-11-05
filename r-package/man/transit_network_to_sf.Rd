@@ -10,7 +10,7 @@ transit_network_to_sf(r5r_network, r5r_core = deprecated())
 \item{r5r_network}{A routable transport network created with \code{\link[=build_network]{build_network()}}.}
 
 \item{r5r_core}{The \code{r5r_core} argument is deprecated as of r5r v2.3.0.
-Please use the \code{r5r_network} argument instead.}
+Use the \code{r5r_network} argument instead.}
 }
 \value{
 A list with two components of a transit network in \code{sf} format:
@@ -25,7 +25,7 @@ area larger than the \code{.osm.pbf} input data.
 }
 \description{
 Extracts the transit network in \code{sf} format from a routable transport network
-built with \code{\link[=build_network]{build_network()}}).
+built with \code{\link[=build_network]{build_network()}}.
 }
 \examples{
 \dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) withAutoprint(\{ # examplesIf}

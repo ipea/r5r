@@ -1,7 +1,7 @@
 Type: Package
 Package: r5r
 Title: Rapid Realistic Routing with 'R5'
-Version: 2.4.0.9000
+Version: 2.4.0.9001
 Authors@R: c(
     person("Marcus", "Saraiva", , "marcus.saraiva@gmail.com", role = "aut",
            comment = c(ORCID = "0000-0001-6218-2338")),
@@ -38,11 +38,11 @@ Description: Rapid realistic routing on multimodal transport networks
     implied by the Conveyal user manual (see
     <https://docs.conveyal.com/changelog>) corresponds with the R5 version
     that r5r depends on.
-License: MIT + file LICENSE
-URL: https://github.com/ipeaGIT/r5r, https://ipeagit.github.io/r5r/
-BugReports: https://github.com/ipeaGIT/r5r/issues
+License: GPL (>= 3) | MIT + file LICENSE
+URL: https://github.com/ipea/r5r, https://ipea.github.io/r5r/
+BugReports: https://github.com/ipea/r5r/issues
 Depends:
-    R (>= 3.6)
+    R (>= 4.1.0)
 Imports:
     checkmate,
     cli,
@@ -64,7 +64,7 @@ Suggests:
     dplyr,
     fs,
     ggplot2 (>= 3.3.1),
-    gtfstools,
+    gtfstools (>= 2.0.0),
     h3jsr (>= 1.3.0),
     interp,
     knitr,
@@ -73,10 +73,11 @@ Suggests:
     patchwork,
     rJavaEnv,
     rmarkdown,
-    testthat
+    testthat,
+    withr
 VignetteBuilder: 
     knitr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 SystemRequirements: Java JDK (>= 21.0)
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0

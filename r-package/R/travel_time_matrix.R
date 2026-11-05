@@ -11,6 +11,7 @@
 #' @template common_arguments
 #' @template time_window_related_args
 #' @template draws_per_minute
+#' @template seed
 #' @template fare_structure
 #' @template max_fare
 #' @template scenarios
@@ -22,9 +23,9 @@
 #'   specified time window are shorter than 15 minutes. Defaults to 50,
 #'   returning the median travel time. If a vector with length bigger than 1 is
 #'   passed, the output contains an additional column for each percentile
-#'   specifying the percentile travel time estimate. each estimate. Due to
-#'   upstream restrictions, only 5 percentiles can be specified at a time. For
-#'   more details, please see R5 documentation at
+#'   specifying the percentile travel time estimate. Due to
+#'   upstream restrictions, only 5 percentiles can be specified at a time. See
+#'   the R5 documentation at
 #'   <https://docs.conveyal.com/analysis/methodology#accounting-for-variability>.
 #'
 #' @return A `data.table` with travel time estimates (in minutes) between
@@ -112,12 +113,11 @@
 #'
 #' @export
 travel_time_matrix <- function(r5r_network,
-                               r5r_core = deprecated(),
                                origins,
                                destinations,
                                mode = "WALK",
                                mode_egress = "WALK",
-                               departure_datetime = Sys.time(),
+                               departure_datetime = NULL,
                                time_window = 10L,
                                percentiles = 50L,
                                max_walk_time = Inf,
@@ -134,10 +134,12 @@ travel_time_matrix <- function(r5r_network,
                                carspeed_scale = 1,
                                new_lts = NULL,
                                draws_per_minute = 5L,
+                               seed = NULL,
                                n_threads = Inf,
                                verbose = FALSE,
-                               progress = FALSE,
-                               output_dir = NULL) {
+                               progress = TRUE,
+                               output_dir = NULL,
+                               r5r_core = deprecated()) {
 
   # deprecating r5r_core --------------------------------------
   if (lifecycle::is_present(r5r_core)) {
@@ -163,19 +165,25 @@ travel_time_matrix <- function(r5r_network,
   origins <- assign_points_input(origins, "origins")
   destinations <- assign_points_input(destinations, "destinations")
   mode_list <- assign_mode(mode, mode_egress)
-  departure <- assign_departure(departure_datetime)
+  departure <- assign_departure(departure_datetime, mode_list)
 
   # check availability of transit services on the selected date
-  if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|CABLE_CAR|GONDOLA|FUNICULAR') {
+  if (mode_list$transit_mode %like% 'TRANSIT|TRAM|SUBWAY|RAIL|BUS|FERRY|CABLE_CAR|GONDOLA|FUNICULAR') {
     check_transit_availability_on_date(r5r_network, departure_date = departure$date)
   }
 
   checkmate::assert_class(r5r_network, "r5r_network")
   r5r_network <- r5r_network@jcore
+  on.exit(r5r_network$resetRoutingProperties(), add = TRUE)
 
-  # in direct modes reverse origin/destination to take advantage of R5's One to Many algorithm
+  # in direct modes reverse origin/destination to take advantage of R5's One to Many algorithm.
+  # skipped when output_dir is set: Java writes the CSVs with the swapped from_id/to_id and names
+  # the files after the swapped origins, and the swap is only undone in the in-memory result
   data_path <- r5r_network$getDataPath()
-  res <- reverse_if_direct_mode(origins, destinations, mode_list, data_path)
+  res <- NULL
+  if (is.null(output_dir)) {
+    res <- reverse_if_direct_mode(origins, destinations, mode_list, data_path)
+  }
   if (!is.null(res)) {
     origins <- res$origins
     destinations <- res$destinations
@@ -196,7 +204,7 @@ travel_time_matrix <- function(r5r_network,
   )
   max_car_time <- assign_max_street_time(
     max_car_time,
-    8, # 8 km/h, R5's default.
+    NULL, # no car speed argument to validate
     max_trip_duration,
     "car"
   )
@@ -204,12 +212,14 @@ travel_time_matrix <- function(r5r_network,
     max_trip_duration,
     mode_list,
     max_walk_time,
-    max_bike_time
+    max_bike_time,
+    max_car_time
   )
 
   set_time_window(r5r_network, time_window)
   set_percentiles(r5r_network, percentiles)
-  set_monte_carlo_draws(r5r_network, draws_per_minute, time_window)
+  set_monte_carlo_draws(r5r_network, draws_per_minute, time_window, fare_structure)
+  set_monte_carlo_seed(r5r_network, seed)
   set_speed(r5r_network, walk_speed, "walk")
   set_speed(r5r_network, bike_speed, "bike")
   set_max_rides(r5r_network, max_rides)
@@ -218,7 +228,7 @@ travel_time_matrix <- function(r5r_network,
   set_verbose(r5r_network, verbose)
   set_progress(r5r_network, progress)
   set_fare_structure(r5r_network, fare_structure)
-  set_max_fare(r5r_network, max_fare)
+  set_max_fare(r5r_network, max_fare, fare_structure)
   set_output_dir(r5r_network, output_dir)
   set_expanded_travel_times(r5r_network, FALSE)
   set_breakdown(r5r_network, FALSE)
@@ -231,7 +241,7 @@ travel_time_matrix <- function(r5r_network,
 
   # call r5r_network method and process result -------------------------------
 
-  travel_times <- r5r_network$travelTimeMatrix(
+  travel_times <- run_routing_job(r5r_network, r5r_network$travelTimeMatrix(
     origins$id,
     origins$lat,
     origins$lon,
@@ -248,11 +258,14 @@ travel_time_matrix <- function(r5r_network,
     max_bike_time,
     max_car_time,
     max_trip_duration
-  )
+  ), progress)
 
   if (!verbose & progress) cat("Preparing final output...", file = stderr())
 
-  travel_times <- java_to_dt(travel_times)
+  travel_times <- java_to_dt(
+    travel_times,
+    ids = list(from_id = origins$id, to_id = destinations$id)
+  )
 
   # reverse order of origins destinations back ONLY if the order had been swapped before
   if (!is.null(res)) {
@@ -268,12 +281,9 @@ travel_time_matrix <- function(r5r_network,
 
 
   if (nrow(travel_times) > 0) {
-    # replace travel-times of nonviable trips with NAs.
-    # the first column with travel time information is column 3, because
-    # columns 1 and 2 contain the ids of OD point.
-    # the percentiles parameter indicates how many travel times columns we'll
-    # have
-    for (j in seq(from = 3, to = (length(percentiles) + 2))) {
+    # replace travel-times of nonviable trips with NAs, in every travel time
+    # column (one per percentile)
+    for (j in grep("^travel_time_p", names(travel_times))) {
       data.table::set(
         travel_times,
         i = which(travel_times[[j]] > max_trip_duration),
