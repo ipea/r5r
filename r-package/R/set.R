@@ -719,6 +719,7 @@ set_new_congestion <- function(r5r_network, new_carspeeds, carspeed_scale) {
 
     if (inherits(new_carspeeds, "sf")) { # polygon mode
       geojson_path <- congestion_poly2geojson(new_carspeeds)
+      on.exit(unlink(geojson_path), add = TRUE)
       errors <- r5r_network$applyCongestionPolygon(geojson_path,
                                                "scale",
                                                "priority",
@@ -760,6 +761,8 @@ set_new_lts <- function(r5r_network, new_lts) {
 
     if (inherits(new_lts, "sf")) { # polygon mode
       shp_path <- lts_lines2shp(new_lts)
+      # a shapefile is several files (.shp, .shx, .dbf, .prj, ...); unlink() expands the wildcard
+      on.exit(unlink(sub("\\.shp$", ".*", shp_path)), add = TRUE)
       errors <- r5r_network$applyLtsPolygon(shp_path)
     } else { # OSM mode
       lts_map <- dt_to_lts_map(new_lts)

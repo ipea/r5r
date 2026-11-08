@@ -17,6 +17,7 @@
 ^man/figures
 ^cran-comments\.md$
 ^rjavaenv$
+^revdep$
 ^\.Rprofile$
 ^inst/extdata/.*/.*\.mapdb$
 ^inst/extdata/.*/gtfs_errors\.csv$

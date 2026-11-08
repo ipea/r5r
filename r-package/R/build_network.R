@@ -130,7 +130,7 @@ build_network <- function(data_path,
     )
 
     # build new r5r_network
-    r5r_network <- rJava::.jnew("org.ipea.r5r.R5RCore", data_path, verbose, elevation, check=F)
+    r5r_network <- rJava::.jnew("org.ipea.r5r.R5RCore", data_path, verbose, elevation, check=FALSE)
     ex = rJava::.jgetEx(clear=TRUE)
     if (!is.null(ex)) {
       msg <- rJava::.jcall(ex, "S", "toString")

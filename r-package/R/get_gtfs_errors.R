@@ -37,5 +37,5 @@ get_gtfs_errors <- function (r5r_network) {
       ))
     }
 
-    return(data.table::fread(err_file, header=T))
+    return(data.table::fread(err_file, header=TRUE))
 }

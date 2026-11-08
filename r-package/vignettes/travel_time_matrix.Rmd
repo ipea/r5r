@@ -52,7 +52,7 @@ We use the Porto Alegre (Brazil) sample data included in `r5r`.
 
 ```{r, message = FALSE}
 # increase Java memory
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 # load libraries
 library(r5r)
@@ -196,6 +196,7 @@ Stop the network and run Java's garbage collector to free the memory it used:
 ```{r, message = FALSE}
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipea/r5r).

@@ -32,6 +32,9 @@ jobs:
       - name: Update r-package/index.md figures source
         run: sed -i 's/\"r-package\//\"/g' r-package/index.md
 
+      - name: Drop README title logo (pkgdown adds man/figures/logo.png itself)
+        run: sed -i '1s/ *<img [^>]*r5r_blue\.png[^>]*>//' r-package/index.md
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::pkgdown, local::.
