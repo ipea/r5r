@@ -24,7 +24,7 @@ arrival_travel_time_matrix(
   destinations,
   mode = "WALK",
   mode_egress = "WALK",
-  arrival_datetime = Sys.time(),
+  arrival_datetime,
   breakdown = FALSE,
   max_walk_time = Inf,
   max_bike_time = Inf,
@@ -73,12 +73,11 @@ arrival_travel_time_matrix(
 
 - arrival_datetime:
 
-  A POSIXct object. The time by which trips must arrive. When routing
-  with public transport, services must run on the date of
-  `arrival_datetime - max_trip_duration` (see
+  A POSIXct object, required for all modes. The time by which trips must
+  arrive. When routing with public transport, services must run on the
+  date of `arrival_datetime - max_trip_duration` (see
   [`check_transit_availability()`](https://ipea.github.io/r5r/reference/check_transit_availability.md)).
-  Defaults to [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html). See
-  details for how datetimes are parsed.
+  See details for how datetimes are parsed.
 
 - breakdown:
 
@@ -189,7 +188,7 @@ arrival_travel_time_matrix(
   frequencies. R5's McRaptor cannot sample many departure times per
   minute over long windows, so such combinations raise an error (e.g. 8
   draws per minute in a 10-minute window, or 5 in a window of 150
-  minutes or more).
+  minutes or more), as does a total of exactly 200 draws.
 
 - seed:
 
@@ -332,6 +331,9 @@ can be found in Delling et al (2015). However, whenever the user
 includes transit fares inputs to these functions, they automatically
 switch to use an `R5`-specific extension to the McRAPTOR routing
 algorithm.
+[`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
+also uses RAPTOR when it only returns the fastest itinerary
+(`shortest_path = TRUE`) and no fares are used.
 
 - Conway, M. W., Byrd, A., & van der Linden, M. (2017). Evidence-based
   transit and land use sketch planning using interactive accessibility

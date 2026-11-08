@@ -12,7 +12,7 @@ pareto_frontier(
   destinations,
   mode = c("WALK", "TRANSIT"),
   mode_egress = "WALK",
-  departure_datetime = Sys.time(),
+  departure_datetime = NULL,
   time_window = 10L,
   seed = NULL,
   percentiles = 50L,
@@ -64,8 +64,8 @@ pareto_frontier(
   with public transport, it must fall within the service period of the
   GTFS feeds (`calendar.txt`; see
   [`check_transit_availability()`](https://ipea.github.io/r5r/reference/check_transit_availability.md)).
-  Defaults to [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html). See
-  details for how datetimes are parsed.
+  Required for public transport; optional otherwise. See details for how
+  datetimes are parsed.
 
 - time_window:
 
@@ -287,10 +287,10 @@ perhaps surprisingly, ignoring the timezone attribute.
 
 ## Routing algorithm
 
-The
+The `pareto_frontier()` function, and
 [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
-and `pareto_frontier()` functions use an `R5`-specific extension to the
-McRAPTOR routing algorithm. The implementation used in
+with `shortest_path = FALSE` or a `fare_structure`, use an `R5`-specific
+extension to the McRAPTOR routing algorithm. The implementation used in
 [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
 allows the router to find paths that are optimal and less than optimal
 in terms of travel time, with some heuristics around multiple access

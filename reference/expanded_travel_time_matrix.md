@@ -16,7 +16,7 @@ expanded_travel_time_matrix(
   destinations,
   mode = "WALK",
   mode_egress = "WALK",
-  departure_datetime = Sys.time(),
+  departure_datetime = NULL,
   time_window = 10L,
   breakdown = FALSE,
   max_walk_time = Inf,
@@ -70,8 +70,8 @@ expanded_travel_time_matrix(
   with public transport, it must fall within the service period of the
   GTFS feeds (`calendar.txt`; see
   [`check_transit_availability()`](https://ipea.github.io/r5r/reference/check_transit_availability.md)).
-  Defaults to [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html). See
-  details for how datetimes are parsed.
+  Required for public transport; optional otherwise. See details for how
+  datetimes are parsed.
 
 - time_window:
 
@@ -190,7 +190,7 @@ expanded_travel_time_matrix(
   frequencies. R5's McRaptor cannot sample many departure times per
   minute over long windows, so such combinations raise an error (e.g. 8
   draws per minute in a 10-minute window, or 5 in a window of 150
-  minutes or more).
+  minutes or more), as does a total of exactly 200 draws.
 
 - seed:
 
@@ -354,6 +354,9 @@ can be found in Delling et al (2015). However, whenever the user
 includes transit fares inputs to these functions, they automatically
 switch to use an `R5`-specific extension to the McRAPTOR routing
 algorithm.
+[`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
+also uses RAPTOR when it only returns the fastest itinerary
+(`shortest_path = TRUE`) and no fares are used.
 
 - Conway, M. W., Byrd, A., & van der Linden, M. (2017). Evidence-based
   transit and land use sketch planning using interactive accessibility

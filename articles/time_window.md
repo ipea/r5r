@@ -50,17 +50,18 @@ This holds for the default routing algorithm (FastRaptor). When a
 [`accessibility()`](https://ipea.github.io/r5r/reference/accessibility.md)
 or
 [`travel_time_surface()`](https://ipea.github.io/r5r/reference/travel_time_surface.md),
-and always in
-[`pareto_frontier()`](https://ipea.github.io/r5r/reference/pareto_frontier.md)
-and
-[`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md),
-R⁵ uses the McRaptor algorithm instead. McRaptor does not route a
-departure every minute: it routes `time_window * draws_per_minute`
-departure times sampled at random within the window (consecutive
-departures are, on average, `1 / draws_per_minute` minutes apart, each
-origin gets its own departure times, and the same ones in every call
-with the same origin and `seed`). So with McRaptor, `draws_per_minute`
-affects results even if the GTFS feeds have no `frequencies.txt` table.
+always in
+[`pareto_frontier()`](https://ipea.github.io/r5r/reference/pareto_frontier.md),
+and in
+[`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
+with `shortest_path = FALSE`, R⁵ uses the McRaptor algorithm instead.
+McRaptor does not route a departure every minute: it routes
+`time_window * draws_per_minute` departure times sampled at random
+within the window (consecutive departures are, on average,
+`1 / draws_per_minute` minutes apart, each origin gets its own departure
+times, and the same ones in every call with the same origin and `seed`).
+So with McRaptor, `draws_per_minute` affects results even if the GTFS
+feeds have no `frequencies.txt` table.
 [`pareto_frontier()`](https://ipea.github.io/r5r/reference/pareto_frontier.md)
 and
 [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
@@ -81,7 +82,7 @@ We use the São Paulo (Brazil) sample data included in `r5r`.
 ``` r
 
 # increase Java memory
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 # load libraries
 library(r5r)
@@ -140,8 +141,8 @@ head(acc, n = 10)
 #>  4: 89a8100c603ffff     schools         70     45             6
 #>  5: 89a8100c603ffff     schools         80     45             6
 #>  6: 89a8100c617ffff     schools         10     45            14
-#>  7: 89a8100c617ffff     schools         20     45            13
-#>  8: 89a8100c617ffff     schools         50     45            10
+#>  7: 89a8100c617ffff     schools         20     45            14
+#>  8: 89a8100c617ffff     schools         50     45            13
 #>  9: 89a8100c617ffff     schools         70     45             6
 #> 10: 89a8100c617ffff     schools         80     45             6
 ```
@@ -270,16 +271,16 @@ head(ettm, n = 10)
 #> 10: 89a8100c603ffff 89a8100c28bffff       14:01:00           5 4491-10
 #>     total_time
 #>          <num>
-#>  1:       34.7
-#>  2:       36.2
-#>  3:       38.3
-#>  4:       41.6
-#>  5:       47.2
-#>  6:       36.2
-#>  7:       39.7
-#>  8:       46.3
-#>  9:       46.4
-#> 10:       48.6
+#>  1:       34.6
+#>  2:       36.4
+#>  3:       39.7
+#>  4:       41.0
+#>  5:       42.3
+#>  6:       37.4
+#>  7:       37.7
+#>  8:       51.4
+#>  9:       51.5
+#> 10:       52.7
 ```
 
 ### 3.5 Detailed itineraries with `time_window`.
@@ -292,17 +293,24 @@ and arrive later than others (use `time_window = 1` for the earliest
 arrival). With `shortest_path = FALSE`, it also returns sub-optimal
 alternatives.
 
-It uses the McRaptor algorithm with one draw per minute (see Section 2):
-consecutive departures are 30 to 90 seconds apart, so a 10-minute
-`time_window` simulates about 10 departures. Each departure is routed
-separately, and with the default `suboptimal_minutes = 0` only the
-itineraries arriving earliest are kept for each departure, even if a
-slower one has fewer transfers.
+With the default `shortest_path = TRUE` and no `fare_structure`, it
+routes one departure at each minute of `time_window`, as
+[`travel_time_matrix()`](https://ipea.github.io/r5r/reference/travel_time_matrix.md)
+does with schedule-based GTFS; ties between equally fast itineraries go
+to the earliest departure.
+
+With `shortest_path = FALSE` or a `fare_structure`, it uses the McRaptor
+algorithm with one draw per minute (see Section 2): consecutive
+departures are 30 to 90 seconds apart, so a 10-minute `time_window`
+simulates about 10 departures. Each departure is routed separately, and
+with the default `suboptimal_minutes = 0` only the itineraries arriving
+earliest are kept for each departure, even if a slower one has fewer
+transfers.
 
 *obs.*
 [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
 cannot route public transport trips on frequency-based GTFS feeds; use
-[`gtfstools::frequencies_to_stop_times()`](https://rdrr.io/pkg/gtfstools/man/frequencies_to_stop_times.html)
+[`gtfstools::frequencies_to_stop_times()`](https://ipea.github.io/gtfstools/reference/frequencies_to_stop_times.html)
 to create a suitable feed.
 
 ### Cleaning up after usage
@@ -314,6 +322,7 @@ used:
 
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit

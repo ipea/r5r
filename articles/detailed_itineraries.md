@@ -24,11 +24,13 @@ bus stop (R5’s documentation calls legs ‘segments’). Each leg has its
 mode, waiting time, travel time, distance and geometry. The function can
 also return suboptimal route alternatives.
 
-**obs.** Use
+**obs.** If you only need the routes used and the access, waiting,
+in-vehicle and transfer times,
+[`expanded_travel_time_matrix()`](https://ipea.github.io/r5r/reference/expanded_travel_time_matrix.md)
+is enough. Use
 [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
-only if you need suboptimal alternative routes and/or route geometries.
-For route information by trip segment alone, we strongly recommend
-[`expanded_travel_time_matrix()`](https://ipea.github.io/r5r/reference/expanded_travel_time_matrix.md).
+when you need each trip segment’s mode, distance or geometry, or
+suboptimal alternative routes.
 
 ## 2. Build routable transport network with `build_network()`
 
@@ -37,7 +39,7 @@ We use the Porto Alegre (Brazil) sample data included in `r5r`.
 ``` r
 
 # increase Java memory
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 # load libraries
 library(r5r)
@@ -93,7 +95,7 @@ head(det)
 #> Simple feature collection with 6 features and 16 fields
 #> Geometry type: LINESTRING
 #> Dimension:     XY
-#> Bounding box:  xmin: -51.24094 ymin: -30.05 xmax: -51.19762 ymax: -29.99729
+#> Bounding box:  xmin: -51.24094 ymin: -30.05002 xmax: -51.19762 ymax: -29.99729
 #> Geodetic CRS:  WGS 84
 #>            from_id  from_lat  from_lon                          to_id    to_lat
 #> 1 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
@@ -103,18 +105,18 @@ head(det)
 #> 5 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
 #> 6 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
 #>      to_lon option departure_time total_duration total_distance segment mode
-#> 1 -51.22875      1       14:08:16           35.3           9460       1 WALK
-#> 2 -51.22875      1       14:08:16           35.3           9460       2 RAIL
-#> 3 -51.22875      1       14:08:16           35.3           9460       3 WALK
-#> 4 -51.22875      1       14:08:16           35.3           9460       4  BUS
-#> 5 -51.22875      1       14:08:16           35.3           9460       5 WALK
-#> 6 -51.22875      2       14:08:16           42.4           8773       1 WALK
+#> 1 -51.22875      1       14:08:16           36.7           9537       1 WALK
+#> 2 -51.22875      1       14:08:16           36.7           9537       2 RAIL
+#> 3 -51.22875      1       14:08:16           36.7           9537       3 WALK
+#> 4 -51.22875      1       14:08:16           36.7           9537       4  BUS
+#> 5 -51.22875      1       14:08:16           36.7           9537       5 WALK
+#> 6 -51.22875      2       14:08:16           43.8           8850       1 WALK
 #>   segment_duration wait distance  route                       geometry
 #> 1              5.1  0.0      174        LINESTRING (-51.1981 -29.99...
 #> 2              6.6  1.7     4796 LINHA1 LINESTRING (-51.19763 -29.9...
 #> 3              4.0  0.0      256        LINESTRING (-51.22827 -30.0...
 #> 4             10.4  4.4     4083    188 LINESTRING (-51.22926 -30.0...
-#> 5              3.2  0.0      151        LINESTRING (-51.22949 -30.0...
+#> 5              4.6  0.0      228        LINESTRING (-51.22949 -30.0...
 #> 6              5.1  0.0      174        LINESTRING (-51.1981 -29.99...
 ```
 
@@ -148,11 +150,19 @@ fig
 
 ## 4. Other options
 
+- **Fastest route only:** with the default `shortest_path = TRUE` and no
+  `fare_structure`, public transport is routed with R5’s RAPTOR
+  algorithm, the one used by
+  [`travel_time_matrix()`](https://ipea.github.io/r5r/reference/travel_time_matrix.md),
+  which is much faster than the search for alternative routes. It routes
+  one departure at each minute of `time_window` and returns the fastest
+  itinerary.
 - **All origins to all destinations:** by default,
   [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
   routes the 1st origin to the 1st destination, the 2nd to the 2nd, and
   so on. Set `all_to_all = TRUE` to route every origin to every
-  destination.
+  destination. With `shortest_path = TRUE`, a single search per origin
+  then serves all its destinations.
 - **No geometry:** set `drop_geometry = TRUE` to return results without
   the trip geometry. This makes the function faster.
 
@@ -181,7 +191,7 @@ gtfstools::write_gtfs(gtfs = stop_times_gtfs,
                       path = tempfile(pattern = 'stop_times_gtfs', fileext = '.zip'))
 ```
 
-[`write_gtfs()`](https://rdrr.io/pkg/gtfstools/man/write_gtfs.html)
+[`write_gtfs()`](https://ipea.github.io/gtfstools/reference/write_gtfs.html)
 saves the new feed to the `path` you give it (a temporary file above).
 Put that file in your `data_path`, in place of the frequency-based feed,
 and build the network.
@@ -195,6 +205,7 @@ used:
 
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit

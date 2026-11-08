@@ -84,7 +84,7 @@ transport network.</p>
 <span>  mode_egress <span class="op">=</span> <span class="st">"walk"</span>,</span>
 <span>  cutoffs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">15</span>, <span class="fl">30</span><span class="op">)</span>,</span>
 <span>  zoom <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  departure_datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  departure_datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  polygon_output <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  time_window <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  max_walk_time <span class="op">=</span> <span class="cn">Inf</span>,</span>
@@ -151,7 +151,8 @@ defined, see
 <dd><p>A POSIXct object. Only affects public transport
 legs; when routing with public transport, it must fall within the service
 period of the GTFS feeds (<code>calendar.txt</code>; see
-<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Defaults to <code><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time()</a></code>. See details for
+<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Required for public transport; optional
+otherwise. See details for
 how datetimes are parsed.</p></dd>
 
 
@@ -242,7 +243,8 @@ same in every call from the same origin with the same <code>seed</code>). This
 parameter then affects the results with or without frequencies. R5's
 McRaptor cannot sample many departure times per minute over long windows,
 so such combinations raise an error (e.g. 8 draws per minute in a
-10-minute window, or 5 in a window of 150 minutes or more).</p></dd>
+10-minute window, or 5 in a window of 150 minutes or more), as does a
+total of exactly 200 draws.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -376,7 +378,9 @@ minute over the time window set by the user in the 'time_window' parameter.
 A detailed description of base RAPTOR can be found in Delling et al (2015).
 However, whenever the user includes transit fares inputs to these functions,
 they automatically switch to use an <code>R5</code>-specific extension to the McRAPTOR
-routing algorithm.</p><ul><li><p>Conway, M. W., Byrd, A., &amp; van der Linden, M. (2017). Evidence-based
+routing algorithm. <code><a href="detailed_itineraries.html">detailed_itineraries()</a></code> also uses RAPTOR when it only
+returns the fastest itinerary (<code>shortest_path = TRUE</code>) and no fares are
+used.</p><ul><li><p>Conway, M. W., Byrd, A., &amp; van der Linden, M. (2017). Evidence-based
 transit and land use sketch planning using interactive accessibility methods
 on combined schedule and headway-based networks. Transportation Research
 Record, 2653(1), 45-53. <a href="https://doi.org/10.3141/2653-06" class="external-link">doi:10.3141/2653-06</a></p></li>
@@ -387,7 +391,7 @@ transit routing. Transportation Science, 49(3), 591-604.
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>java.parameters <span class="op">=</span> <span class="st">"-Xmx2G"</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">old_options</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>java.parameters <span class="op">=</span> <span class="st">"-Xmx2G"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ipea/r5r" class="external-link">r5r</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -488,6 +492,7 @@ transit routing. Transportation Science, 49(3), 591-604.
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="stop_r5.html">stop_r5</a></span><span class="op">(</span><span class="va">r5r_network</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> r5r_network has been successfully stopped.</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_options</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

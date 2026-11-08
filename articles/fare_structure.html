@@ -78,7 +78,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Accounting for monetary costs</h1>
             
-            <h4 data-toc-skip class="date">2026-10-23</h4>
+            <h4 data-toc-skip class="date">2026-11-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ipea/r5r/blob/HEAD/r-package/vignettes/fare_structure.Rmd" class="external-link"><code>vignettes/fare_structure.Rmd</code></a></small>
       <div class="d-none name"><code>fare_structure.Rmd</code></div>
@@ -144,7 +144,7 @@ transport agencies.</p>
 of Porto Alegre (Brazil) included in <code>r5r</code>. Set Java memory
 before loading the packages (<a href="https://ipea.github.io/r5r/articles/r5r.html#usage">why</a>).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>java.parameters <span class="op">=</span> <span class="st">"-Xmx2G"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">old_options</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>java.parameters <span class="op">=</span> <span class="st">"-Xmx2G"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ipea/r5r" class="external-link">r5r</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
@@ -245,34 +245,34 @@ properties and data.frames:</p>
 <span><span class="co">#&gt; $fares_per_route</span></span>
 <span><span class="co">#&gt;      agency_id                                 agency_name  route_id</span></span>
 <span><span class="co">#&gt;         &lt;char&gt;                                      &lt;char&gt;    &lt;char&gt;</span></span>
-<span><span class="co">#&gt;   1:     TRENS                                    TRENSURB    LINHA1</span></span>
-<span><span class="co">#&gt;   2:     TRENS                                    TRENSURB LINHAAERO</span></span>
-<span><span class="co">#&gt;   3:      EPTC Empresa Publica de Transportes e Circulação      1112</span></span>
-<span><span class="co">#&gt;   4:      EPTC Empresa Publica de Transportes e Circulação       149</span></span>
-<span><span class="co">#&gt;   5:      EPTC Empresa Publica de Transportes e Circulação       165</span></span>
+<span><span class="co">#&gt;   1:      EPTC Empresa Publica de Transportes e Circulação      1112</span></span>
+<span><span class="co">#&gt;   2:      EPTC Empresa Publica de Transportes e Circulação       149</span></span>
+<span><span class="co">#&gt;   3:      EPTC Empresa Publica de Transportes e Circulação       165</span></span>
+<span><span class="co">#&gt;   4:      EPTC Empresa Publica de Transportes e Circulação       168</span></span>
+<span><span class="co">#&gt;   5:      EPTC Empresa Publica de Transportes e Circulação       173</span></span>
 <span><span class="co">#&gt;  ---                                                                </span></span>
-<span><span class="co">#&gt; 113:      EPTC Empresa Publica de Transportes e Circulação        T7</span></span>
-<span><span class="co">#&gt; 114:      EPTC Empresa Publica de Transportes e Circulação        T8</span></span>
-<span><span class="co">#&gt; 115:      EPTC Empresa Publica de Transportes e Circulação        T9</span></span>
-<span><span class="co">#&gt; 116:      EPTC Empresa Publica de Transportes e Circulação      TR60</span></span>
-<span><span class="co">#&gt; 117:      EPTC Empresa Publica de Transportes e Circulação      TR62</span></span>
+<span><span class="co">#&gt; 113:      EPTC Empresa Publica de Transportes e Circulação        T9</span></span>
+<span><span class="co">#&gt; 114:      EPTC Empresa Publica de Transportes e Circulação      TR60</span></span>
+<span><span class="co">#&gt; 115:      EPTC Empresa Publica de Transportes e Circulação      TR62</span></span>
+<span><span class="co">#&gt; 116:     TRENS                                    TRENSURB    LINHA1</span></span>
+<span><span class="co">#&gt; 117:     TRENS                                    TRENSURB LINHAAERO</span></span>
 <span><span class="co">#&gt;      route_short_name                           route_long_name   mode</span></span>
 <span><span class="co">#&gt;                &lt;char&gt;                                    &lt;char&gt; &lt;char&gt;</span></span>
-<span><span class="co">#&gt;   1:           LINHA1 ESTACAO MERCADO ATE ESTACAO NOVO HAMBURGO   RAIL</span></span>
-<span><span class="co">#&gt;   2:             AREO                        AEROMOVEL TRENSURB   RAIL</span></span>
-<span><span class="co">#&gt;   3:             1112                         HIPICA / TRISTEZA    BUS</span></span>
-<span><span class="co">#&gt;   4:              149                                    ICARAI    BUS</span></span>
-<span><span class="co">#&gt;   5:              165                                     COHAB    BUS</span></span>
+<span><span class="co">#&gt;   1:             1112                         HIPICA / TRISTEZA    BUS</span></span>
+<span><span class="co">#&gt;   2:              149                                    ICARAI    BUS</span></span>
+<span><span class="co">#&gt;   3:              165                                     COHAB    BUS</span></span>
+<span><span class="co">#&gt;   4:              168                  BELEM NOVO(VIA TRISTEZA)    BUS</span></span>
+<span><span class="co">#&gt;   5:              173                                   CAMAQUA    BUS</span></span>
 <span><span class="co">#&gt;  ---                                                                  </span></span>
-<span><span class="co">#&gt; 113:               T7                     NILO / PRAIA DE BELAS    BUS</span></span>
-<span><span class="co">#&gt; 114:               T8                       CAMPUS  /  FARRAPOS    BUS</span></span>
-<span><span class="co">#&gt; 115:               T9                                       PUC    BUS</span></span>
-<span><span class="co">#&gt; 116:             TR60                         TRONCAL TRI‘NGULO    BUS</span></span>
-<span><span class="co">#&gt; 117:             TR62                          TRONCAL BALTAZAR    BUS</span></span>
+<span><span class="co">#&gt; 113:               T9                                       PUC    BUS</span></span>
+<span><span class="co">#&gt; 114:             TR60                         TRONCAL TRI‘NGULO    BUS</span></span>
+<span><span class="co">#&gt; 115:             TR62                          TRONCAL BALTAZAR    BUS</span></span>
+<span><span class="co">#&gt; 116:           LINHA1 ESTACAO MERCADO ATE ESTACAO NOVO HAMBURGO   RAIL</span></span>
+<span><span class="co">#&gt; 117:             AREO                        AEROMOVEL TRENSURB   RAIL</span></span>
 <span><span class="co">#&gt;      route_fare fare_type</span></span>
 <span><span class="co">#&gt;           &lt;num&gt;    &lt;char&gt;</span></span>
-<span><span class="co">#&gt;   1:        4.8      RAIL</span></span>
-<span><span class="co">#&gt;   2:        4.8      RAIL</span></span>
+<span><span class="co">#&gt;   1:        4.8       BUS</span></span>
+<span><span class="co">#&gt;   2:        4.8       BUS</span></span>
 <span><span class="co">#&gt;   3:        4.8       BUS</span></span>
 <span><span class="co">#&gt;   4:        4.8       BUS</span></span>
 <span><span class="co">#&gt;   5:        4.8       BUS</span></span>
@@ -280,8 +280,8 @@ properties and data.frames:</p>
 <span><span class="co">#&gt; 113:        4.8       BUS</span></span>
 <span><span class="co">#&gt; 114:        4.8       BUS</span></span>
 <span><span class="co">#&gt; 115:        4.8       BUS</span></span>
-<span><span class="co">#&gt; 116:        4.8       BUS</span></span>
-<span><span class="co">#&gt; 117:        4.8       BUS</span></span>
+<span><span class="co">#&gt; 116:        4.8      RAIL</span></span>
+<span><span class="co">#&gt; 117:        4.8      RAIL</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $debug_settings</span></span>
 <span><span class="co">#&gt; $debug_settings$output_file</span></span>
@@ -456,22 +456,30 @@ routes (e.g. express services) with specific fares, these values can be
 updated in this <code>fares_per_route</code> data.frame.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">fare_structure</span><span class="op">$</span><span class="va">fares_per_route</span><span class="op">)</span></span>
-<span><span class="co">#&gt;    agency_id                                 agency_name route_id</span></span>
-<span><span class="co">#&gt;       &lt;char&gt;                                      &lt;char&gt;   &lt;char&gt;</span></span>
-<span><span class="co">#&gt; 1:      EPTC Empresa Publica de Transportes e Circulação       T6</span></span>
-<span><span class="co">#&gt; 2:      EPTC Empresa Publica de Transportes e Circulação       T7</span></span>
-<span><span class="co">#&gt; 3:      EPTC Empresa Publica de Transportes e Circulação       T8</span></span>
-<span><span class="co">#&gt; 4:      EPTC Empresa Publica de Transportes e Circulação       T9</span></span>
-<span><span class="co">#&gt; 5:      EPTC Empresa Publica de Transportes e Circulação     TR60</span></span>
-<span><span class="co">#&gt; 6:      EPTC Empresa Publica de Transportes e Circulação     TR62</span></span>
-<span><span class="co">#&gt;    route_short_name       route_long_name   mode route_fare fare_type</span></span>
-<span><span class="co">#&gt;              &lt;char&gt;                &lt;char&gt; &lt;char&gt;      &lt;num&gt;    &lt;char&gt;</span></span>
-<span><span class="co">#&gt; 1:               T6         TRANSVERSAL 6    BUS        4.8       BUS</span></span>
-<span><span class="co">#&gt; 2:               T7 NILO / PRAIA DE BELAS    BUS        4.8       BUS</span></span>
-<span><span class="co">#&gt; 3:               T8   CAMPUS  /  FARRAPOS    BUS        4.8       BUS</span></span>
-<span><span class="co">#&gt; 4:               T9                   PUC    BUS        4.8       BUS</span></span>
-<span><span class="co">#&gt; 5:             TR60     TRONCAL TRI‘NGULO    BUS        4.8       BUS</span></span>
-<span><span class="co">#&gt; 6:             TR62      TRONCAL BALTAZAR    BUS        4.8       BUS</span></span></code></pre></div>
+<span><span class="co">#&gt;    agency_id                                 agency_name  route_id</span></span>
+<span><span class="co">#&gt;       &lt;char&gt;                                      &lt;char&gt;    &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1:      EPTC Empresa Publica de Transportes e Circulação        T8</span></span>
+<span><span class="co">#&gt; 2:      EPTC Empresa Publica de Transportes e Circulação        T9</span></span>
+<span><span class="co">#&gt; 3:      EPTC Empresa Publica de Transportes e Circulação      TR60</span></span>
+<span><span class="co">#&gt; 4:      EPTC Empresa Publica de Transportes e Circulação      TR62</span></span>
+<span><span class="co">#&gt; 5:     TRENS                                    TRENSURB    LINHA1</span></span>
+<span><span class="co">#&gt; 6:     TRENS                                    TRENSURB LINHAAERO</span></span>
+<span><span class="co">#&gt;    route_short_name                           route_long_name   mode route_fare</span></span>
+<span><span class="co">#&gt;              &lt;char&gt;                                    &lt;char&gt; &lt;char&gt;      &lt;num&gt;</span></span>
+<span><span class="co">#&gt; 1:               T8                       CAMPUS  /  FARRAPOS    BUS        4.8</span></span>
+<span><span class="co">#&gt; 2:               T9                                       PUC    BUS        4.8</span></span>
+<span><span class="co">#&gt; 3:             TR60                         TRONCAL TRI‘NGULO    BUS        4.8</span></span>
+<span><span class="co">#&gt; 4:             TR62                          TRONCAL BALTAZAR    BUS        4.8</span></span>
+<span><span class="co">#&gt; 5:           LINHA1 ESTACAO MERCADO ATE ESTACAO NOVO HAMBURGO   RAIL        4.8</span></span>
+<span><span class="co">#&gt; 6:             AREO                        AEROMOVEL TRENSURB   RAIL        4.8</span></span>
+<span><span class="co">#&gt;    fare_type</span></span>
+<span><span class="co">#&gt;       &lt;char&gt;</span></span>
+<span><span class="co">#&gt; 1:       BUS</span></span>
+<span><span class="co">#&gt; 2:       BUS</span></span>
+<span><span class="co">#&gt; 3:       BUS</span></span>
+<span><span class="co">#&gt; 4:       BUS</span></span>
+<span><span class="co">#&gt; 5:      RAIL</span></span>
+<span><span class="co">#&gt; 6:      RAIL</span></span></code></pre></div>
 <p>Basic route information is taken directly from the GTFS data (agency,
 route id and names, mode, etc), but the <code>route_fare</code> and
 <code>fare_type</code> columns were added specifically for the
@@ -592,7 +600,7 @@ differences and unreachable destinations:</p>
 <span></span>
 <span><span class="co"># plot of unreachable destinations when the monetary cost limit is too low</span></span>
 <span><span class="va">unreachable</span> <span class="op">&lt;-</span> <span class="va">ttm</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span>count <span class="op">=</span> <span class="va">.N</span><span class="op">)</span>, by <span class="op">=</span> <span class="fu">.</span><span class="op">(</span><span class="va">travel_time_unl</span>, <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">travel_time_500</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">unreachable</span><span class="op">[</span>, <span class="va">perc</span> <span class="op">:=</span> <span class="va">count</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">count</span>, na.rm <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>, by <span class="op">=</span> <span class="fu">.</span><span class="op">(</span><span class="va">travel_time_unl</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">unreachable</span><span class="op">[</span>, <span class="va">perc</span> <span class="op">:=</span> <span class="va">count</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">count</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, by <span class="op">=</span> <span class="fu">.</span><span class="op">(</span><span class="va">travel_time_unl</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">unreachable</span> <span class="op">&lt;-</span> <span class="va">unreachable</span><span class="op">[</span><span class="va">is.na</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">]</span></span>
 <span><span class="va">unreachable</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="va">unreachable</span><span class="op">)</span></span>
 <span></span>
@@ -670,7 +678,8 @@ accessibility:</p>
 it used:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">r5r</span><span class="fu">::</span><span class="fu"><a href="../reference/stop_r5.html">stop_r5</a></span><span class="op">(</span><span class="va">r5r_network</span><span class="op">)</span></span>
-<span><span class="fu">rJava</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rJava/man/jgc.html" class="external-link">.jgc</a></span><span class="op">(</span>R.gc <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">rJava</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rJava/man/jgc.html" class="external-link">.jgc</a></span><span class="op">(</span>R.gc <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_options</span><span class="op">)</span></span></code></pre></div>
 <p>If you have any suggestions or want to report an error, please visit
 <a href="https://github.com/ipea/r5r" class="external-link">the package GitHub page</a>.</p>
 </div>

@@ -78,7 +78,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>FAQ - Frequently Asked Questions</h1>
             
-            <h4 data-toc-skip class="date">2026-10-23</h4>
+            <h4 data-toc-skip class="date">2026-11-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ipea/r5r/blob/HEAD/r-package/vignettes/faq.Rmd" class="external-link"><code>vignettes/faq.Rmd</code></a></small>
       <div class="d-none name"><code>faq.Rmd</code></div>
@@ -136,11 +136,19 @@ and <code>detailed_itineraries()</code> different?<a class="anchor" aria-label="
 <details><summary>
 click to expand
 </summary><blockquote>
-<p>The functions <code><a href="../reference/travel_time_matrix.html">travel_time_matrix()</a></code> (and
+<p><code><a href="../reference/travel_time_matrix.html">travel_time_matrix()</a></code> (and
 <code><a href="../reference/expanded_travel_time_matrix.html">expanded_travel_time_matrix()</a></code>) and
-<code><a href="../reference/detailed_itineraries.html">detailed_itineraries()</a></code> use different routing algorithms, as
-explained in the documentation of these functions. As such, we advise
-not to use or combine the output of these functions.</p>
+<code><a href="../reference/detailed_itineraries.html">detailed_itineraries()</a></code> compute different things, as
+explained in the documentation of these functions.
+<code><a href="../reference/detailed_itineraries.html">detailed_itineraries()</a></code> returns the fastest itinerary over
+the time window rather than a percentile of travel times, and it routes
+the walk or bike legs to and from public transport with separate street
+searches for each origin-destination pair
+(<code><a href="../reference/travel_time_matrix.html">travel_time_matrix()</a></code> uses precomputed street times between
+stops and destinations). With <code>shortest_path = FALSE</code> or a
+<code>fare_structure</code>, it also uses a different routing algorithm
+(McRAPTOR), which simulates departures at random seconds. As such, we
+advise not to combine the output of these functions.</p>
 </blockquote>
 </details>
 </div>

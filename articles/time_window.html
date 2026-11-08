@@ -78,7 +78,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Using the time_window parameter</h1>
             
-            <h4 data-toc-skip class="date">2026-10-23</h4>
+            <h4 data-toc-skip class="date">2026-11-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ipea/r5r/blob/HEAD/r-package/vignettes/time_window.Rmd" class="external-link"><code>vignettes/time_window.Rmd</code></a></small>
       <div class="d-none name"><code>time_window.Rmd</code></div>
@@ -136,15 +136,16 @@ the number of draws on result stability, see Stewart et al <span class="citation
 <p>This holds for the default routing algorithm (FastRaptor). When a
 <code>fare_structure</code> is passed to
 <code><a href="../reference/travel_time_matrix.html">travel_time_matrix()</a></code>, <code><a href="../reference/accessibility.html">accessibility()</a></code> or
-<code><a href="../reference/travel_time_surface.html">travel_time_surface()</a></code>, and always in
-<code><a href="../reference/pareto_frontier.html">pareto_frontier()</a></code> and <code><a href="../reference/detailed_itineraries.html">detailed_itineraries()</a></code>,
-R<sup>5</sup> uses the McRaptor algorithm instead. McRaptor does not
-route a departure every minute: it routes
-<code>time_window * draws_per_minute</code> departure times sampled at
-random within the window (consecutive departures are, on average,
-<code>1 / draws_per_minute</code> minutes apart, each origin gets its
-own departure times, and the same ones in every call with the same
-origin and <code>seed</code>). So with McRaptor,
+<code><a href="../reference/travel_time_surface.html">travel_time_surface()</a></code>, always in
+<code><a href="../reference/pareto_frontier.html">pareto_frontier()</a></code>, and in
+<code><a href="../reference/detailed_itineraries.html">detailed_itineraries()</a></code> with
+<code>shortest_path = FALSE</code>, R<sup>5</sup> uses the McRaptor
+algorithm instead. McRaptor does not route a departure every minute: it
+routes <code>time_window * draws_per_minute</code> departure times
+sampled at random within the window (consecutive departures are, on
+average, <code>1 / draws_per_minute</code> minutes apart, each origin
+gets its own departure times, and the same ones in every call with the
+same origin and <code>seed</code>). So with McRaptor,
 <code>draws_per_minute</code> affects results even if the GTFS feeds
 have no <code>frequencies.txt</code> table.
 <code><a href="../reference/pareto_frontier.html">pareto_frontier()</a></code> and <code><a href="../reference/detailed_itineraries.html">detailed_itineraries()</a></code>
@@ -166,7 +167,7 @@ within the window are shorter than 15 minutes.</p>
 <code>r5r</code>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># increase Java memory</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>java.parameters <span class="op">=</span> <span class="st">"-Xmx2G"</span><span class="op">)</span></span>
+<span><span class="va">old_options</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>java.parameters <span class="op">=</span> <span class="st">"-Xmx2G"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># load libraries</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ipea/r5r" class="external-link">r5r</a></span><span class="op">)</span></span>
@@ -223,8 +224,8 @@ departures between 2pm and 3pm (<code>time_window = 60</code>):</p>
 <span><span class="co">#&gt;  4: 89a8100c603ffff     schools         70     45             6</span></span>
 <span><span class="co">#&gt;  5: 89a8100c603ffff     schools         80     45             6</span></span>
 <span><span class="co">#&gt;  6: 89a8100c617ffff     schools         10     45            14</span></span>
-<span><span class="co">#&gt;  7: 89a8100c617ffff     schools         20     45            13</span></span>
-<span><span class="co">#&gt;  8: 89a8100c617ffff     schools         50     45            10</span></span>
+<span><span class="co">#&gt;  7: 89a8100c617ffff     schools         20     45            14</span></span>
+<span><span class="co">#&gt;  8: 89a8100c617ffff     schools         50     45            13</span></span>
 <span><span class="co">#&gt;  9: 89a8100c617ffff     schools         70     45             6</span></span>
 <span><span class="co">#&gt; 10: 89a8100c617ffff     schools         80     45             6</span></span></code></pre></div>
 <p>The output is in long format, one row per origin and percentile, so
@@ -343,16 +344,16 @@ be very memory intensive for large data sets and time windows.</p>
 <span><span class="co">#&gt; 10: 89a8100c603ffff 89a8100c28bffff       14:01:00           5 4491-10</span></span>
 <span><span class="co">#&gt;     total_time</span></span>
 <span><span class="co">#&gt;          &lt;num&gt;</span></span>
-<span><span class="co">#&gt;  1:       34.7</span></span>
-<span><span class="co">#&gt;  2:       36.2</span></span>
-<span><span class="co">#&gt;  3:       38.3</span></span>
-<span><span class="co">#&gt;  4:       41.6</span></span>
-<span><span class="co">#&gt;  5:       47.2</span></span>
-<span><span class="co">#&gt;  6:       36.2</span></span>
-<span><span class="co">#&gt;  7:       39.7</span></span>
-<span><span class="co">#&gt;  8:       46.3</span></span>
-<span><span class="co">#&gt;  9:       46.4</span></span>
-<span><span class="co">#&gt; 10:       48.6</span></span></code></pre></div>
+<span><span class="co">#&gt;  1:       34.6</span></span>
+<span><span class="co">#&gt;  2:       36.4</span></span>
+<span><span class="co">#&gt;  3:       39.7</span></span>
+<span><span class="co">#&gt;  4:       41.0</span></span>
+<span><span class="co">#&gt;  5:       42.3</span></span>
+<span><span class="co">#&gt;  6:       37.4</span></span>
+<span><span class="co">#&gt;  7:       37.7</span></span>
+<span><span class="co">#&gt;  8:       51.4</span></span>
+<span><span class="co">#&gt;  9:       51.5</span></span>
+<span><span class="co">#&gt; 10:       52.7</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="detailed-itineraries-with-time_window-">3.5 Detailed itineraries with <code>time_window</code>.<a class="anchor" aria-label="anchor" href="#detailed-itineraries-with-time_window-"></a>
@@ -364,16 +365,22 @@ its own departure, so it may depart and arrive later than others (use
 <code>time_window = 1</code> for the earliest arrival). With
 <code>shortest_path = FALSE</code>, it also returns sub-optimal
 alternatives.</p>
-<p>It uses the McRaptor algorithm with one draw per minute (see Section
-2): consecutive departures are 30 to 90 seconds apart, so a 10-minute
-<code>time_window</code> simulates about 10 departures. Each departure
-is routed separately, and with the default
+<p>With the default <code>shortest_path = TRUE</code> and no
+<code>fare_structure</code>, it routes one departure at each minute of
+<code>time_window</code>, as <code><a href="../reference/travel_time_matrix.html">travel_time_matrix()</a></code> does with
+schedule-based GTFS; ties between equally fast itineraries go to the
+earliest departure.</p>
+<p>With <code>shortest_path = FALSE</code> or a
+<code>fare_structure</code>, it uses the McRaptor algorithm with one
+draw per minute (see Section 2): consecutive departures are 30 to 90
+seconds apart, so a 10-minute <code>time_window</code> simulates about
+10 departures. Each departure is routed separately, and with the default
 <code>suboptimal_minutes = 0</code> only the itineraries arriving
 earliest are kept for each departure, even if a slower one has fewer
 transfers.</p>
 <p><em>obs.</em> <code><a href="../reference/detailed_itineraries.html">detailed_itineraries()</a></code> cannot route public
 transport trips on frequency-based GTFS feeds; use
-<code><a href="https://rdrr.io/pkg/gtfstools/man/frequencies_to_stop_times.html" class="external-link">gtfstools::frequencies_to_stop_times()</a></code> to create a suitable
+<code><a href="https://ipea.github.io/gtfstools/reference/frequencies_to_stop_times.html" class="external-link">gtfstools::frequencies_to_stop_times()</a></code> to create a suitable
 feed.</p>
 </div>
 <div class="section level3">
@@ -383,7 +390,8 @@ feed.</p>
 it used:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">r5r</span><span class="fu">::</span><span class="fu"><a href="../reference/stop_r5.html">stop_r5</a></span><span class="op">(</span><span class="va">r5r_network</span><span class="op">)</span></span>
-<span><span class="fu">rJava</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rJava/man/jgc.html" class="external-link">.jgc</a></span><span class="op">(</span>R.gc <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">rJava</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rJava/man/jgc.html" class="external-link">.jgc</a></span><span class="op">(</span>R.gc <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_options</span><span class="op">)</span></span></code></pre></div>
 <p>If you have any suggestions or want to report an error, please visit
 <a href="https://github.com/ipea/r5r" class="external-link">the package GitHub page</a>.</p>
 </div>

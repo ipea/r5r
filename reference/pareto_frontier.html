@@ -65,7 +65,7 @@ origin and destination pairs.</p>
 <span>  <span class="va">destinations</span>,</span>
 <span>  mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"WALK"</span>, <span class="st">"TRANSIT"</span><span class="op">)</span>,</span>
 <span>  mode_egress <span class="op">=</span> <span class="st">"WALK"</span>,</span>
-<span>  departure_datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  departure_datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_window <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  percentiles <span class="op">=</span> <span class="fl">50L</span>,</span>
@@ -116,7 +116,8 @@ from the last public transport. It can be either <code>WALK</code>, <code>BICYCL
 <dd><p>A POSIXct object. Only affects public transport
 legs; when routing with public transport, it must fall within the service
 period of the GTFS feeds (<code>calendar.txt</code>; see
-<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Defaults to <code><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time()</a></code>. See details for
+<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Required for public transport; optional
+otherwise. See details for
 how datetimes are parsed.</p></dd>
 
 
@@ -335,8 +336,9 @@ ignoring the timezone attribute.</p>
 
 
 
-<p>The <code><a href="detailed_itineraries.html">detailed_itineraries()</a></code> and <code>pareto_frontier()</code> functions use an
-<code>R5</code>-specific extension to the McRAPTOR routing algorithm. The
+<p>The <code>pareto_frontier()</code> function, and <code><a href="detailed_itineraries.html">detailed_itineraries()</a></code> with
+<code>shortest_path = FALSE</code> or a <code>fare_structure</code>, use an <code>R5</code>-specific
+extension to the McRAPTOR routing algorithm. The
 implementation used in <code><a href="detailed_itineraries.html">detailed_itineraries()</a></code> allows the router to find
 paths that are optimal and less than optimal in terms of travel time, with
 some heuristics around multiple access modes, riding the same patterns, etc.

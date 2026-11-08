@@ -74,7 +74,7 @@ other, more analytical, routing functions.</p>
 <span>  <span class="va">destinations</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"WALK"</span>,</span>
 <span>  mode_egress <span class="op">=</span> <span class="st">"WALK"</span>,</span>
-<span>  departure_datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  departure_datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time_window <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  suboptimal_minutes <span class="op">=</span> <span class="fl">0L</span>,</span>
 <span>  max_walk_time <span class="op">=</span> <span class="cn">Inf</span>,</span>
@@ -131,36 +131,39 @@ from the last public transport. It can be either <code>WALK</code>, <code>BICYCL
 <dd><p>A POSIXct object. Only affects public transport
 legs; when routing with public transport, it must fall within the service
 period of the GTFS feeds (<code>calendar.txt</code>; see
-<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Defaults to <code><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time()</a></code>. See details for
+<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Required for public transport; optional
+otherwise. See details for
 how datetimes are parsed.</p></dd>
 
 
 <dt id="arg-time-window">time_window<a class="anchor" aria-label="anchor" href="#arg-time-window"></a></dt>
 <dd><p>An integer. The time window in minutes for which <code>r5r</code>
-will calculate multiple itineraries. Defaults to 10. Departures are
-simulated at random seconds, about one per minute (30 to 90 seconds
-apart), with the same departure times in every call with the same origin.
-Each departure is routed separately, so an itinerary may appear or
-disappear when <code>departure_datetime</code> changes by one minute, depending on
-whether a departure still catches a faster connection. Unlike other
-routing functions, results are not aggregated by percentile: when the same
-sequence of routes appears in several departures, only the fastest is
-kept, so the output may contain trips departing after
-<code>departure_datetime</code> but within the window. See
+will calculate multiple itineraries. Defaults to 10. Unlike other routing
+functions, results are not aggregated by percentile, so the output may
+contain trips departing after <code>departure_datetime</code> but within the window.
+With <code>shortest_path = TRUE</code> and no <code>fare_structure</code>, a trip is routed for
+each minute from <code>departure_datetime</code> until <code>time_window</code> minutes later,
+and the fastest one is returned (ties go to the earliest departure).
+Otherwise, departures are simulated at random seconds, about one per
+minute (30 to 90 seconds apart), with the same departure times in every
+call with the same origin, and each departure is routed separately: an
+itinerary may appear or disappear when <code>departure_datetime</code> changes by one
+minute, and when the same sequence of routes appears in several
+departures, only the fastest is kept. See
 <code><a href="../articles/time_window.html">vignette("time_window", package = "r5r")</a></code>.</p></dd>
 
 
 <dt id="arg-suboptimal-minutes">suboptimal_minutes<a class="anchor" aria-label="anchor" href="#arg-suboptimal-minutes"></a></dt>
 <dd><p>A number. How many minutes after the optimal
-arrival a non-optimal RAPTOR branch may arrive and still be kept (e.g.
+arrival a non-optimal McRAPTOR branch may arrive and still be kept (e.g.
 with <code>10</code>, routes arriving up to 10 minutes after the fastest one are
-considered). The comparison is made separately for each departure within
-<code>time_window</code> and uses arrival time only: a route beyond this margin is
-discarded even if it has fewer transfers. The default, <code>0</code>, keeps only
-routes arriving at the earliest time for each departure. Higher values
-return more itineraries, emulating people who take a slower route for
-practical reasons (e.g. mode preference, safety). Values above 0 can only
-be used when <code>shortest_path</code> is <code>FALSE</code> and <code>fare_structure</code> is <code>NULL</code>.</p></dd>
+considered). It can only be used when <code>shortest_path = FALSE</code> and
+<code>fare_structure</code> is <code>NULL</code>. The comparison is made separately for each
+departure within <code>time_window</code> and uses arrival time only: a route beyond
+this margin is discarded even if it has fewer transfers. The default, <code>0</code>,
+keeps only routes arriving at the earliest time for each departure. Higher
+values return more itineraries, emulating people who take a slower route for
+practical reasons (e.g. mode preference, safety).</p></dd>
 
 
 <dt id="arg-max-walk-time">max_walk_time<a class="anchor" aria-label="anchor" href="#arg-max-walk-time"></a></dt>
@@ -222,14 +225,20 @@ or multiple alternatives. The fastest itinerary is the one with the
 shortest travel time, measured from its own departure time, among all
 departures within <code>time_window</code>. With a large <code>time_window</code>, it may depart
 later and arrive later than other itineraries; use <code>time_window = 1</code> to
-get the itinerary with the earliest arrival for a given departure time.</p></dd>
+get the itinerary with the earliest arrival for a given departure time.
+Without a <code>fare_structure</code>, public transport trips are then routed with
+R5's RAPTOR algorithm, which is much faster than the McRAPTOR algorithm
+used for alternative routes and fares (see the Fastest itinerary section).</p></dd>
 
 
 <dt id="arg-all-to-all">all_to_all<a class="anchor" aria-label="anchor" href="#arg-all-to-all"></a></dt>
 <dd><p>A logical. Whether to query routes between the 1st origin
 to the 1st destination, then the 2nd origin to the 2nd destination, and so
 on (<code>FALSE</code>, the default) or to query routes between all origins to all
-destinations (<code>TRUE</code>).</p></dd>
+destinations (<code>TRUE</code>). With <code>shortest_path = TRUE</code> and no <code>fare_structure</code>,
+<code>all_to_all = TRUE</code> runs one public transport search per origin for all
+its destinations, which is much faster than listing the same pairs with
+<code>all_to_all = FALSE</code>.</p></dd>
 
 
 <dt id="arg-fare-structure">fare_structure<a class="anchor" aria-label="anchor" href="#arg-fare-structure"></a></dt>
@@ -340,7 +349,8 @@ segment (trip leg) of one itinerary, with the columns:</p><ul><li><p><code>from_
 origin and destination of the pair;</p></li>
 <li><p><code>option</code>: the itinerary number within the pair. Options are ordered
 with direct (non-transit) trips first, then by number of segments, then
-by duration, so <code>option</code> 1 is not necessarily the fastest one;</p></li>
+by duration, so <code>option</code> 1 is not necessarily the fastest one. With
+<code>shortest_path = TRUE</code>, each pair has a single itinerary (<code>option</code> 1);</p></li>
 <li><p><code>departure_time</code>: the departure time of the itinerary (<code>"HH:MM:SS"</code>);</p></li>
 <li><p><code>total_duration</code>, <code>total_distance</code>: duration and distance of the whole
 itinerary;</p></li>
@@ -418,8 +428,9 @@ ignoring the timezone attribute.</p>
 
 
 
-<p>The <code>detailed_itineraries()</code> and <code><a href="pareto_frontier.html">pareto_frontier()</a></code> functions use an
-<code>R5</code>-specific extension to the McRAPTOR routing algorithm. The
+<p>The <code><a href="pareto_frontier.html">pareto_frontier()</a></code> function, and <code>detailed_itineraries()</code> with
+<code>shortest_path = FALSE</code> or a <code>fare_structure</code>, use an <code>R5</code>-specific
+extension to the McRAPTOR routing algorithm. The
 implementation used in <code>detailed_itineraries()</code> allows the router to find
 paths that are optimal and less than optimal in terms of travel time, with
 some heuristics around multiple access modes, riding the same patterns, etc.
@@ -435,6 +446,26 @@ transit routing. Transportation Science, 49(3), 591-604.
 multiobjective optimization method to account for cost constraints in public
 transit accessibility metrics. International Journal of Geographical
 Information Science, 33(9), 1759-1787. <a href="https://doi.org/10.1080/13658816.2019.1605075" class="external-link">doi:10.1080/13658816.2019.1605075</a></p></li>
+</ul></div>
+    <div class="section level2">
+    <h2 id="fastest-itinerary">Fastest itinerary<a class="anchor" aria-label="anchor" href="#fastest-itinerary"></a></h2>
+
+
+
+<p>When only the fastest itinerary is returned (<code>shortest_path = TRUE</code>) and no
+<code>fare_structure</code> is used, public transport is routed with R5's RAPTOR
+algorithm (Conway et al, 2017), the one used by <code><a href="travel_time_matrix.html">travel_time_matrix()</a></code>,
+which is much faster than McRAPTOR. Compared with McRAPTOR, the results can
+differ slightly: departures are routed every minute of <code>time_window</code>
+instead of at random seconds, so the itinerary returned is never more than
+about a minute slower and often faster; walking transfers between stops are
+limited by <code>max_walk_time</code> (McRAPTOR only applies it to the first and last
+legs); stops where the GTFS <code>pickup_type</code> or <code>drop_off_type</code> does not allow
+boarding or alighting are respected; and when two trips are equally fast,
+the route chosen may differ.</p><ul><li><p>Conway, M. W., Byrd, A., &amp; van der Linden, M. (2017). Evidence-based
+transit and land use sketch planning using interactive accessibility methods
+on combined schedule and headway-based networks. Transportation Research
+Record, 2653(1), 45-53. <a href="https://doi.org/10.3141/2653-06" class="external-link">doi:10.3141/2653-06</a></p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -476,7 +507,7 @@ Information Science, 33(9), 1759-1787. <a href="https://doi.org/10.1080/13658816
 <span class="r-out co"><span class="r-pr">#&gt;</span> Simple feature collection with 5 features and 16 fields</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geometry type: LINESTRING</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Dimension:     XY</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: -51.24094 ymin: -30.05 xmax: -51.19762 ymax: -29.99729</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Bounding box:  xmin: -51.24094 ymin: -30.05002 xmax: -51.19762 ymax: -29.99729</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Geodetic CRS:  WGS 84</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            from_id  from_lat  from_lon                          to_id    to_lat</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995</span>
@@ -485,17 +516,17 @@ Information Science, 33(9), 1759-1787. <a href="https://doi.org/10.1080/13658816
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      to_lon option departure_time total_duration total_distance segment mode</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -51.22875      1       14:08:16           35.3           9460       1 WALK</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -51.22875      1       14:08:16           35.3           9460       2 RAIL</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -51.22875      1       14:08:16           35.3           9460       3 WALK</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -51.22875      1       14:08:16           35.3           9460       4  BUS</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -51.22875      1       14:08:16           35.3           9460       5 WALK</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -51.22875      1       14:08:00             37           9537       1 WALK</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -51.22875      1       14:08:00             37           9537       2 RAIL</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -51.22875      1       14:08:00             37           9537       3 WALK</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -51.22875      1       14:08:00             37           9537       4  BUS</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -51.22875      1       14:08:00             37           9537       5 WALK</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   segment_duration wait distance  route                       geometry</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1              5.1  0.0      174        LINESTRING (-51.1981 -29.99...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2              6.6  1.7     4796 LINHA1 LINESTRING (-51.19763 -29.9...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              6.6  1.9     4796 LINHA1 LINESTRING (-51.19763 -29.9...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3              4.0  0.0      256        LINESTRING (-51.22827 -30.0...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4             10.4  4.4     4083    188 LINESTRING (-51.22926 -30.0...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              3.2  0.0      151        LINESTRING (-51.22949 -30.0...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              4.6  0.0      228        LINESTRING (-51.22949 -30.0...</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="stop_r5.html">stop_r5</a></span><span class="op">(</span><span class="va">r5r_network</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> r5r_network has been successfully stopped.</span>

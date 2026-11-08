@@ -60,7 +60,8 @@
 <span>  <span class="va">r5r_network</span>,</span>
 <span>  <span class="va">draws_per_minute</span>,</span>
 <span>  <span class="va">time_window</span>,</span>
-<span>  fare_structure <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  fare_structure <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  mcraptor <span class="op">=</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">fare_structure</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -84,6 +85,11 @@
 <dd><p>A fare structure or <code>NULL</code>. When set, R5 uses the
 McRaptor algorithm, and combinations of <code>draws_per_minute</code> and
 <code>time_window</code> that its departure-time sampler cannot handle are rejected.</p></dd>
+
+
+<dt id="arg-mcraptor">mcraptor<a class="anchor" aria-label="anchor" href="#arg-mcraptor"></a></dt>
+<dd><p>A logical. Whether the routing uses the McRaptor algorithm.
+Defaults to <code>TRUE</code> when a <code>fare_structure</code> is set.</p></dd>
 
 </dl></div>
     <div class="section level2">

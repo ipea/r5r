@@ -15,7 +15,7 @@ detailed_itineraries(
   destinations,
   mode = "WALK",
   mode_egress = "WALK",
-  departure_datetime = Sys.time(),
+  departure_datetime = NULL,
   time_window = 10L,
   suboptimal_minutes = 0L,
   max_walk_time = Inf,
@@ -73,37 +73,38 @@ detailed_itineraries(
   with public transport, it must fall within the service period of the
   GTFS feeds (`calendar.txt`; see
   [`check_transit_availability()`](https://ipea.github.io/r5r/reference/check_transit_availability.md)).
-  Defaults to [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html). See
-  details for how datetimes are parsed.
+  Required for public transport; optional otherwise. See details for how
+  datetimes are parsed.
 
 - time_window:
 
   An integer. The time window in minutes for which `r5r` will calculate
-  multiple itineraries. Defaults to 10. Departures are simulated at
-  random seconds, about one per minute (30 to 90 seconds apart), with
-  the same departure times in every call with the same origin. Each
-  departure is routed separately, so an itinerary may appear or
-  disappear when `departure_datetime` changes by one minute, depending
-  on whether a departure still catches a faster connection. Unlike other
-  routing functions, results are not aggregated by percentile: when the
-  same sequence of routes appears in several departures, only the
-  fastest is kept, so the output may contain trips departing after
-  `departure_datetime` but within the window. See
+  multiple itineraries. Defaults to 10. Unlike other routing functions,
+  results are not aggregated by percentile, so the output may contain
+  trips departing after `departure_datetime` but within the window. With
+  `shortest_path = TRUE` and no `fare_structure`, a trip is routed for
+  each minute from `departure_datetime` until `time_window` minutes
+  later, and the fastest one is returned (ties go to the earliest
+  departure). Otherwise, departures are simulated at random seconds,
+  about one per minute (30 to 90 seconds apart), with the same departure
+  times in every call with the same origin, and each departure is routed
+  separately: an itinerary may appear or disappear when
+  `departure_datetime` changes by one minute, and when the same sequence
+  of routes appears in several departures, only the fastest is kept. See
   [`vignette("time_window", package = "r5r")`](https://ipea.github.io/r5r/articles/time_window.md).
 
 - suboptimal_minutes:
 
   A number. How many minutes after the optimal arrival a non-optimal
-  RAPTOR branch may arrive and still be kept (e.g. with `10`, routes
-  arriving up to 10 minutes after the fastest one are considered). The
-  comparison is made separately for each departure within `time_window`
-  and uses arrival time only: a route beyond this margin is discarded
-  even if it has fewer transfers. The default, `0`, keeps only routes
-  arriving at the earliest time for each departure. Higher values return
-  more itineraries, emulating people who take a slower route for
-  practical reasons (e.g. mode preference, safety). Values above 0 can
-  only be used when `shortest_path` is `FALSE` and `fare_structure` is
-  `NULL`.
+  McRAPTOR branch may arrive and still be kept (e.g. with `10`, routes
+  arriving up to 10 minutes after the fastest one are considered). It
+  can only be used when `shortest_path = FALSE` and `fare_structure` is
+  `NULL`. The comparison is made separately for each departure within
+  `time_window` and uses arrival time only: a route beyond this margin
+  is discarded even if it has fewer transfers. The default, `0`, keeps
+  only routes arriving at the earliest time for each departure. Higher
+  values return more itineraries, emulating people who take a slower
+  route for practical reasons (e.g. mode preference, safety).
 
 - max_walk_time:
 
@@ -165,14 +166,20 @@ detailed_itineraries(
   departures within `time_window`. With a large `time_window`, it may
   depart later and arrive later than other itineraries; use
   `time_window = 1` to get the itinerary with the earliest arrival for a
-  given departure time.
+  given departure time. Without a `fare_structure`, public transport
+  trips are then routed with R5's RAPTOR algorithm, which is much faster
+  than the McRAPTOR algorithm used for alternative routes and fares (see
+  the Fastest itinerary section).
 
 - all_to_all:
 
   A logical. Whether to query routes between the 1st origin to the 1st
   destination, then the 2nd origin to the 2nd destination, and so on
   (`FALSE`, the default) or to query routes between all origins to all
-  destinations (`TRUE`).
+  destinations (`TRUE`). With `shortest_path = TRUE` and no
+  `fare_structure`, `all_to_all = TRUE` runs one public transport search
+  per origin for all its destinations, which is much faster than listing
+  the same pairs with `all_to_all = FALSE`.
 
 - fare_structure:
 
@@ -287,7 +294,9 @@ segment (trip leg) of one itinerary, with the columns:
 
 - `option`: the itinerary number within the pair. Options are ordered
   with direct (non-transit) trips first, then by number of segments,
-  then by duration, so `option` 1 is not necessarily the fastest one;
+  then by duration, so `option` 1 is not necessarily the fastest one.
+  With `shortest_path = TRUE`, each pair has a single itinerary
+  (`option` 1);
 
 - `departure_time`: the departure time of the itinerary (`"HH:MM:SS"`);
 
@@ -374,9 +383,10 @@ perhaps surprisingly, ignoring the timezone attribute.
 
 ## Routing algorithm
 
-The `detailed_itineraries()` and
+The
 [`pareto_frontier()`](https://ipea.github.io/r5r/reference/pareto_frontier.md)
-functions use an `R5`-specific extension to the McRAPTOR routing
+function, and `detailed_itineraries()` with `shortest_path = FALSE` or a
+`fare_structure`, use an `R5`-specific extension to the McRAPTOR routing
 algorithm. The implementation used in `detailed_itineraries()` allows
 the router to find paths that are optimal and less than optimal in terms
 of travel time, with some heuristics around multiple access modes,
@@ -398,6 +408,27 @@ on the algorithm can be found in Conway and Stewart (2019).
   public transit accessibility metrics. International Journal of
   Geographical Information Science, 33(9), 1759-1787.
   [doi:10.1080/13658816.2019.1605075](https://doi.org/10.1080/13658816.2019.1605075)
+
+## Fastest itinerary
+
+When only the fastest itinerary is returned (`shortest_path = TRUE`) and
+no `fare_structure` is used, public transport is routed with R5's RAPTOR
+algorithm (Conway et al, 2017), the one used by
+[`travel_time_matrix()`](https://ipea.github.io/r5r/reference/travel_time_matrix.md),
+which is much faster than McRAPTOR. Compared with McRAPTOR, the results
+can differ slightly: departures are routed every minute of `time_window`
+instead of at random seconds, so the itinerary returned is never more
+than about a minute slower and often faster; walking transfers between
+stops are limited by `max_walk_time` (McRAPTOR only applies it to the
+first and last legs); stops where the GTFS `pickup_type` or
+`drop_off_type` does not allow boarding or alighting are respected; and
+when two trips are equally fast, the route chosen may differ.
+
+- Conway, M. W., Byrd, A., & van der Linden, M. (2017). Evidence-based
+  transit and land use sketch planning using interactive accessibility
+  methods on combined schedule and headway-based networks.
+  Transportation Research Record, 2653(1), 45-53.
+  [doi:10.3141/2653-06](https://doi.org/10.3141/2653-06)
 
 ## See also
 
@@ -439,7 +470,7 @@ head(det)
 #> Simple feature collection with 5 features and 16 fields
 #> Geometry type: LINESTRING
 #> Dimension:     XY
-#> Bounding box:  xmin: -51.24094 ymin: -30.05 xmax: -51.19762 ymax: -29.99729
+#> Bounding box:  xmin: -51.24094 ymin: -30.05002 xmax: -51.19762 ymax: -29.99729
 #> Geodetic CRS:  WGS 84
 #>            from_id  from_lat  from_lon                          to_id    to_lat
 #> 1 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
@@ -448,17 +479,17 @@ head(det)
 #> 4 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
 #> 5 farrapos_station -29.99772 -51.19762 praia_de_belas_shopping_center -30.04995
 #>      to_lon option departure_time total_duration total_distance segment mode
-#> 1 -51.22875      1       14:08:16           35.3           9460       1 WALK
-#> 2 -51.22875      1       14:08:16           35.3           9460       2 RAIL
-#> 3 -51.22875      1       14:08:16           35.3           9460       3 WALK
-#> 4 -51.22875      1       14:08:16           35.3           9460       4  BUS
-#> 5 -51.22875      1       14:08:16           35.3           9460       5 WALK
+#> 1 -51.22875      1       14:08:00             37           9537       1 WALK
+#> 2 -51.22875      1       14:08:00             37           9537       2 RAIL
+#> 3 -51.22875      1       14:08:00             37           9537       3 WALK
+#> 4 -51.22875      1       14:08:00             37           9537       4  BUS
+#> 5 -51.22875      1       14:08:00             37           9537       5 WALK
 #>   segment_duration wait distance  route                       geometry
 #> 1              5.1  0.0      174        LINESTRING (-51.1981 -29.99...
-#> 2              6.6  1.7     4796 LINHA1 LINESTRING (-51.19763 -29.9...
+#> 2              6.6  1.9     4796 LINHA1 LINESTRING (-51.19763 -29.9...
 #> 3              4.0  0.0      256        LINESTRING (-51.22827 -30.0...
 #> 4             10.4  4.4     4083    188 LINESTRING (-51.22926 -30.0...
-#> 5              3.2  0.0      151        LINESTRING (-51.22949 -30.0...
+#> 5              4.6  0.0      228        LINESTRING (-51.22949 -30.0...
 
 stop_r5(r5r_network)
 #> r5r_network has been successfully stopped.

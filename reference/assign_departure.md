@@ -5,7 +5,7 @@ Check and convert POSIXct objects to strings
 ## Usage
 
 ``` r
-assign_departure(datetime)
+assign_departure(datetime, mode_list)
 ```
 
 ## Arguments

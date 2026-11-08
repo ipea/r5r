@@ -89,7 +89,7 @@ information; split larger sets into chunks.</p>
 <span>  <span class="va">destinations</span>,</span>
 <span>  mode <span class="op">=</span> <span class="st">"WALK"</span>,</span>
 <span>  mode_egress <span class="op">=</span> <span class="st">"WALK"</span>,</span>
-<span>  arrival_datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="va">arrival_datetime</span>,</span>
 <span>  breakdown <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  max_walk_time <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  max_bike_time <span class="op">=</span> <span class="cn">Inf</span>,</span>
@@ -138,10 +138,10 @@ from the last public transport. It can be either <code>WALK</code>, <code>BICYCL
 
 
 <dt id="arg-arrival-datetime">arrival_datetime<a class="anchor" aria-label="anchor" href="#arg-arrival-datetime"></a></dt>
-<dd><p>A POSIXct object. The time by which trips must
+<dd><p>A POSIXct object, required for all modes. The time by which trips must
 arrive. When routing with public transport, services must run on the date
 of <code>arrival_datetime - max_trip_duration</code> (see
-<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). Defaults to <code><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time()</a></code>. See details for
+<code><a href="check_transit_availability.html">check_transit_availability()</a></code>). See details for
 how datetimes are parsed.</p></dd>
 
 
@@ -253,7 +253,8 @@ same in every call from the same origin with the same <code>seed</code>). This
 parameter then affects the results with or without frequencies. R5's
 McRaptor cannot sample many departure times per minute over long windows,
 so such combinations raise an error (e.g. 8 draws per minute in a
-10-minute window, or 5 in a window of 150 minutes or more).</p></dd>
+10-minute window, or 5 in a window of 150 minutes or more), as does a
+total of exactly 200 draws.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -386,7 +387,9 @@ minute over the time window set by the user in the 'time_window' parameter.
 A detailed description of base RAPTOR can be found in Delling et al (2015).
 However, whenever the user includes transit fares inputs to these functions,
 they automatically switch to use an <code>R5</code>-specific extension to the McRAPTOR
-routing algorithm.</p><ul><li><p>Conway, M. W., Byrd, A., &amp; van der Linden, M. (2017). Evidence-based
+routing algorithm. <code><a href="detailed_itineraries.html">detailed_itineraries()</a></code> also uses RAPTOR when it only
+returns the fastest itinerary (<code>shortest_path = TRUE</code>) and no fares are
+used.</p><ul><li><p>Conway, M. W., Byrd, A., &amp; van der Linden, M. (2017). Evidence-based
 transit and land use sketch planning using interactive accessibility methods
 on combined schedule and headway-based networks. Transportation Research
 Record, 2653(1), 45-53. <a href="https://doi.org/10.3141/2653-06" class="external-link">doi:10.3141/2653-06</a></p></li>

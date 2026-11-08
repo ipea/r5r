@@ -37,15 +37,24 @@ click to expand
 
 click to expand
 
-> The functions
 > [`travel_time_matrix()`](https://ipea.github.io/r5r/reference/travel_time_matrix.md)
 > (and
 > [`expanded_travel_time_matrix()`](https://ipea.github.io/r5r/reference/expanded_travel_time_matrix.md))
 > and
 > [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
-> use different routing algorithms, as explained in the documentation of
-> these functions. As such, we advise not to use or combine the output
-> of these functions.
+> compute different things, as explained in the documentation of these
+> functions.
+> [`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
+> returns the fastest itinerary over the time window rather than a
+> percentile of travel times, and it routes the walk or bike legs to and
+> from public transport with separate street searches for each
+> origin-destination pair
+> ([`travel_time_matrix()`](https://ipea.github.io/r5r/reference/travel_time_matrix.md)
+> uses precomputed street times between stops and destinations). With
+> `shortest_path = FALSE` or a `fare_structure`, it also uses a
+> different routing algorithm (McRAPTOR), which simulates departures at
+> random seconds. As such, we advise not to combine the output of these
+> functions.
 
 ## 4. What does the ERROR “Geographic extent of street layer exceeds limit” mean? and what to do about it?
 

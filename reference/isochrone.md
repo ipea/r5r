@@ -19,7 +19,7 @@ isochrone(
   mode_egress = "walk",
   cutoffs = c(0, 15, 30),
   zoom = 10,
-  departure_datetime = Sys.time(),
+  departure_datetime = NULL,
   polygon_output = TRUE,
   time_window = 10L,
   max_walk_time = Inf,
@@ -87,8 +87,8 @@ isochrone(
   with public transport, it must fall within the service period of the
   GTFS feeds (`calendar.txt`; see
   [`check_transit_availability()`](https://ipea.github.io/r5r/reference/check_transit_availability.md)).
-  Defaults to [`Sys.time()`](https://rdrr.io/r/base/Sys.time.html). See
-  details for how datetimes are parsed.
+  Required for public transport; optional otherwise. See details for how
+  datetimes are parsed.
 
 - polygon_output:
 
@@ -181,7 +181,7 @@ isochrone(
   frequencies. R5's McRaptor cannot sample many departure times per
   minute over long windows, so such combinations raise an error (e.g. 8
   draws per minute in a 10-minute window, or 5 in a window of 150
-  minutes or more).
+  minutes or more), as does a total of exactly 200 draws.
 
 - seed:
 
@@ -325,6 +325,9 @@ can be found in Delling et al (2015). However, whenever the user
 includes transit fares inputs to these functions, they automatically
 switch to use an `R5`-specific extension to the McRAPTOR routing
 algorithm.
+[`detailed_itineraries()`](https://ipea.github.io/r5r/reference/detailed_itineraries.md)
+also uses RAPTOR when it only returns the fastest itinerary
+(`shortest_path = TRUE`) and no fares are used.
 
 - Conway, M. W., Byrd, A., & van der Linden, M. (2017). Evidence-based
   transit and land use sketch planning using interactive accessibility
@@ -339,7 +342,7 @@ algorithm.
 ## Examples
 
 ``` r
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 library(r5r)
 library(ggplot2)
 
@@ -440,4 +443,5 @@ ggplot() +
 
 stop_r5(r5r_network)
 #> r5r_network has been successfully stopped.
+options(old_options)
 ```
