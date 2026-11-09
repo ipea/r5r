@@ -856,7 +856,7 @@ devtools::check_mac_release()
 rhub::check_for_cran(show_status = FALSE)
 
 
-devtools::submit_cran()
+devtools::submit_cran(pkg = "./r-package/")
 
 
 # build binary -----------------

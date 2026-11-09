@@ -194,6 +194,7 @@ write_fare_structure <- function(fare_structure, file_path) {
 
   tmpdir <- tempfile(pattern = "r5r_fare_structure")
   dir.create(tmpdir)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
   tmpfile <- function(path) file.path(tmpdir, path)
 
   data.table::fwrite(fare_global_settings, tmpfile("global_settings.csv"))
@@ -256,6 +257,7 @@ read_fare_structure <- function(file_path, encoding = "UTF-8") {
 
   tmpdir <- tempfile("read_fare_structure")
   dir.create(tmpdir)
+  on.exit(unlink(tmpdir, recursive = TRUE), add = TRUE)
   zip::unzip(zipfile = file_path, exdir = tmpdir)
 
   tmpfile <- function(path) file.path(tmpdir, path)

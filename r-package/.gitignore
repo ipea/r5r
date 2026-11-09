@@ -4,3 +4,4 @@ Meta
 /Meta/
 /r-package/rjavaenv/*
 *.log
+/revdep/

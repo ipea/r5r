@@ -68,7 +68,7 @@
 #' @family Isochrone
 #'
 #' @examplesIf identical(tolower(Sys.getenv("NOT_CRAN")), "true")
-#' options(java.parameters = "-Xmx2G")
+#' old_options <- options(java.parameters = "-Xmx2G")
 #' library(r5r)
 #' library(ggplot2)
 #'
@@ -128,6 +128,7 @@
 #'   theme_minimal()
 #'
 #' stop_r5(r5r_network)
+#' options(old_options)
 #'
 #' @export
 isochrone <- function(r5r_network,
@@ -279,7 +280,7 @@ isochrone <- function(r5r_network,
 
     # aggregate travel-times
     # ttm[, isochrone_interval := cut(x=travel_time_p50, breaks=cutoffs)]
-    ttm[, isochrone := cut(x=travel_time_p50, breaks=cutoffs, labels=F)]
+    ttm[, isochrone := cut(x=travel_time_p50, breaks=cutoffs, labels=FALSE)]
     ttm[, isochrone := cutoffs[cutoffs>0][isochrone]]
 
 

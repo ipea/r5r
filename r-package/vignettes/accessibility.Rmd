@@ -35,7 +35,7 @@ Accessibility indicators measure how easily opportunities, such as jobs, can be 
 Set Java memory before loading the packages ([why](https://ipea.github.io/r5r/articles/r5r.html#usage)).
 
 ```{r, message = FALSE}
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 library(r5r)
 library(accessibility)
@@ -224,6 +224,7 @@ Stop the network and run Java's garbage collector to free the memory it used:
 ```{r, message = FALSE}
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit [the package GitHub page](https://github.com/ipea/r5r).

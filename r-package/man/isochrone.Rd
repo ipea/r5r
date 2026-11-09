@@ -279,7 +279,7 @@ transit routing. Transportation Science, 49(3), 591-604.
 
 \examples{
 \dontshow{if (identical(tolower(Sys.getenv("NOT_CRAN")), "true")) withAutoprint(\{ # examplesIf}
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 library(r5r)
 library(ggplot2)
 
@@ -339,6 +339,7 @@ ggplot() +
   theme_minimal()
 
 stop_r5(r5r_network)
+options(old_options)
 \dontshow{\}) # examplesIf}
 }
 \concept{Isochrone}
