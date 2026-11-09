@@ -809,6 +809,11 @@ tictoc::toc()
 beepr::beep()
 
 
+# Run all diagnostics on the current package
+library(checktor)
+results <- checktor::checktor()
+
+
 # CRAN
 tictoc::tic()
 Sys.setenv(NOT_CRAN = "false")
