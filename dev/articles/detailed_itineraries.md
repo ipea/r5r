@@ -39,7 +39,7 @@ We use the Porto Alegre (Brazil) sample data included in `r5r`.
 ``` r
 
 # increase Java memory
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 # load libraries
 library(r5r)
@@ -205,6 +205,7 @@ used:
 
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit

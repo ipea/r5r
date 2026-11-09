@@ -59,7 +59,7 @@ the packages
 
 ``` r
 
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 library(r5r)
 library(sf)
@@ -534,7 +534,7 @@ p1 <- ggplot(time_difference, aes(y = travel_time_unl, x = travel_time_500)) +
 
 # plot of unreachable destinations when the monetary cost limit is too low
 unreachable <- ttm[, .(count = .N), by = .(travel_time_unl, is.na(travel_time_500))]
-unreachable[, perc := count / sum(count, na.rm = T), by = .(travel_time_unl)]
+unreachable[, perc := count / sum(count, na.rm = TRUE), by = .(travel_time_unl)]
 unreachable <- unreachable[is.na == TRUE]
 unreachable <- na.omit(unreachable)
 
@@ -623,6 +623,7 @@ used:
 
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit

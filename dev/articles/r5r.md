@@ -75,11 +75,11 @@ later changes only take effect after restarting R.
 
 ``` r
 
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 # By default, {r5r} uses all CPU cores available. If you want to limit the 
 # number of CPUs to 4, for example, you can run:  
-options(java.parameters = c("-Xmx2G", "-XX:ActiveProcessorCount=4"))
+# options(java.parameters = c("-Xmx2G", "-XX:ActiveProcessorCount=4"))
 ```
 
 Then we can load the packages used in this vignette:
@@ -449,6 +449,7 @@ used:
 
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit

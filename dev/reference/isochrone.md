@@ -342,7 +342,7 @@ also uses RAPTOR when it only returns the fastest itinerary
 ## Examples
 
 ``` r
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 library(r5r)
 library(ggplot2)
 
@@ -443,4 +443,5 @@ ggplot() +
 
 stop_r5(r5r_network)
 #> r5r_network has been successfully stopped.
+options(old_options)
 ```

@@ -28,7 +28,7 @@ Set Java memory before loading the packages
 
 ``` r
 
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 library(r5r)
 library(accessibility)
@@ -284,6 +284,7 @@ used:
 
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit

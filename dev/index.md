@@ -1,4 +1,4 @@
-# r5r: Rapid Realistic Routing with R5 in R ![logo](reference/figures/r5r_blue.png)
+# r5r: Rapid Realistic Routing with R5 in R
 
 [![CRAN/METACRAN
 Version](https://www.r-pkg.org/badges/version/r5r)](https://CRAN.R-project.org/package=r5r)
@@ -153,7 +153,7 @@ Here are a few places from where you can download these data sets:
   - [transitland](https://www.transit.land/) website
   - [Mobility Database](https://database.mobilitydata.org/) website
 - Elevation
-  - [elevatr](https://github.com/jhollist/elevatr) R package
+  - [elevatr](https://github.com/USEPA/elevatr) R package
   - [Nasa’s SRTMGL1](https://lpdaac.usgs.gov/products/srtmgl1v003/)
     website
 
@@ -224,8 +224,8 @@ theses packages.
 
 - [dodgr](https://github.com/ATFutures/dodgr): Distances on Directed
   Graphs in R
-- [gtfsrouter](https://github.com/ATFutures/gtfs-router): R package for
-  routing with GTFS data
+- [gtfsrouter](https://github.com/UrbanAnalyst/gtfsrouter): R package
+  for routing with GTFS data
 - [hereR](https://github.com/munterfinger/hereR): an R interface to the
   HERE REST APIs
 - [opentripplanner](https://github.com/ropensci/opentripplanner):

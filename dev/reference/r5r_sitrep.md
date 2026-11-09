@@ -28,7 +28,7 @@ R5 Jar in use, the memory set to Java and user's Session Info.
 ``` r
 r5r_sitrep()
 #> $r5r_package_version
-#> [1] ‘2.4.0.9001’
+#> [1] ‘2.5.0.9000’
 #> 
 #> $r5_jar_version
 #> [1] "7.6"
@@ -37,7 +37,7 @@ r5r_sitrep()
 #> [1] "21.0.13"
 #> 
 #> $set_memory
-#> [1] "-Xmx2G"
+#> NULL
 #> 
 #> $session_info
 #> R version 4.6.2 (2026-10-29)
@@ -63,7 +63,7 @@ r5r_sitrep()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] ggplot2_4.0.3  r5r_2.4.0.9001
+#> [1] ggplot2_4.0.3  r5r_2.5.0.9000
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] gtable_0.3.6        xfun_0.62           bslib_0.12.0       
@@ -85,7 +85,7 @@ r5r_sitrep()
 #> [49] labeling_0.4.3      fastmap_1.2.0       grid_4.6.2         
 #> [52] cli_3.6.6           magrittr_2.0.5      e1071_1.7-17       
 #> [55] withr_3.0.3         scales_1.4.0        backports_1.5.1    
-#> [58] rmarkdown_2.32      otel_0.2.0          askpass_1.2.1      
+#> [58] rmarkdown_2.32      otel_0.3.0          askpass_1.2.1      
 #> [61] ragg_1.5.2          memoise_2.0.1       evaluate_1.0.5     
 #> [64] knitr_1.52          testthat_3.3.2      s2_1.1.13          
 #> [67] rlang_1.3.0         isoband_0.3.0       Rcpp_1.1.2         

@@ -82,7 +82,7 @@ We use the São Paulo (Brazil) sample data included in `r5r`.
 ``` r
 
 # increase Java memory
-options(java.parameters = "-Xmx2G")
+old_options <- options(java.parameters = "-Xmx2G")
 
 # load libraries
 library(r5r)
@@ -271,16 +271,16 @@ head(ettm, n = 10)
 #> 10: 89a8100c603ffff 89a8100c28bffff       14:01:00           5 4491-10
 #>     total_time
 #>          <num>
-#>  1:       42.8
-#>  2:       43.9
-#>  3:       44.1
-#>  4:       53.6
-#>  5:       53.8
-#>  6:       37.0
-#>  7:       41.3
-#>  8:       47.0
-#>  9:       47.2
-#> 10:       47.6
+#>  1:       36.7
+#>  2:       38.2
+#>  3:       41.7
+#>  4:       46.5
+#>  5:       49.3
+#>  6:       36.1
+#>  7:       36.7
+#>  8:       41.1
+#>  9:       46.7
+#> 10:       53.1
 ```
 
 ### 3.5 Detailed itineraries with `time_window`.
@@ -322,6 +322,7 @@ used:
 
 r5r::stop_r5(r5r_network)
 rJava::.jgc(R.gc = TRUE)
+options(old_options)
 ```
 
 If you have any suggestions or want to report an error, please visit
